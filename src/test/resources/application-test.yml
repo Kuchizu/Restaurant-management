@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    hikari:
+      # Shorter timeouts for faster test cleanup
+      connection-timeout: 5000
+      max-lifetime: 60000
+      validation-timeout: 3000
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  liquibase:
+    enabled: false
+

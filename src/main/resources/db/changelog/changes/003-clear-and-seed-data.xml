@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="003-clear-all-tables" author="restaurant" runAlways="true">
+        <validCheckSum>9:cfd325bb5ee4d9f508a2e68980d17fa2</validCheckSum>
+        <validCheckSum>9:496c7a7da4354b98151db46bfa4740c7</validCheckSum>
+        <sql>
+            DELETE FROM bills;
+            DELETE FROM kitchen_queue;
+            DELETE FROM inventory;
+            DELETE FROM supply_order_ingredients;
+            DELETE FROM supply_orders;
+            DELETE FROM suppliers;
+            DELETE FROM order_items;
+            DELETE FROM orders;
+            DELETE FROM dish_ingredients;
+            DELETE FROM dishes;
+            DELETE FROM ingredients;
+            DELETE FROM categories;
+            DELETE FROM tables;
+            DELETE FROM employees;
+        </sql>
+    </changeSet>
+
+    <!-- Заполнение категорий -->
+    <changeSet id="004-insert-categories" author="restaurant" runAlways="true">
+        <insert tableName="categories">
+            <column name="name" value="Супы"/>
+            <column name="description" value="Горячие первые блюда"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="categories">
+            <column name="name" value="Основные блюда"/>
+            <column name="description" value="Горячие вторые блюда"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="categories">
+            <column name="name" value="Салаты"/>
+            <column name="description" value="Холодные закуски"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="categories">
+            <column name="name" value="Десерты"/>
+            <column name="description" value="Сладкие блюда"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="categories">
+            <column name="name" value="Напитки"/>
+            <column name="description" value="Горячие и холодные напитки"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+    </changeSet>
+
+    <!-- Заполнение ингредиентов -->
+    <changeSet id="005-insert-ingredients" author="restaurant" runAlways="true">
+        <insert tableName="ingredients">
+            <column name="name" value="Курица"/>
+            <column name="unit" value="кг"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="name" value="Говядина"/>
+            <column name="unit" value="кг"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="name" value="Лук"/>
+            <column name="unit" value="кг"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="name" value="Морковь"/>
+            <column name="unit" value="кг"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="name" value="Картофель"/>
+            <column name="unit" value="кг"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="name" value="Помидоры"/>
+            <column name="unit" value="кг"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="name" value="Огурцы"/>
+            <column name="unit" value="кг"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="name" value="Мука"/>
+            <column name="unit" value="кг"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="name" value="Сахар"/>
+            <column name="unit" value="кг"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="name" value="Соль"/>
+            <column name="unit" value="кг"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="name" value="Перец"/>
+            <column name="unit" value="кг"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="name" value="Масло подсолнечное"/>
+            <column name="unit" value="л"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="name" value="Сметана"/>
+            <column name="unit" value="кг"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="name" value="Сыр"/>
+            <column name="unit" value="кг"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="name" value="Кофе"/>
+            <column name="unit" value="кг"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="name" value="Чай"/>
+            <column name="unit" value="кг"/>
+        </insert>
+    </changeSet>
+
+    <!-- Заполнение блюд -->
+    <changeSet id="006-insert-dishes" author="restaurant" runAlways="true">
+        <insert tableName="dishes">
+            <column name="name" value="Борщ"/>
+            <column name="description" value="Традиционный украинский суп со свеклой"/>
+            <column name="price" valueNumeric="350.00"/>
+            <column name="cost" valueNumeric="120.00"/>
+            <column name="category_id" valueComputed="(SELECT id FROM categories WHERE name = 'Супы')"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="dishes">
+            <column name="name" value="Куриный суп"/>
+            <column name="description" value="Легкий суп с курицей и овощами"/>
+            <column name="price" valueNumeric="280.00"/>
+            <column name="cost" valueNumeric="90.00"/>
+            <column name="category_id" valueComputed="(SELECT id FROM categories WHERE name = 'Супы')"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="dishes">
+            <column name="name" value="Стейк из говядины"/>
+            <column name="description" value="Жареный стейк с гарниром"/>
+            <column name="price" valueNumeric="850.00"/>
+            <column name="cost" valueNumeric="350.00"/>
+            <column name="category_id" valueComputed="(SELECT id FROM categories WHERE name = 'Основные блюда')"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="dishes">
+            <column name="name" value="Куриная грудка с картофелем"/>
+            <column name="description" value="Запеченная курица с жареным картофелем"/>
+            <column name="price" valueNumeric="450.00"/>
+            <column name="cost" valueNumeric="180.00"/>
+            <column name="category_id" valueComputed="(SELECT id FROM categories WHERE name = 'Основные блюда')"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="dishes">
+            <column name="name" value="Греческий салат"/>
+            <column name="description" value="Свежие овощи с сыром фета"/>
+            <column name="price" valueNumeric="320.00"/>
+            <column name="cost" valueNumeric="110.00"/>
+            <column name="category_id" valueComputed="(SELECT id FROM categories WHERE name = 'Салаты')"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="dishes">
+            <column name="name" value="Оливье"/>
+            <column name="description" value="Классический салат оливье"/>
+            <column name="price" valueNumeric="280.00"/>
+            <column name="cost" valueNumeric="95.00"/>
+            <column name="category_id" valueComputed="(SELECT id FROM categories WHERE name = 'Салаты')"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="dishes">
+            <column name="name" value="Торт Наполеон"/>
+            <column name="description" value="Классический слоеный торт"/>
+            <column name="price" valueNumeric="250.00"/>
+            <column name="cost" valueNumeric="85.00"/>
+            <column name="category_id" valueComputed="(SELECT id FROM categories WHERE name = 'Десерты')"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="dishes">
+            <column name="name" value="Кофе эспрессо"/>
+            <column name="description" value="Крепкий черный кофе"/>
+            <column name="price" valueNumeric="150.00"/>
+            <column name="cost" valueNumeric="30.00"/>
+            <column name="category_id" valueComputed="(SELECT id FROM categories WHERE name = 'Напитки')"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="dishes">
+            <column name="name" value="Чай черный"/>
+            <column name="description" value="Черный чай"/>
+            <column name="price" valueNumeric="100.00"/>
+            <column name="cost" valueNumeric="20.00"/>
+            <column name="category_id" valueComputed="(SELECT id FROM categories WHERE name = 'Напитки')"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+    </changeSet>
+
+    <!-- Связь блюд с ингредиентами -->
+    <changeSet id="007-insert-dish-ingredients" author="restaurant" runAlways="true">
+        <sql>
+            INSERT INTO dish_ingredients (dish_id, ingredient_id)
+            VALUES 
+            ((SELECT id FROM dishes WHERE name = 'Борщ'), (SELECT id FROM ingredients WHERE name = 'Говядина')),
+            ((SELECT id FROM dishes WHERE name = 'Борщ'), (SELECT id FROM ingredients WHERE name = 'Лук')),
+            ((SELECT id FROM dishes WHERE name = 'Борщ'), (SELECT id FROM ingredients WHERE name = 'Морковь')),
+            ((SELECT id FROM dishes WHERE name = 'Борщ'), (SELECT id FROM ingredients WHERE name = 'Соль')),
+            ((SELECT id FROM dishes WHERE name = 'Куриный суп'), (SELECT id FROM ingredients WHERE name = 'Курица')),
+            ((SELECT id FROM dishes WHERE name = 'Куриный суп'), (SELECT id FROM ingredients WHERE name = 'Картофель')),
+            ((SELECT id FROM dishes WHERE name = 'Куриный суп'), (SELECT id FROM ingredients WHERE name = 'Лук')),
+            ((SELECT id FROM dishes WHERE name = 'Куриный суп'), (SELECT id FROM ingredients WHERE name = 'Соль')),
+            ((SELECT id FROM dishes WHERE name = 'Стейк из говядины'), (SELECT id FROM ingredients WHERE name = 'Говядина')),
+            ((SELECT id FROM dishes WHERE name = 'Стейк из говядины'), (SELECT id FROM ingredients WHERE name = 'Соль')),
+            ((SELECT id FROM dishes WHERE name = 'Стейк из говядины'), (SELECT id FROM ingredients WHERE name = 'Перец')),
+            ((SELECT id FROM dishes WHERE name = 'Куриная грудка с картофелем'), (SELECT id FROM ingredients WHERE name = 'Курица')),
+            ((SELECT id FROM dishes WHERE name = 'Куриная грудка с картофелем'), (SELECT id FROM ingredients WHERE name = 'Картофель')),
+            ((SELECT id FROM dishes WHERE name = 'Куриная грудка с картофелем'), (SELECT id FROM ingredients WHERE name = 'Масло подсолнечное')),
+            ((SELECT id FROM dishes WHERE name = 'Греческий салат'), (SELECT id FROM ingredients WHERE name = 'Помидоры')),
+            ((SELECT id FROM dishes WHERE name = 'Греческий салат'), (SELECT id FROM ingredients WHERE name = 'Огурцы')),
+            ((SELECT id FROM dishes WHERE name = 'Греческий салат'), (SELECT id FROM ingredients WHERE name = 'Сыр')),
+            ((SELECT id FROM dishes WHERE name = 'Оливье'), (SELECT id FROM ingredients WHERE name = 'Картофель')),
+            ((SELECT id FROM dishes WHERE name = 'Оливье'), (SELECT id FROM ingredients WHERE name = 'Курица')),
+            ((SELECT id FROM dishes WHERE name = 'Оливье'), (SELECT id FROM ingredients WHERE name = 'Сметана')),
+            ((SELECT id FROM dishes WHERE name = 'Торт Наполеон'), (SELECT id FROM ingredients WHERE name = 'Мука')),
+            ((SELECT id FROM dishes WHERE name = 'Торт Наполеон'), (SELECT id FROM ingredients WHERE name = 'Сахар')),
+            ((SELECT id FROM dishes WHERE name = 'Кофе эспрессо'), (SELECT id FROM ingredients WHERE name = 'Кофе')),
+            ((SELECT id FROM dishes WHERE name = 'Чай черный'), (SELECT id FROM ingredients WHERE name = 'Чай'));
+        </sql>
+    </changeSet>
+
+    <!-- Заполнение столиков -->
+    <changeSet id="008-insert-tables" author="restaurant" runAlways="true">
+        <insert tableName="tables">
+            <column name="table_number" valueNumeric="1"/>
+            <column name="capacity" valueNumeric="2"/>
+            <column name="location" value="У окна"/>
+            <column name="status" value="FREE"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="tables">
+            <column name="table_number" valueNumeric="2"/>
+            <column name="capacity" valueNumeric="4"/>
+            <column name="location" value="В центре"/>
+            <column name="status" value="FREE"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="tables">
+            <column name="table_number" valueNumeric="3"/>
+            <column name="capacity" valueNumeric="4"/>
+            <column name="location" value="У стены"/>
+            <column name="status" value="OCCUPIED"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="tables">
+            <column name="table_number" valueNumeric="4"/>
+            <column name="capacity" valueNumeric="6"/>
+            <column name="location" value="VIP зал"/>
+            <column name="status" value="FREE"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="tables">
+            <column name="table_number" valueNumeric="5"/>
+            <column name="capacity" valueNumeric="2"/>
+            <column name="location" value="Терраса"/>
+            <column name="status" value="RESERVED"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="tables">
+            <column name="table_number" valueNumeric="6"/>
+            <column name="capacity" valueNumeric="8"/>
+            <column name="location" value="VIP зал"/>
+            <column name="status" value="FREE"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+    </changeSet>
+
+    <!-- Заполнение сотрудников -->
+    <changeSet id="009-insert-employees" author="restaurant" runAlways="true">
+        <insert tableName="employees">
+            <column name="first_name" value="Иван"/>
+            <column name="last_name" value="Иванов"/>
+            <column name="email" value="ivan.ivanov@restaurant.ru"/>
+            <column name="phone" value="+7-999-123-45-67"/>
+            <column name="role" value="ADMIN"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="employees">
+            <column name="first_name" value="Официант 1"/>
+            <column name="last_name" value="Фамилия о1"/>
+            <column name="email" value="someemail@restaurant.ru"/>
+            <column name="phone" value="+7-999-123-45-68"/>
+            <column name="role" value="WAITER"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="employees">
+            <column name="first_name" value="Kaneki"/>
+            <column name="last_name" value="Ken"/>
+            <column name="email" value="Ken@restaurant.ru"/>
+            <column name="phone" value="+7-999-123-45-69"/>
+            <column name="role" value="WAITER"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="employees">
+            <column name="first_name" value="Kuchizu"/>
+            <column name="last_name" value="Kuchizu"/>
+            <column name="email" value="Kuchizu@restaurant.ru"/>
+            <column name="phone" value="+7-999-123-45-70"/>
+            <column name="role" value="CHEF"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="employees">
+            <column name="first_name" value="Atmosphere"/>
+            <column name="last_name" value="Surname"/>
+            <column name="email" value="Atmosphere@restaurant.ru"/>
+            <column name="phone" value="+7-999-123-45-71"/>
+            <column name="role" value="LOGISTICIAN"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+    </changeSet>
+
+    <!-- Заполнение заказов -->
+    <changeSet id="010-insert-orders" author="restaurant" runAlways="true">
+        <sql>
+            INSERT INTO orders (table_id, waiter_id, status, total_amount, special_requests, created_at)
+            VALUES 
+            ((SELECT id FROM tables WHERE table_number = 3), 
+             (SELECT id FROM employees WHERE role = 'WAITER' LIMIT 1), 
+             'CREATED', 730.00, 'Без лука', NOW()),
+            ((SELECT id FROM tables WHERE table_number = 2), 
+             (SELECT id FROM employees WHERE role = 'WAITER' LIMIT 1), 
+             'IN_KITCHEN', 1350.00, NULL, NOW() - INTERVAL '1 hour'),
+            ((SELECT id FROM tables WHERE table_number = 1), 
+             (SELECT id FROM employees WHERE role = 'WAITER' LIMIT 1), 
+             'CLOSED', 850.00, NULL, NOW() - INTERVAL '2 hours'),
+            ((SELECT id FROM tables WHERE table_number = 4), 
+             (SELECT id FROM employees WHERE role = 'WAITER' LIMIT 1), 
+             'READY', 1120.00, NULL, NOW() - INTERVAL '30 minutes');
+        </sql>
+    </changeSet>
+
+    <!-- Заполнение позиций заказов -->
+    <changeSet id="011-insert-order-items" author="restaurant" runAlways="true">
+        <sql>
+            INSERT INTO order_items (order_id, dish_id, quantity, price, special_request)
+            VALUES 
+            ((SELECT id FROM orders WHERE status = 'CREATED' LIMIT 1),
+             (SELECT id FROM dishes WHERE name = 'Борщ'), 2, 350.00, 'Без лука'),
+            ((SELECT id FROM orders WHERE status = 'CREATED' LIMIT 1),
+             (SELECT id FROM dishes WHERE name = 'Кофе эспрессо'), 1, 150.00, NULL),
+            ((SELECT id FROM orders WHERE status = 'IN_KITCHEN' LIMIT 1),
+             (SELECT id FROM dishes WHERE name = 'Стейк из говядины'), 1, 850.00, NULL),
+            ((SELECT id FROM orders WHERE status = 'IN_KITCHEN' LIMIT 1),
+             (SELECT id FROM dishes WHERE name = 'Греческий салат'), 1, 320.00, NULL),
+            ((SELECT id FROM orders WHERE status = 'IN_KITCHEN' LIMIT 1),
+             (SELECT id FROM dishes WHERE name = 'Кофе эспрессо'), 2, 150.00, NULL),
+            ((SELECT id FROM orders WHERE status = 'CLOSED' LIMIT 1),
+             (SELECT id FROM dishes WHERE name = 'Стейк из говядины'), 1, 850.00, NULL),
+            ((SELECT id FROM orders WHERE status = 'READY' LIMIT 1),
+             (SELECT id FROM dishes WHERE name = 'Куриная грудка с картофелем'), 2, 450.00, NULL),
+            ((SELECT id FROM orders WHERE status = 'READY' LIMIT 1),
+             (SELECT id FROM dishes WHERE name = 'Оливье'), 1, 280.00, NULL);
+        </sql>
+    </changeSet>
+
+    <!-- Заполнение поставщиков -->
+    <changeSet id="012-insert-suppliers" author="restaurant" runAlways="true">
+        <insert tableName="suppliers">
+            <column name="name" value="ООО Мясная компания"/>
+            <column name="address" value="г. Москва, ул. Мясная, д. 1"/>
+            <column name="email" value="info@meat-company.ru"/>
+            <column name="phone" value="+7-495-111-22-33"/>
+            <column name="notes" value="Поставщик мяса и птицы"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="suppliers">
+            <column name="name" value="Овощной склад"/>
+            <column name="address" value="г. Москва, ул. Овощная, д. 5"/>
+            <column name="email" value="info@vegetables.ru"/>
+            <column name="phone" value="+7-495-222-33-44"/>
+            <column name="notes" value="Свежие овощи"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+        <insert tableName="suppliers">
+            <column name="name" value="Кофейная компания"/>
+            <column name="address" value="г. Москва, ул. Кофейная, д. 10"/>
+            <column name="email" value="info@coffee-company.ru"/>
+            <column name="phone" value="+7-495-333-44-55"/>
+            <column name="notes" value="Кофе и чай премиум класса"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+    </changeSet>
+
+    <!-- Заполнение заказов на поставку -->
+    <changeSet id="013-insert-supply-orders" author="restaurant" runAlways="true">
+        <sql>
+            INSERT INTO supply_orders (supplier_id, status, created_at, ordered_at, received_at, notes)
+            VALUES 
+            ((SELECT id FROM suppliers WHERE name = 'ООО Мясная компания'), 
+             'RECEIVED', 
+             NOW() - INTERVAL '7 days',
+             NOW() - INTERVAL '6 days',
+             NOW() - INTERVAL '5 days',
+             'Обычная поставка мяса'),
+            ((SELECT id FROM suppliers WHERE name = 'Овощной склад'), 
+             'IN_TRANSIT', 
+             NOW() - INTERVAL '2 days',
+             NOW() - INTERVAL '1 day',
+             NULL,
+             'Срочная поставка овощей'),
+            ((SELECT id FROM suppliers WHERE name = 'Кофейная компания'), 
+             'CREATED', 
+             NOW(),
+             NULL,
+             NULL,
+             'Планируемая поставка кофе');
+        </sql>
+    </changeSet>
+
+    <!-- Заполнение позиций заказов на поставку -->
+    <changeSet id="014-insert-supply-order-ingredients" author="restaurant" runAlways="true">
+        <sql>
+            INSERT INTO supply_order_ingredients (supply_order_id, ingredient_id, quantity, price_per_unit)
+            VALUES 
+            ((SELECT id FROM supply_orders WHERE status = 'RECEIVED' LIMIT 1),
+             (SELECT id FROM ingredients WHERE name = 'Курица'), 50, 250.00),
+            ((SELECT id FROM supply_orders WHERE status = 'RECEIVED' LIMIT 1),
+             (SELECT id FROM ingredients WHERE name = 'Говядина'), 30, 600.00),
+            ((SELECT id FROM supply_orders WHERE status = 'IN_TRANSIT' LIMIT 1),
+             (SELECT id FROM ingredients WHERE name = 'Помидоры'), 20, 150.00),
+            ((SELECT id FROM supply_orders WHERE status = 'IN_TRANSIT' LIMIT 1),
+             (SELECT id FROM ingredients WHERE name = 'Огурцы'), 15, 120.00),
+            ((SELECT id FROM supply_orders WHERE status = 'CREATED' LIMIT 1),
+             (SELECT id FROM ingredients WHERE name = 'Кофе'), 10, 800.00),
+            ((SELECT id FROM supply_orders WHERE status = 'CREATED' LIMIT 1),
+             (SELECT id FROM ingredients WHERE name = 'Чай'), 5, 500.00);
+        </sql>
+    </changeSet>
+
+    <!-- Заполнение склада -->
+    <changeSet id="015-insert-inventory" author="restaurant" runAlways="true">
+        <sql>
+            INSERT INTO inventory (ingredient_id, quantity, reserved_quantity, price_per_unit, expiry_date, received_date)
+            VALUES 
+            ((SELECT id FROM ingredients WHERE name = 'Курица'), 40, 0, 250.00, CURRENT_DATE + INTERVAL '3 days', CURRENT_DATE - INTERVAL '2 days'),
+            ((SELECT id FROM ingredients WHERE name = 'Говядина'), 25, 0, 600.00, CURRENT_DATE + INTERVAL '5 days', CURRENT_DATE - INTERVAL '2 days'),
+            ((SELECT id FROM ingredients WHERE name = 'Лук'), 30, 0, 80.00, CURRENT_DATE + INTERVAL '7 days', CURRENT_DATE - INTERVAL '1 day'),
+            ((SELECT id FROM ingredients WHERE name = 'Морковь'), 25, 0, 60.00, CURRENT_DATE + INTERVAL '7 days', CURRENT_DATE - INTERVAL '1 day'),
+            ((SELECT id FROM ingredients WHERE name = 'Картофель'), 50, 0, 40.00, CURRENT_DATE + INTERVAL '10 days', CURRENT_DATE - INTERVAL '1 day'),
+            ((SELECT id FROM ingredients WHERE name = 'Помидоры'), 15, 0, 150.00, CURRENT_DATE + INTERVAL '4 days', CURRENT_DATE),
+            ((SELECT id FROM ingredients WHERE name = 'Огурцы'), 12, 0, 120.00, CURRENT_DATE + INTERVAL '4 days', CURRENT_DATE),
+            ((SELECT id FROM ingredients WHERE name = 'Сыр'), 10, 0, 400.00, CURRENT_DATE + INTERVAL '14 days', CURRENT_DATE - INTERVAL '3 days'),
+            ((SELECT id FROM ingredients WHERE name = 'Кофе'), 8, 0, 800.00, CURRENT_DATE + INTERVAL '180 days', CURRENT_DATE - INTERVAL '5 days'),
+            ((SELECT id FROM ingredients WHERE name = 'Чай'), 5, 0, 500.00, CURRENT_DATE + INTERVAL '365 days', CURRENT_DATE - INTERVAL '5 days'),
+            ((SELECT id FROM ingredients WHERE name = 'Сметана'), 20, 0, 200.00, CURRENT_DATE + INTERVAL '5 days', CURRENT_DATE - INTERVAL '1 day'),
+            ((SELECT id FROM ingredients WHERE name = 'Мука'), 30, 0, 50.00, CURRENT_DATE + INTERVAL '90 days', CURRENT_DATE - INTERVAL '10 days'),
+            ((SELECT id FROM ingredients WHERE name = 'Сахар'), 25, 0, 60.00, CURRENT_DATE + INTERVAL '365 days', CURRENT_DATE - INTERVAL '10 days');
+        </sql>
+    </changeSet>
+
+    <!-- Заполнение очереди кухни -->
+    <changeSet id="016-insert-kitchen-queue" author="restaurant" runAlways="true">
+        <sql>
+            INSERT INTO kitchen_queue (order_id, order_item_id, status, created_at, started_at, completed_at)
+            VALUES 
+            ((SELECT id FROM orders WHERE status = 'IN_KITCHEN' LIMIT 1),
+             (SELECT id FROM order_items WHERE order_id = (SELECT id FROM orders WHERE status = 'IN_KITCHEN' LIMIT 1) AND dish_id = (SELECT id FROM dishes WHERE name = 'Стейк из говядины') LIMIT 1),
+             'IN_PROGRESS',
+             NOW() - INTERVAL '30 minutes',
+             NOW() - INTERVAL '20 minutes',
+             NULL),
+            ((SELECT id FROM orders WHERE status = 'IN_KITCHEN' LIMIT 1),
+             (SELECT id FROM order_items WHERE order_id = (SELECT id FROM orders WHERE status = 'IN_KITCHEN' LIMIT 1) AND dish_id = (SELECT id FROM dishes WHERE name = 'Греческий салат') LIMIT 1),
+             'READY',
+             NOW() - INTERVAL '25 minutes',
+             NOW() - INTERVAL '20 minutes',
+             NOW() - INTERVAL '5 minutes'),
+            ((SELECT id FROM orders WHERE status = 'READY' LIMIT 1),
+             (SELECT id FROM order_items WHERE order_id = (SELECT id FROM orders WHERE status = 'READY' LIMIT 1) AND dish_id = (SELECT id FROM dishes WHERE name = 'Куриная грудка с картофелем') LIMIT 1),
+             'READY',
+             NOW() - INTERVAL '20 minutes',
+             NOW() - INTERVAL '15 minutes',
+             NOW() - INTERVAL '5 minutes');
+        </sql>
+    </changeSet>
+
+    <!-- Заполнение чеков -->
+    <changeSet id="017-insert-bills" author="restaurant" runAlways="true">
+        <sql>
+            INSERT INTO bills (order_id, subtotal, discount, tax, total, issued_at, notes)
+            VALUES 
+            ((SELECT id FROM orders WHERE status = 'CLOSED' LIMIT 1),
+             850.00, 0.00, 153.00, 1003.00, NOW() - INTERVAL '1 hour', 'Оплачено картой');
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
