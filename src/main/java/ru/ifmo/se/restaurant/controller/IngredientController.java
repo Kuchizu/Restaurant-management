@@ -4,13 +4,10 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import ru.ifmo.se.restaurant.dto.IngredientDto;
-import ru.ifmo.se.restaurant.mapper.CategoryMapper;
 import ru.ifmo.se.restaurant.repository.IngredientRepository;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/ingredients")
@@ -34,7 +31,7 @@ public class IngredientController {
 
     @GetMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get ingredient by ID")
-    public ResponseEntity<IngredientDto> getIngredient(@PathVariable Long id) {
+    public ResponseEntity<IngredientDto> getIngredient(@PathVariable @NonNull Long id) {
         ru.ifmo.se.restaurant.model.entity.Ingredient ingredient = ingredientRepository.findById(id)
             .orElseThrow(() -> new ru.ifmo.se.restaurant.exception.ResourceNotFoundException("Ingredient not found with id: " + id));
         return ResponseEntity.ok(toDto(ingredient));

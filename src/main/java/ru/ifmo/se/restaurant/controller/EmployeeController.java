@@ -4,12 +4,11 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import ru.ifmo.se.restaurant.dto.EmployeeDto;
 import ru.ifmo.se.restaurant.model.EmployeeRole;
 import ru.ifmo.se.restaurant.repository.EmployeeRepository;
-
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/employees")
@@ -37,7 +36,7 @@ public class EmployeeController {
 
     @GetMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get employee by ID")
-    public ResponseEntity<EmployeeDto> getEmployee(@PathVariable Long id) {
+    public ResponseEntity<EmployeeDto> getEmployee(@PathVariable @NonNull Long id) {
         ru.ifmo.se.restaurant.model.entity.Employee employee = employeeRepository.findById(id)
             .orElseThrow(() -> new ru.ifmo.se.restaurant.exception.ResourceNotFoundException("Employee not found with id: " + id));
         return ResponseEntity.ok(toDto(employee));

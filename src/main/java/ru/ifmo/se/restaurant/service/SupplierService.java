@@ -3,6 +3,7 @@ package ru.ifmo.se.restaurant.service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.se.restaurant.dto.InventoryDto;
@@ -17,7 +18,6 @@ import ru.ifmo.se.restaurant.repository.SupplierRepository;
 import ru.ifmo.se.restaurant.repository.SupplyOrderIngredientRepository;
 import ru.ifmo.se.restaurant.repository.SupplyOrderRepository;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
@@ -54,7 +54,7 @@ public class SupplierService {
         return toSupplierDto(supplierRepository.save(supplier));
     }
 
-    public SupplierDto getSupplierById(Long id) {
+    public SupplierDto getSupplierById(@NonNull Long id) {
         Supplier supplier = supplierRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + id));
         return toSupplierDto(supplier);
@@ -67,7 +67,7 @@ public class SupplierService {
     }
 
     @Transactional
-    public SupplierDto updateSupplier(Long id, SupplierDto dto) {
+    public SupplierDto updateSupplier(@NonNull Long id, SupplierDto dto) {
         Supplier supplier = supplierRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + id));
         supplier.setName(dto.getName());
@@ -79,7 +79,7 @@ public class SupplierService {
     }
 
     @Transactional
-    public void deleteSupplier(Long id) {
+    public void deleteSupplier(@NonNull Long id) {
         Supplier supplier = supplierRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + id));
         supplier.setIsActive(false);
@@ -120,7 +120,7 @@ public class SupplierService {
     }
 
     @Transactional
-    public SupplyOrderDto receiveSupplyOrder(Long orderId) {
+    public SupplyOrderDto receiveSupplyOrder(@NonNull Long orderId) {
         SupplyOrder supplyOrder = supplyOrderRepository.findById(orderId)
             .orElseThrow(() -> new ResourceNotFoundException("Supply order not found with id: " + orderId));
 
@@ -146,7 +146,7 @@ public class SupplierService {
         return toSupplyOrderDto(supplyOrder);
     }
 
-    public SupplyOrderDto getSupplyOrderById(Long id) {
+    public SupplyOrderDto getSupplyOrderById(@NonNull Long id) {
         SupplyOrder supplyOrder = supplyOrderRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Supply order not found with id: " + id));
         return toSupplyOrderDto(supplyOrder);

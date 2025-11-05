@@ -21,7 +21,6 @@ import ru.ifmo.se.restaurant.repository.TableRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Service

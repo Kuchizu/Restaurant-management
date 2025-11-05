@@ -3,6 +3,7 @@ package ru.ifmo.se.restaurant.service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.se.restaurant.dto.TableDto;
@@ -30,7 +31,7 @@ public class TableManagementService {
         return toDto(tableRepository.save(table));
     }
 
-    public TableDto getTableById(Long id) {
+    public TableDto getTableById(@NonNull Long id) {
         Table table = tableRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Table not found with id: " + id));
         return toDto(table);
@@ -49,7 +50,7 @@ public class TableManagementService {
     }
 
     @Transactional
-    public TableDto updateTable(Long id, TableDto dto) {
+    public TableDto updateTable(@NonNull Long id, TableDto dto) {
         Table table = tableRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Table not found with id: " + id));
         table.setTableNumber(dto.getTableNumber());
@@ -62,7 +63,7 @@ public class TableManagementService {
     }
 
     @Transactional
-    public void deleteTable(Long id) {
+    public void deleteTable(@NonNull Long id) {
         Table table = tableRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Table not found with id: " + id));
         table.setIsActive(false);

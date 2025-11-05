@@ -14,9 +14,7 @@ import ru.ifmo.se.restaurant.model.entity.OrderItem;
 import ru.ifmo.se.restaurant.repository.IngredientRepository;
 import ru.ifmo.se.restaurant.repository.InventoryRepository;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service

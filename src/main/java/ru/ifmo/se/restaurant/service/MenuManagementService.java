@@ -16,8 +16,6 @@ import ru.ifmo.se.restaurant.repository.CategoryRepository;
 import ru.ifmo.se.restaurant.repository.DishRepository;
 import ru.ifmo.se.restaurant.repository.IngredientRepository;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
