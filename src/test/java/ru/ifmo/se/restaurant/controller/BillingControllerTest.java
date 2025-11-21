@@ -118,7 +118,7 @@ class BillingControllerTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/billing/orders/" + orderId + "/finalize")
                 .param("discount", "0")
                 .param("notes", "Test bill"))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.total").exists());
     }
@@ -127,7 +127,7 @@ class BillingControllerTest extends BaseIntegrationTest {
     void testFinalizeOrderWithDiscount() throws Exception {
         mockMvc.perform(post("/api/billing/orders/" + orderId + "/finalize")
                 .param("discount", "1.00"))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.discount").value(1.0));
     }
 
