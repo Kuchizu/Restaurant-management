@@ -1,5 +1,8 @@
 package ru.ifmo.se.restaurant.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.se.restaurant.dto.BillDto;
@@ -28,7 +31,7 @@ public class BillingService {
     }
 
     @Transactional
-    public BillDto finalizeOrder(Long orderId, BigDecimal discount, String notes) {
+    public BillDto finalizeOrder(@NonNull Long orderId, BigDecimal discount, String notes) {
         Order order = orderRepository.findById(orderId)
             .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
 
@@ -72,16 +75,68 @@ public class BillingService {
         return toBillDto(savedBill);
     }
 
-    public BillDto getBillByOrderId(Long orderId) {
+    public BillDto getBillByOrderId(@NonNull Long orderId) {
         Bill bill = billRepository.findByOrderId(orderId)
             .orElseThrow(() -> new ResourceNotFoundException("Bill not found for order id: " + orderId));
         return toBillDto(bill);
     }
 
+    public BillDto getBillById(@NonNull Long id) {
+        Bill bill = billRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Bill not found with id: " + id));
+        return toBillDto(bill);
+    }
+
+    public Page<BillDto> getAllBills(int page, int size) {
+        return billRepository.findAll(PageRequest.of(page, Math.min(size, 50)))
+            .map(this::toBillDto);
+    }
+
+    @Transactional
+    public BillDto updateBill(@NonNull Long id, @NonNull BillDto dto) {
+        Bill bill = billRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Bill not found with id: " + id));
+        
+        Order order = bill.getOrder();
+        BigDecimal orderTotal = order.getTotalAmount();
+        
+        if (dto.getDiscount() != null) {
+            if (dto.getDiscount().compareTo(orderTotal) > 0) {
+                throw new BusinessException("Discount cannot exceed order total");
+            }
+            if (dto.getDiscount().compareTo(BigDecimal.ZERO) < 0) {
+                throw new BusinessException("Discount cannot be negative");
+            }
+            
+            bill.setDiscount(dto.getDiscount());
+            BigDecimal subtotal = orderTotal.subtract(dto.getDiscount());
+            BigDecimal tax = subtotal.multiply(TAX_RATE);
+            BigDecimal total = subtotal.add(tax);
+            
+            bill.setSubtotal(subtotal);
+            bill.setTax(tax);
+            bill.setTotal(total);
+        }
+        
+        if (dto.getNotes() != null) {
+            bill.setNotes(dto.getNotes());
+        }
+        
+        return toBillDto(billRepository.save(bill));
+    }
+
+    @Transactional
+    public void deleteBill(@NonNull Long id) {
+        Bill bill = billRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Bill not found with id: " + id));
+        billRepository.delete(bill);
+    }
+
     private BillDto toBillDto(Bill bill) {
         BillDto dto = new BillDto();
         dto.setId(bill.getId());
-        dto.setOrderId(bill.getOrder().getId());
+        Order order = bill.getOrder();
+        dto.setOrderId(order.getId());
         dto.setSubtotal(bill.getSubtotal());
         dto.setDiscount(bill.getDiscount());
         dto.setTax(bill.getTax());

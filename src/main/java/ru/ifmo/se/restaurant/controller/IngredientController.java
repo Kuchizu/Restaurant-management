@@ -50,6 +50,29 @@ public class IngredientController {
             .body(result);
     }
 
+    @PutMapping("/{id}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Update ingredient")
+    public ResponseEntity<IngredientDto> updateIngredient(@PathVariable @NonNull Long id, @Valid @RequestBody IngredientDto dto) {
+        ru.ifmo.se.restaurant.model.entity.Ingredient ingredient = ingredientRepository.findById(id)
+            .orElseThrow(() -> new ru.ifmo.se.restaurant.exception.ResourceNotFoundException("Ingredient not found with id: " + id));
+        
+        ingredient.setName(dto.getName());
+        ingredient.setUnit(dto.getUnit());
+        ingredient = ingredientRepository.save(ingredient);
+        
+        return ResponseEntity.ok(toDto(ingredient));
+    }
+
+    @DeleteMapping("/{id}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Delete ingredient")
+    public ResponseEntity<Void> deleteIngredient(@PathVariable @NonNull Long id) {
+        ru.ifmo.se.restaurant.model.entity.Ingredient ingredient = ingredientRepository.findById(id)
+            .orElseThrow(() -> new ru.ifmo.se.restaurant.exception.ResourceNotFoundException("Ingredient not found with id: " + id));
+        
+        ingredientRepository.delete(ingredient);
+        return ResponseEntity.noContent().build();
+    }
+
     private IngredientDto toDto(ru.ifmo.se.restaurant.model.entity.Ingredient ingredient) {
         IngredientDto dto = new IngredientDto();
         dto.setId(ingredient.getId());

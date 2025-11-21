@@ -66,6 +66,36 @@ public class EmployeeController {
             .map(this::toDto));
     }
 
+    @PutMapping("/{id}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Update employee")
+    public ResponseEntity<EmployeeDto> updateEmployee(@PathVariable @NonNull Long id, @Valid @RequestBody EmployeeDto dto) {
+        ru.ifmo.se.restaurant.model.entity.Employee employee = employeeRepository.findById(id)
+            .orElseThrow(() -> new ru.ifmo.se.restaurant.exception.ResourceNotFoundException("Employee not found with id: " + id));
+        
+        employee.setFirstName(dto.getFirstName());
+        employee.setLastName(dto.getLastName());
+        employee.setEmail(dto.getEmail());
+        employee.setPhone(dto.getPhone());
+        employee.setRole(dto.getRole());
+        if (dto.getIsActive() != null) {
+            employee.setIsActive(dto.getIsActive());
+        }
+        
+        employee = employeeRepository.save(employee);
+        return ResponseEntity.ok(toDto(employee));
+    }
+
+    @DeleteMapping("/{id}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Delete employee (soft delete)")
+    public ResponseEntity<Void> deleteEmployee(@PathVariable @NonNull Long id) {
+        ru.ifmo.se.restaurant.model.entity.Employee employee = employeeRepository.findById(id)
+            .orElseThrow(() -> new ru.ifmo.se.restaurant.exception.ResourceNotFoundException("Employee not found with id: " + id));
+        
+        employee.setIsActive(false);
+        employeeRepository.save(employee);
+        return ResponseEntity.noContent().build();
+    }
+
     private EmployeeDto toDto(ru.ifmo.se.restaurant.model.entity.Employee employee) {
         EmployeeDto dto = new EmployeeDto();
         dto.setId(employee.getId());

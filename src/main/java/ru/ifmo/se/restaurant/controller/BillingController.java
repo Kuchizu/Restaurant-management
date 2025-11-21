@@ -1,6 +1,10 @@
 package ru.ifmo.se.restaurant.controller;
 
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import ru.ifmo.se.restaurant.dto.BillDto;
 import ru.ifmo.se.restaurant.service.BillingService;
@@ -17,19 +21,58 @@ public class BillingController {
         this.billingService = billingService;
     }
 
+    @PostMapping
+    @io.swagger.v3.oas.annotations.Operation(summary = "Create a new bill by finalizing order")
+    public ResponseEntity<BillDto> createBill(
+            @RequestParam @NonNull Long orderId,
+            @RequestParam(required = false) BigDecimal discount,
+            @RequestParam(required = false) String notes) {
+        return new ResponseEntity<>(billingService.finalizeOrder(orderId, discount, notes), HttpStatus.CREATED);
+    }
+
     @PostMapping("/orders/{orderId}/finalize")
     @io.swagger.v3.oas.annotations.Operation(summary = "Finalize order and create bill")
     public ResponseEntity<BillDto> finalizeOrder(
-            @PathVariable Long orderId,
+            @PathVariable @NonNull Long orderId,
             @RequestParam(required = false) BigDecimal discount,
             @RequestParam(required = false) String notes) {
-        return ResponseEntity.ok(billingService.finalizeOrder(orderId, discount, notes));
+        return new ResponseEntity<>(billingService.finalizeOrder(orderId, discount, notes), HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{id}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get bill by ID")
+    public ResponseEntity<BillDto> getBill(@PathVariable @NonNull Long id) {
+        return ResponseEntity.ok(billingService.getBillById(id));
+    }
+
+    @GetMapping
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get all bills with pagination")
+    public ResponseEntity<Page<BillDto>> getAllBills(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Page<BillDto> result = billingService.getAllBills(page, size);
+        return ResponseEntity.ok()
+            .header("X-Total-Count", String.valueOf(result.getTotalElements()))
+            .body(result);
     }
 
     @GetMapping("/orders/{orderId}/bill")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get bill by order ID")
-    public ResponseEntity<BillDto> getBillByOrderId(@PathVariable Long orderId) {
+    public ResponseEntity<BillDto> getBillByOrderId(@PathVariable @NonNull Long orderId) {
         return ResponseEntity.ok(billingService.getBillByOrderId(orderId));
+    }
+
+    @PutMapping("/{id}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Update bill")
+    public ResponseEntity<BillDto> updateBill(@PathVariable @NonNull Long id, @Valid @RequestBody BillDto dto) {
+        return ResponseEntity.ok(billingService.updateBill(id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Delete bill")
+    public ResponseEntity<Void> deleteBill(@PathVariable @NonNull Long id) {
+        billingService.deleteBill(id);
+        return ResponseEntity.noContent().build();
     }
 }
 

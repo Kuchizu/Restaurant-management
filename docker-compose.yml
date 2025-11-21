@@ -22,13 +22,14 @@ services:
       dockerfile: Dockerfile
     container_name: restaurant-app
     ports:
-      - "${APP_PORT:-8080}:8080"
+      - "${APP_PORT:-49999}:49999"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-restaurant_db}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-restaurant_user}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-restaurant_pass}
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SPRING_LIQUIBASE_ENABLED: ${SPRING_LIQUIBASE_ENABLED:-true}
+      SERVER_PORT: 49999
     depends_on:
       postgres:
         condition: service_healthy
