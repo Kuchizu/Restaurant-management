@@ -43,7 +43,7 @@ public class EmployeeController {
     }
 
     @GetMapping
-    @io.swagger.v3.oas.annotations.Operation(summary = "Get all employees with pagination")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get all employees")
     public ResponseEntity<Page<EmployeeDto>> getAllEmployees(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -86,7 +86,7 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{id}")
-    @io.swagger.v3.oas.annotations.Operation(summary = "Delete employee (soft delete)")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Delete employee")
     public ResponseEntity<Void> deleteEmployee(@PathVariable @NonNull Long id) {
         ru.ifmo.se.restaurant.model.entity.Employee employee = employeeRepository.findById(id)
             .orElseThrow(() -> new ru.ifmo.se.restaurant.exception.ResourceNotFoundException("Employee not found with id: " + id));

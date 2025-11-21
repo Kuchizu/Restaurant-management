@@ -35,7 +35,7 @@ public class InventoryController {
     }
 
     @GetMapping
-    @io.swagger.v3.oas.annotations.Operation(summary = "Get all inventory with pagination")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get all inventory items")
     public ResponseEntity<Page<InventoryDto>> getAllInventory(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {

@@ -32,7 +32,7 @@ public class TableController {
     }
 
     @GetMapping
-    @io.swagger.v3.oas.annotations.Operation(summary = "Get all tables with pagination")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get all tables")
     public ResponseEntity<Page<TableDto>> getAllTables(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {

@@ -26,7 +26,7 @@ public class KitchenController {
     }
 
     @GetMapping("/queue/all")
-    @io.swagger.v3.oas.annotations.Operation(summary = "Get all kitchen queue items with pagination")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get all kitchen queue items")
     public ResponseEntity<Page<KitchenQueueDto>> getAllKitchenQueueItems(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {

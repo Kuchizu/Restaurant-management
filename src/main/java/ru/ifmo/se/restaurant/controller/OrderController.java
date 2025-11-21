@@ -40,7 +40,7 @@ public class OrderController {
     }
 
     @GetMapping
-    @io.swagger.v3.oas.annotations.Operation(summary = "Get all orders - infinite scroll (no total count)")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get all orders")
     public ResponseEntity<Page<OrderDto>> getAllOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {

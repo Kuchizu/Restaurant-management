@@ -32,7 +32,7 @@ public class SupplierController {
     }
 
     @GetMapping
-    @io.swagger.v3.oas.annotations.Operation(summary = "Get all suppliers with pagination")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get all suppliers")
     public ResponseEntity<Page<SupplierDto>> getAllSuppliers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -65,7 +65,7 @@ public class SupplierController {
     }
 
     @GetMapping("/supply-orders")
-    @io.swagger.v3.oas.annotations.Operation(summary = "Get all supply orders with pagination")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get all supply orders")
     public ResponseEntity<Page<SupplyOrderDto>> getAllSupplyOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {

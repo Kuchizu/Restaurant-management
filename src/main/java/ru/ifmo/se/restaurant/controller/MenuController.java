@@ -32,7 +32,7 @@ public class MenuController {
     }
 
     @GetMapping("/categories")
-    @io.swagger.v3.oas.annotations.Operation(summary = "Get all categories with pagination")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get all categories")
     public ResponseEntity<Page<CategoryDto>> getAllCategories(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -65,7 +65,7 @@ public class MenuController {
     }
 
     @GetMapping("/dishes")
-    @io.swagger.v3.oas.annotations.Operation(summary = "Get all dishes with pagination")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get all dishes")
     public ResponseEntity<Page<DishDto>> getAllDishes(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
