@@ -5,11 +5,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.ifmo.se.restaurant.BaseIntegrationTest;
 import ru.ifmo.se.restaurant.dto.InventoryDto;
+import ru.ifmo.se.restaurant.exception.BusinessException;
+import ru.ifmo.se.restaurant.model.entity.Category;
+import ru.ifmo.se.restaurant.model.entity.Dish;
 import ru.ifmo.se.restaurant.model.entity.Ingredient;
+import ru.ifmo.se.restaurant.model.entity.OrderItem;
+import ru.ifmo.se.restaurant.repository.CategoryRepository;
+import ru.ifmo.se.restaurant.repository.DishRepository;
 import ru.ifmo.se.restaurant.repository.IngredientRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,6 +27,12 @@ class InventoryServiceTest extends BaseIntegrationTest {
 
     @Autowired
     private IngredientRepository ingredientRepository;
+
+    @Autowired
+    private DishRepository dishRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     private Long ingredientId;
 
@@ -183,6 +197,134 @@ class InventoryServiceTest extends BaseIntegrationTest {
         created.setPricePerUnit(new BigDecimal("2.50"));
         InventoryDto updated = inventoryService.updateInventory(created.getId(), created);
         assertEquals(new BigDecimal("2.50"), updated.getPricePerUnit());
+    }
+
+    @Test
+    void testReserveIngredientsForOrder() {
+        Ingredient ingredient = ingredientRepository.findById(ingredientId).orElseThrow();
+
+        InventoryDto invDto = new InventoryDto();
+        invDto.setIngredientId(ingredientId);
+        invDto.setQuantity(100);
+        invDto.setReservedQuantity(0);
+        invDto.setPricePerUnit(new BigDecimal("2.00"));
+        invDto.setExpiryDate(LocalDate.now().plusDays(30));
+        inventoryService.addInventory(invDto);
+
+        Category category = new Category();
+        category.setName("Test Category");
+        category = categoryRepository.save(category);
+
+        Dish dish = new Dish();
+        dish.setName("Test Dish");
+        dish.setPrice(new BigDecimal("10.00"));
+        dish.setCost(new BigDecimal("5.00"));
+        dish.setCategory(category);
+        dish.setIngredients(List.of(ingredient));
+        dish = dishRepository.save(dish);
+
+        OrderItem orderItem = new OrderItem();
+        orderItem.setDish(dish);
+        orderItem.setQuantity(2);
+        orderItem.setPrice(dish.getPrice());
+
+        List<OrderItem> orderItems = List.of(orderItem);
+
+        assertDoesNotThrow(() -> inventoryService.reserveIngredientsForOrder(orderItems));
+    }
+
+    @Test
+    void testReserveIngredientsWithInsufficientInventory() {
+        Ingredient ingredient = ingredientRepository.findById(ingredientId).orElseThrow();
+
+        InventoryDto invDto = new InventoryDto();
+        invDto.setIngredientId(ingredientId);
+        invDto.setQuantity(1);
+        invDto.setReservedQuantity(0);
+        invDto.setPricePerUnit(new BigDecimal("2.00"));
+        invDto.setExpiryDate(LocalDate.now().plusDays(30));
+        inventoryService.addInventory(invDto);
+
+        Category category = new Category();
+        category.setName("Test Category");
+        category = categoryRepository.save(category);
+
+        Dish dish = new Dish();
+        dish.setName("Test Dish");
+        dish.setPrice(new BigDecimal("10.00"));
+        dish.setCost(new BigDecimal("5.00"));
+        dish.setCategory(category);
+        dish.setIngredients(List.of(ingredient));
+        dish = dishRepository.save(dish);
+
+        OrderItem orderItem = new OrderItem();
+        orderItem.setDish(dish);
+        orderItem.setQuantity(10);
+        orderItem.setPrice(dish.getPrice());
+
+        List<OrderItem> orderItems = List.of(orderItem);
+
+        assertThrows(BusinessException.class, () ->
+            inventoryService.reserveIngredientsForOrder(orderItems));
+    }
+
+    @Test
+    void testConsumeReservedIngredients() {
+        Ingredient ingredient = ingredientRepository.findById(ingredientId).orElseThrow();
+
+        InventoryDto invDto = new InventoryDto();
+        invDto.setIngredientId(ingredientId);
+        invDto.setQuantity(100);
+        invDto.setReservedQuantity(0);
+        invDto.setPricePerUnit(new BigDecimal("2.00"));
+        invDto.setExpiryDate(LocalDate.now().plusDays(30));
+        inventoryService.addInventory(invDto);
+
+        Category category = new Category();
+        category.setName("Test Category");
+        category = categoryRepository.save(category);
+
+        Dish dish = new Dish();
+        dish.setName("Test Dish");
+        dish.setPrice(new BigDecimal("10.00"));
+        dish.setCost(new BigDecimal("5.00"));
+        dish.setCategory(category);
+        dish.setIngredients(List.of(ingredient));
+        dish = dishRepository.save(dish);
+
+        OrderItem orderItem = new OrderItem();
+        orderItem.setDish(dish);
+        orderItem.setQuantity(2);
+        orderItem.setPrice(dish.getPrice());
+
+        List<OrderItem> orderItems = List.of(orderItem);
+
+        inventoryService.reserveIngredientsForOrder(orderItems);
+        assertDoesNotThrow(() -> inventoryService.consumeReservedIngredients(orderItems));
+    }
+
+    @Test
+    void testReserveIngredientsWithEmptyIngredientsList() {
+        Category category = new Category();
+        category.setName("Test Category");
+        category = categoryRepository.save(category);
+
+        Dish dish = new Dish();
+        dish.setName("Test Dish");
+        dish.setPrice(new BigDecimal("10.00"));
+        dish.setCost(new BigDecimal("5.00"));
+        dish.setCategory(category);
+        dish.setIngredients(new ArrayList<>());
+        dish = dishRepository.save(dish);
+
+        OrderItem orderItem = new OrderItem();
+        orderItem.setDish(dish);
+        orderItem.setQuantity(2);
+        orderItem.setPrice(dish.getPrice());
+
+        List<OrderItem> orderItems = List.of(orderItem);
+
+        assertDoesNotThrow(() -> inventoryService.reserveIngredientsForOrder(orderItems));
     }
 }
 
