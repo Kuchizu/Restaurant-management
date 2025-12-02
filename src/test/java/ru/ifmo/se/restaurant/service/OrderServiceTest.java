@@ -128,5 +128,146 @@ class OrderServiceTest extends BaseIntegrationTest {
 
         assertThrows(BusinessException.class, () -> orderService.sendOrderToKitchen(created.getId()));
     }
+
+    @Test
+    void testGetOrderById() {
+        OrderDto order = new OrderDto();
+        order.setTableId(tableId);
+        order.setWaiterId(waiterId);
+        OrderItemDto item = new OrderItemDto();
+        item.setDishId(dishId);
+        item.setQuantity(1);
+        order.setItems(List.of(item));
+        OrderDto created = orderService.createOrder(order);
+
+        OrderDto found = orderService.getOrderById(created.getId());
+        assertNotNull(found);
+        assertEquals(created.getId(), found.getId());
+    }
+
+    @Test
+    void testGetOrderByIdNotFound() {
+        assertThrows(ResourceNotFoundException.class, () -> orderService.getOrderById(99999L));
+    }
+
+    @Test
+    void testGetAllOrders() {
+        OrderDto order = new OrderDto();
+        order.setTableId(tableId);
+        order.setWaiterId(waiterId);
+        order.setItems(new ArrayList<>());
+        orderService.createOrder(order);
+
+        var orders = orderService.getAllOrders(0, 10);
+        assertFalse(orders.isEmpty());
+    }
+
+    @Test
+    void testCloseOrder() {
+        OrderDto order = new OrderDto();
+        order.setTableId(tableId);
+        order.setWaiterId(waiterId);
+        OrderItemDto item = new OrderItemDto();
+        item.setDishId(dishId);
+        item.setQuantity(1);
+        order.setItems(List.of(item));
+        OrderDto created = orderService.createOrder(order);
+
+        assertThrows(BusinessException.class, () ->
+            orderService.closeOrder(created.getId()));
+    }
+
+    @Test
+    void testRemoveItemFromOrder() {
+        OrderDto order = new OrderDto();
+        order.setTableId(tableId);
+        order.setWaiterId(waiterId);
+        OrderItemDto item = new OrderItemDto();
+        item.setDishId(dishId);
+        item.setQuantity(1);
+        order.setItems(List.of(item));
+        OrderDto created = orderService.createOrder(order);
+
+        Long itemId = created.getItems().get(0).getId();
+        orderService.removeItemFromOrder(created.getId(), itemId);
+
+        OrderDto updated = orderService.getOrderById(created.getId());
+        assertTrue(updated.getItems().isEmpty());
+    }
+
+    @Test
+    void testRemoveItemFromOrderNotBelonging() {
+        OrderDto order1 = new OrderDto();
+        order1.setTableId(tableId);
+        order1.setWaiterId(waiterId);
+        OrderItemDto item1 = new OrderItemDto();
+        item1.setDishId(dishId);
+        item1.setQuantity(1);
+        order1.setItems(List.of(item1));
+        OrderDto created1 = orderService.createOrder(order1);
+
+        TableDto table2 = new TableDto();
+        table2.setTableNumber(99);
+        table2.setCapacity(4);
+        TableDto createdTable2 = tableService.createTable(table2);
+
+        OrderDto order2 = new OrderDto();
+        order2.setTableId(createdTable2.getId());
+        order2.setWaiterId(waiterId);
+        OrderItemDto item2 = new OrderItemDto();
+        item2.setDishId(dishId);
+        item2.setQuantity(1);
+        order2.setItems(List.of(item2));
+        OrderDto created2 = orderService.createOrder(order2);
+
+        Long itemId1 = created1.getItems().get(0).getId();
+        assertThrows(BusinessException.class, () ->
+            orderService.removeItemFromOrder(created2.getId(), itemId1));
+    }
+
+    @Test
+    void testRemoveItemFromOrderNotFound() {
+        OrderDto order = new OrderDto();
+        order.setTableId(tableId);
+        order.setWaiterId(waiterId);
+        order.setItems(new ArrayList<>());
+        OrderDto created = orderService.createOrder(order);
+
+        assertThrows(ResourceNotFoundException.class, () ->
+            orderService.removeItemFromOrder(created.getId(), 99999L));
+    }
+
+    @Test
+    void testCloseOrderWithInvalidStatus() {
+        OrderDto order = new OrderDto();
+        order.setTableId(tableId);
+        order.setWaiterId(waiterId);
+        OrderItemDto item = new OrderItemDto();
+        item.setDishId(dishId);
+        item.setQuantity(1);
+        order.setItems(List.of(item));
+        OrderDto created = orderService.createOrder(order);
+        orderService.sendOrderToKitchen(created.getId());
+
+        assertThrows(BusinessException.class, () ->
+            orderService.closeOrder(created.getId()));
+    }
+
+    @Test
+    void testCreateOrderWithOccupiedTable() {
+        OrderDto order1 = new OrderDto();
+        order1.setTableId(tableId);
+        order1.setWaiterId(waiterId);
+        order1.setItems(new ArrayList<>());
+        orderService.createOrder(order1);
+
+        OrderDto order2 = new OrderDto();
+        order2.setTableId(tableId);
+        order2.setWaiterId(waiterId);
+        order2.setItems(new ArrayList<>());
+
+        assertThrows(BusinessException.class, () ->
+            orderService.createOrder(order2));
+    }
 }
 

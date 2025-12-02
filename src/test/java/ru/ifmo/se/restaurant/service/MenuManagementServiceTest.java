@@ -103,5 +103,83 @@ class MenuManagementServiceTest extends BaseIntegrationTest {
         Page<DishDto> dishes = menuService.getAllDishes(0, 10);
         assertTrue(dishes.getTotalElements() >= 1);
     }
+
+    @Test
+    void testUpdateDish() {
+        CategoryDto category = new CategoryDto();
+        category.setName("Starters");
+        CategoryDto createdCategory = menuService.createCategory(category);
+
+        DishDto dish = new DishDto();
+        dish.setName("Garlic Bread");
+        dish.setPrice(new BigDecimal("5.00"));
+        dish.setCost(new BigDecimal("2.00"));
+        dish.setCategoryId(createdCategory.getId());
+        DishDto created = menuService.createDish(dish);
+
+        created.setPrice(new BigDecimal("6.00"));
+        created.setDescription("Fresh garlic bread");
+        DishDto updated = menuService.updateDish(created.getId(), created);
+        assertEquals(new BigDecimal("6.00"), updated.getPrice());
+        assertEquals("Fresh garlic bread", updated.getDescription());
+    }
+
+    @Test
+    void testDeleteDish() {
+        CategoryDto category = new CategoryDto();
+        category.setName("Sides");
+        CategoryDto createdCategory = menuService.createCategory(category);
+
+        DishDto dish = new DishDto();
+        dish.setName("French Fries");
+        dish.setPrice(new BigDecimal("4.00"));
+        dish.setCost(new BigDecimal("1.50"));
+        dish.setCategoryId(createdCategory.getId());
+        DishDto created = menuService.createDish(dish);
+
+        menuService.deleteDish(created.getId());
+        assertThrows(ResourceNotFoundException.class, () -> menuService.getDishById(created.getId()));
+    }
+
+    @Test
+    void testGetDishesByCategory() {
+        CategoryDto category = new CategoryDto();
+        category.setName("Pizza");
+        CategoryDto createdCategory = menuService.createCategory(category);
+
+        DishDto dish = new DishDto();
+        dish.setName("Margherita");
+        dish.setPrice(new BigDecimal("10.00"));
+        dish.setCost(new BigDecimal("4.00"));
+        dish.setCategoryId(createdCategory.getId());
+        menuService.createDish(dish);
+
+        Page<DishDto> dishes = menuService.getDishesByCategory(createdCategory.getId(), 0, 10);
+        assertFalse(dishes.isEmpty());
+    }
+
+    @Test
+    void testGetCategoryNotFound() {
+        assertThrows(ResourceNotFoundException.class, () -> menuService.getCategoryById(99999L));
+    }
+
+    @Test
+    void testGetDishNotFound() {
+        assertThrows(ResourceNotFoundException.class, () -> menuService.getDishById(99999L));
+    }
+
+    @Test
+    void testUpdateCategoryNotFound() {
+        CategoryDto dto = new CategoryDto();
+        dto.setName("Test");
+        assertThrows(ResourceNotFoundException.class, () -> menuService.updateCategory(99999L, dto));
+    }
+
+    @Test
+    void testUpdateDishNotFound() {
+        DishDto dto = new DishDto();
+        dto.setName("Test");
+        assertThrows(ResourceNotFoundException.class, () -> menuService.updateDish(99999L, dto));
+    }
 }
 

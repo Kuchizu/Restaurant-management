@@ -114,13 +114,38 @@ class KitchenServiceTest extends BaseIntegrationTest {
     @Test
     void testUpdateDishStatus() {
         orderService.sendOrderToKitchen(orderId);
-        
+
         List<ru.ifmo.se.restaurant.dto.KitchenQueueDto> queue = kitchenService.getKitchenQueue();
         if (!queue.isEmpty()) {
             Long queueId = queue.get(0).getId();
             ru.ifmo.se.restaurant.dto.KitchenQueueDto updated = kitchenService.updateDishStatus(queueId, DishStatus.IN_PROGRESS);
             assertEquals(DishStatus.IN_PROGRESS, updated.getStatus());
         }
+    }
+
+    @Test
+    void testCompleteDish() {
+        orderService.sendOrderToKitchen(orderId);
+
+        List<ru.ifmo.se.restaurant.dto.KitchenQueueDto> queue = kitchenService.getKitchenQueue();
+        if (!queue.isEmpty()) {
+            Long queueId = queue.get(0).getId();
+            kitchenService.updateDishStatus(queueId, DishStatus.IN_PROGRESS);
+            ru.ifmo.se.restaurant.dto.KitchenQueueDto completed = kitchenService.updateDishStatus(queueId, DishStatus.READY);
+            assertEquals(DishStatus.READY, completed.getStatus());
+        }
+    }
+
+    @Test
+    void testUpdateDishStatusNotFound() {
+        assertThrows(ru.ifmo.se.restaurant.exception.ResourceNotFoundException.class,
+            () -> kitchenService.updateDishStatus(99999L, DishStatus.IN_PROGRESS));
+    }
+
+    @Test
+    void testGetKitchenQueueEmpty() {
+        List<ru.ifmo.se.restaurant.dto.KitchenQueueDto> queue = kitchenService.getKitchenQueue();
+        assertNotNull(queue);
     }
 }
 
