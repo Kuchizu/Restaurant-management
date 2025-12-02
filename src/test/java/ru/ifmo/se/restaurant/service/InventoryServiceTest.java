@@ -74,5 +74,48 @@ class InventoryServiceTest extends BaseIntegrationTest {
         InventoryDto updated = inventoryService.updateInventory(created.getId(), created);
         assertEquals(100, updated.getQuantity());
     }
+
+    @Test
+    void testGetAllInventory() {
+        InventoryDto dto = new InventoryDto();
+        dto.setIngredientId(ingredientId);
+        dto.setQuantity(50);
+        dto.setReservedQuantity(0);
+        dto.setPricePerUnit(new BigDecimal("2.50"));
+        dto.setExpiryDate(LocalDate.now().plusDays(7));
+        inventoryService.addInventory(dto);
+
+        var inventory = inventoryService.getAllInventory(0, 10);
+        assertFalse(inventory.isEmpty());
+    }
+
+    @Test
+    void testGetExpiringInventory() {
+        InventoryDto dto = new InventoryDto();
+        dto.setIngredientId(ingredientId);
+        dto.setQuantity(50);
+        dto.setReservedQuantity(0);
+        dto.setPricePerUnit(new BigDecimal("2.50"));
+        dto.setExpiryDate(LocalDate.now().plusDays(2));
+        inventoryService.addInventory(dto);
+
+        var expiring = inventoryService.getExpiringInventory(LocalDate.now().plusDays(7));
+        assertFalse(expiring.isEmpty());
+    }
+
+    @Test
+    void testDeleteInventory() {
+        InventoryDto dto = new InventoryDto();
+        dto.setIngredientId(ingredientId);
+        dto.setQuantity(50);
+        dto.setReservedQuantity(0);
+        dto.setPricePerUnit(new BigDecimal("2.50"));
+        dto.setExpiryDate(LocalDate.now().plusDays(7));
+        InventoryDto created = inventoryService.addInventory(dto);
+
+        inventoryService.deleteInventory(created.getId());
+        assertThrows(ru.ifmo.se.restaurant.exception.ResourceNotFoundException.class, () ->
+            inventoryService.getInventoryById(created.getId()));
+    }
 }
 

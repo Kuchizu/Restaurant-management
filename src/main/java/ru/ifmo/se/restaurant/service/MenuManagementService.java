@@ -36,7 +36,6 @@ public class MenuManagementService {
         this.categoryMapper = categoryMapper;
     }
 
-    // Category CRUD
     @Transactional
     public CategoryDto createCategory(CategoryDto dto) {
         Category category = categoryMapper.toEntity(dto);
@@ -74,7 +73,6 @@ public class MenuManagementService {
         categoryRepository.delete(category);
     }
 
-    // Dish CRUD
     @Transactional
     public DishDto createDish(DishDto dto) {
         Category category = categoryRepository.findById(dto.getCategoryId())
