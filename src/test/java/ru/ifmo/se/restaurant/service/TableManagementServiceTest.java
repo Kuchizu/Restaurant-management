@@ -85,8 +85,67 @@ class TableManagementServiceTest extends BaseIntegrationTest {
         TableDto created = tableService.createTable(table);
 
         tableService.deleteTable(created.getId());
-        // Table should be inactive but still retrievable
         assertDoesNotThrow(() -> tableService.getTableById(created.getId()));
+    }
+
+    @Test
+    void testGetTableByIdNotFound() {
+        assertThrows(ResourceNotFoundException.class, () ->
+            tableService.getTableById(99999L));
+    }
+
+    @Test
+    void testUpdateTableNotFound() {
+        TableDto dto = new TableDto();
+        dto.setTableNumber(99);
+        dto.setCapacity(4);
+        assertThrows(ResourceNotFoundException.class, () ->
+            tableService.updateTable(99999L, dto));
+    }
+
+    @Test
+    void testDeleteTableNotFound() {
+        assertThrows(ResourceNotFoundException.class, () ->
+            tableService.deleteTable(99999L));
+    }
+
+    @Test
+    void testGetTablesByStatusFree() {
+        TableDto table = new TableDto();
+        table.setTableNumber(16);
+        table.setCapacity(2);
+        table.setLocation("Corner");
+        table.setStatus(TableStatus.FREE);
+        tableService.createTable(table);
+
+        Page<TableDto> freeTables = tableService.getTablesByStatus(TableStatus.FREE, 0, 10);
+        assertTrue(freeTables.getTotalElements() >= 1);
+    }
+
+    @Test
+    void testCreateTableWithDefaultStatus() {
+        TableDto table = new TableDto();
+        table.setTableNumber(17);
+        table.setCapacity(4);
+        table.setLocation("Center");
+
+        TableDto created = tableService.createTable(table);
+        assertNotNull(created.getId());
+        assertEquals(17, created.getTableNumber());
+    }
+
+    @Test
+    void testUpdateTableStatus() {
+        TableDto table = new TableDto();
+        table.setTableNumber(18);
+        table.setCapacity(4);
+        table.setLocation("Window");
+        table.setStatus(TableStatus.FREE);
+        TableDto created = tableService.createTable(table);
+
+        created.setStatus(TableStatus.RESERVED);
+        TableDto updated = tableService.updateTable(created.getId(), created);
+        assertEquals(TableStatus.RESERVED, updated.getStatus());
     }
 }
 

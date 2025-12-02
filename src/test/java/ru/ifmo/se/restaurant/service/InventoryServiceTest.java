@@ -117,5 +117,72 @@ class InventoryServiceTest extends BaseIntegrationTest {
         assertThrows(ru.ifmo.se.restaurant.exception.ResourceNotFoundException.class, () ->
             inventoryService.getInventoryById(created.getId()));
     }
+
+    @Test
+    void testAddInventoryWithInvalidIngredient() {
+        InventoryDto dto = new InventoryDto();
+        dto.setIngredientId(99999L);
+        dto.setQuantity(50);
+        dto.setReservedQuantity(0);
+        dto.setPricePerUnit(new BigDecimal("2.50"));
+        dto.setExpiryDate(LocalDate.now().plusDays(7));
+
+        assertThrows(ru.ifmo.se.restaurant.exception.ResourceNotFoundException.class, () ->
+            inventoryService.addInventory(dto));
+    }
+
+    @Test
+    void testUpdateInventoryNotFound() {
+        InventoryDto dto = new InventoryDto();
+        dto.setQuantity(100);
+        dto.setReservedQuantity(0);
+        dto.setPricePerUnit(new BigDecimal("3.00"));
+        dto.setExpiryDate(LocalDate.now().plusDays(10));
+
+        assertThrows(ru.ifmo.se.restaurant.exception.ResourceNotFoundException.class, () ->
+            inventoryService.updateInventory(99999L, dto));
+    }
+
+    @Test
+    void testDeleteInventoryNotFound() {
+        assertThrows(ru.ifmo.se.restaurant.exception.ResourceNotFoundException.class, () ->
+            inventoryService.deleteInventory(99999L));
+    }
+
+    @Test
+    void testGetInventoryByIdNotFound() {
+        assertThrows(ru.ifmo.se.restaurant.exception.ResourceNotFoundException.class, () ->
+            inventoryService.getInventoryById(99999L));
+    }
+
+    @Test
+    void testAddInventoryWithDefaultReceivedDate() {
+        InventoryDto dto = new InventoryDto();
+        dto.setIngredientId(ingredientId);
+        dto.setQuantity(75);
+        dto.setReservedQuantity(0);
+        dto.setPricePerUnit(new BigDecimal("3.00"));
+        dto.setExpiryDate(LocalDate.now().plusDays(14));
+
+        InventoryDto created = inventoryService.addInventory(dto);
+        assertNotNull(created.getId());
+        assertEquals(75, created.getQuantity());
+        assertNotNull(created.getReceivedDate());
+    }
+
+    @Test
+    void testUpdateInventoryWithPriceChange() {
+        InventoryDto dto = new InventoryDto();
+        dto.setIngredientId(ingredientId);
+        dto.setQuantity(100);
+        dto.setReservedQuantity(0);
+        dto.setPricePerUnit(new BigDecimal("2.00"));
+        dto.setExpiryDate(LocalDate.now().plusDays(7));
+        InventoryDto created = inventoryService.addInventory(dto);
+
+        created.setPricePerUnit(new BigDecimal("2.50"));
+        InventoryDto updated = inventoryService.updateInventory(created.getId(), created);
+        assertEquals(new BigDecimal("2.50"), updated.getPricePerUnit());
+    }
 }
 
