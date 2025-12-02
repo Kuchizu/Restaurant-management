@@ -1,14 +1,14 @@
 spring:
   datasource:
-    hikari:
-      # Shorter timeouts for faster test cleanup
-      connection-timeout: 5000
-      max-lifetime: 60000
-      validation-timeout: 3000
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
   jpa:
     hibernate:
       ddl-auto: create-drop
     show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
   liquibase:
     enabled: false
 
