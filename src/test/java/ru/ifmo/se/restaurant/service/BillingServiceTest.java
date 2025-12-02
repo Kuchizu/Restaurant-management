@@ -116,8 +116,84 @@ class BillingServiceTest extends BaseIntegrationTest {
         order.setStatus(OrderStatus.CREATED);
         orderRepository.save(order);
 
-        assertThrows(BusinessException.class, () -> 
+        assertThrows(BusinessException.class, () ->
             billingService.finalizeOrder(orderId, BigDecimal.ZERO, null));
+    }
+
+    @Test
+    void testFinalizeOrderAlreadyFinalized() {
+        billingService.finalizeOrder(orderId, BigDecimal.ZERO, null);
+        assertThrows(BusinessException.class, () ->
+            billingService.finalizeOrder(orderId, BigDecimal.ZERO, null));
+    }
+
+    @Test
+    void testFinalizeOrderExcessiveDiscount() {
+        assertThrows(BusinessException.class, () ->
+            billingService.finalizeOrder(orderId, new BigDecimal("1000"), null));
+    }
+
+    @Test
+    void testGetBillByOrderId() {
+        billingService.finalizeOrder(orderId, BigDecimal.ZERO, "Test");
+        BillDto bill = billingService.getBillByOrderId(orderId);
+        assertNotNull(bill);
+        assertEquals(orderId, bill.getOrderId());
+    }
+
+    @Test
+    void testGetBillById() {
+        BillDto created = billingService.finalizeOrder(orderId, BigDecimal.ZERO, "Test");
+        BillDto bill = billingService.getBillById(created.getId());
+        assertNotNull(bill);
+        assertEquals(created.getId(), bill.getId());
+    }
+
+    @Test
+    void testGetAllBills() {
+        billingService.finalizeOrder(orderId, BigDecimal.ZERO, "Test");
+        var bills = billingService.getAllBills(0, 10);
+        assertFalse(bills.isEmpty());
+    }
+
+    @Test
+    void testUpdateBill() {
+        BillDto created = billingService.finalizeOrder(orderId, BigDecimal.ZERO, "Original");
+        BillDto update = new BillDto();
+        update.setDiscount(new BigDecimal("1.00"));
+        update.setNotes("Updated");
+
+        BillDto updated = billingService.updateBill(created.getId(), update);
+        assertEquals(new BigDecimal("1.00"), updated.getDiscount());
+        assertEquals("Updated", updated.getNotes());
+    }
+
+    @Test
+    void testUpdateBillNegativeDiscount() {
+        BillDto created = billingService.finalizeOrder(orderId, BigDecimal.ZERO, "Test");
+        BillDto update = new BillDto();
+        update.setDiscount(new BigDecimal("-1.00"));
+
+        assertThrows(BusinessException.class, () ->
+            billingService.updateBill(created.getId(), update));
+    }
+
+    @Test
+    void testUpdateBillExcessiveDiscount() {
+        BillDto created = billingService.finalizeOrder(orderId, BigDecimal.ZERO, "Test");
+        BillDto update = new BillDto();
+        update.setDiscount(new BigDecimal("1000"));
+
+        assertThrows(BusinessException.class, () ->
+            billingService.updateBill(created.getId(), update));
+    }
+
+    @Test
+    void testDeleteBill() {
+        BillDto created = billingService.finalizeOrder(orderId, BigDecimal.ZERO, "Test");
+        billingService.deleteBill(created.getId());
+        assertThrows(ru.ifmo.se.restaurant.exception.ResourceNotFoundException.class, () ->
+            billingService.getBillById(created.getId()));
     }
 }
 
