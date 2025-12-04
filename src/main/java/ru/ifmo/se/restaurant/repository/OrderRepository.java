@@ -35,6 +35,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByDateRange(@Param("startDate") LocalDateTime startDate,
                                @Param("endDate") LocalDateTime endDate);
 
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.items i LEFT JOIN FETCH i.dish WHERE o.createdAt BETWEEN :startDate AND :endDate")
+    List<Order> findByDateRangeWithItems(@Param("startDate") LocalDateTime startDate,
+                                        @Param("endDate") LocalDateTime endDate);
+
     @EntityGraph(attributePaths = {"table", "waiter"})
     @Query("SELECT o FROM Order o WHERE o.status IN :statuses")
     List<Order> findByStatuses(@Param("statuses") List<OrderStatus> statuses);
