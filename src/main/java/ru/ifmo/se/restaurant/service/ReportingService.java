@@ -45,13 +45,12 @@ public class ReportingService {
     }
 
     public Map<String, Object> getPopularDishes(LocalDateTime startDate, LocalDateTime endDate, int limit) {
-        List<Order> orders = orderRepository.findByDateRange(startDate, endDate);
+        List<Order> orders = orderRepository.findByDateRangeWithItems(startDate, endDate);
         Map<Long, Integer> dishQuantityMap = new HashMap<>();
         Map<Long, Dish> dishMap = new HashMap<>();
 
         for (Order order : orders) {
-            List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
-            for (OrderItem item : items) {
+            for (OrderItem item : order.getItems()) {
                 if (item.getDish() == null || item.getDish().getId() == null) {
                     continue;
                 }
@@ -83,13 +82,12 @@ public class ReportingService {
 
     public Map<String, Object> getProfitability(LocalDateTime startDate, LocalDateTime endDate) {
         BigDecimal revenue = getRevenue(startDate, endDate);
-        
-        List<Order> orders = orderRepository.findByDateRange(startDate, endDate);
+
+        List<Order> orders = orderRepository.findByDateRangeWithItems(startDate, endDate);
         BigDecimal totalCost = BigDecimal.ZERO;
-        
+
         for (Order order : orders) {
-            List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
-            for (OrderItem item : items) {
+            for (OrderItem item : order.getItems()) {
                 if (item.getDish() == null || item.getDish().getCost() == null) {
                     continue;
                 }
@@ -115,14 +113,13 @@ public class ReportingService {
 
     public Page<DishDto> getDishesByRevenue(int page, int size, LocalDateTime startDate, LocalDateTime endDate) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
-        List<Order> orders = orderRepository.findByDateRange(startDate, endDate);
-        
+        List<Order> orders = orderRepository.findByDateRangeWithItems(startDate, endDate);
+
         Map<Long, BigDecimal> dishRevenueMap = new HashMap<>();
         Map<Long, Dish> dishMap = new HashMap<>();
 
         for (Order order : orders) {
-            List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
-            for (OrderItem item : items) {
+            for (OrderItem item : order.getItems()) {
                 if (item.getDish() == null || item.getDish().getId() == null || item.getPrice() == null) {
                     continue;
                 }
