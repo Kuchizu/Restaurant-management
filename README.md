@@ -30,14 +30,17 @@
 ```bash
 docker-compose up --build
 ```
-
-Приложение будет доступно на `http://localhost:8080`
+или на более новой версии Docker:
+```sh
+docker compose up --build
+```
+Приложение будет доступно на `http://localhost:49999`
 
 ## API
 
 Swagger документация:
-- Swagger UI: http://localhost:8080/swagger-ui.html
-- OpenAPI JSON: http://localhost:8080/api-docs
+- Swagger UI: http://localhost:49999/swagger-ui.html
+- OpenAPI JSON: http://localhost:49999/api-docs
 
 ## Тесты
 
