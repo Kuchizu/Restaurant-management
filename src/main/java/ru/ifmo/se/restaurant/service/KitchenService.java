@@ -80,7 +80,7 @@ public class KitchenService {
             .allMatch(item -> item.getStatus() == DishStatus.READY || item.getStatus() == DishStatus.SERVED);
 
         if (allReady && order.getStatus() == OrderStatus.IN_KITCHEN) {
-            order.setStatus(OrderStatus.PREPARING);
+            order.setStatus(OrderStatus.READY);
             orderRepository.save(order);
         }
     }
