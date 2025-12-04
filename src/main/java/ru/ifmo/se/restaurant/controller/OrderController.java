@@ -1,5 +1,6 @@
 package ru.ifmo.se.restaurant.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -46,7 +47,8 @@ public class OrderController {
         @ApiResponse(responseCode = "404", description = "Resource not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<OrderDto> getOrder(@PathVariable @NonNull Long id) {
+    public ResponseEntity<OrderDto> getOrder(
+            @Parameter(description = "Order ID", required = true, example = "1") @PathVariable @NonNull Long id) {
         return ResponseEntity.ok(orderService.getOrderById(id));
     }
 
@@ -58,8 +60,8 @@ public class OrderController {
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     public ResponseEntity<Page<OrderDto>> getAllOrders(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(orderService.getAllOrders(page, size));
     }
 
@@ -70,7 +72,7 @@ public class OrderController {
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     public ResponseEntity<OrderDto> addItemToOrder(
-            @PathVariable Long orderId,
+            @Parameter(description = "Order ID", required = true, example = "1") @PathVariable Long orderId,
             @Valid @RequestBody OrderItemDto itemDto) {
         return ResponseEntity.ok(orderService.addItemToOrder(orderId, itemDto));
     }
@@ -82,8 +84,8 @@ public class OrderController {
         @ApiResponse(responseCode = "404", description = "Resource not found")
     })
     public ResponseEntity<Void> removeItemFromOrder(
-            @PathVariable Long orderId,
-            @PathVariable Long itemId) {
+            @Parameter(description = "Order ID", required = true, example = "1") @PathVariable Long orderId,
+            @Parameter(description = "Item ID", required = true, example = "1") @PathVariable Long itemId) {
         orderService.removeItemFromOrder(orderId, itemId);
         return ResponseEntity.noContent().build();
     }
@@ -94,7 +96,8 @@ public class OrderController {
         @ApiResponse(responseCode = "201", description = "Created"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<OrderDto> sendOrderToKitchen(@PathVariable Long orderId) {
+    public ResponseEntity<OrderDto> sendOrderToKitchen(
+            @Parameter(description = "Order ID", required = true, example = "1") @PathVariable Long orderId) {
         return ResponseEntity.ok(orderService.sendOrderToKitchen(orderId));
     }
 
@@ -104,7 +107,8 @@ public class OrderController {
         @ApiResponse(responseCode = "201", description = "Created"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<OrderDto> closeOrder(@PathVariable Long orderId) {
+    public ResponseEntity<OrderDto> closeOrder(
+            @Parameter(description = "Order ID", required = true, example = "1") @PathVariable Long orderId) {
         return ResponseEntity.ok(orderService.closeOrder(orderId));
     }
 }

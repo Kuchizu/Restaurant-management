@@ -1,5 +1,6 @@
 package ru.ifmo.se.restaurant.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -47,7 +48,8 @@ public class EmployeeController {
         @ApiResponse(responseCode = "404", description = "Resource not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<EmployeeDto> getEmployee(@PathVariable @NonNull Long id) {
+    public ResponseEntity<EmployeeDto> getEmployee(
+            @Parameter(description = "Employee ID", required = true, example = "1") @PathVariable @NonNull Long id) {
         ru.ifmo.se.restaurant.model.entity.Employee employee = employeeRepository.findById(id)
             .orElseThrow(() -> new ru.ifmo.se.restaurant.exception.ResourceNotFoundException("Employee not found with id: " + id));
         return ResponseEntity.ok(toDto(employee));
@@ -61,8 +63,8 @@ public class EmployeeController {
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     public ResponseEntity<Page<EmployeeDto>> getAllEmployees(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size) {
         Page<EmployeeDto> result = employeeRepository.findByIsActiveTrue(
             org.springframework.data.domain.PageRequest.of(page, Math.min(size, 50)))
             .map(this::toDto);
@@ -79,9 +81,9 @@ public class EmployeeController {
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     public ResponseEntity<Page<EmployeeDto>> getEmployeesByRole(
-            @PathVariable EmployeeRole role,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @Parameter(description = "Employee role", required = true, example = "WAITER") @PathVariable EmployeeRole role,
+            @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(employeeRepository.findByRoleAndIsActiveTrue(role,
             org.springframework.data.domain.PageRequest.of(page, Math.min(size, 50)))
             .map(this::toDto));
@@ -94,7 +96,9 @@ public class EmployeeController {
         @ApiResponse(responseCode = "404", description = "Resource not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<EmployeeDto> updateEmployee(@PathVariable @NonNull Long id, @Valid @RequestBody EmployeeDto dto) {
+    public ResponseEntity<EmployeeDto> updateEmployee(
+            @Parameter(description = "Employee ID", required = true, example = "1") @PathVariable @NonNull Long id,
+            @Valid @RequestBody EmployeeDto dto) {
         ru.ifmo.se.restaurant.model.entity.Employee employee = employeeRepository.findById(id)
             .orElseThrow(() -> new ru.ifmo.se.restaurant.exception.ResourceNotFoundException("Employee not found with id: " + id));
 
@@ -117,7 +121,8 @@ public class EmployeeController {
         @ApiResponse(responseCode = "204", description = "No content"),
         @ApiResponse(responseCode = "404", description = "Resource not found")
     })
-    public ResponseEntity<Void> deleteEmployee(@PathVariable @NonNull Long id) {
+    public ResponseEntity<Void> deleteEmployee(
+            @Parameter(description = "Employee ID", required = true, example = "1") @PathVariable @NonNull Long id) {
         ru.ifmo.se.restaurant.model.entity.Employee employee = employeeRepository.findById(id)
             .orElseThrow(() -> new ru.ifmo.se.restaurant.exception.ResourceNotFoundException("Employee not found with id: " + id));
 

@@ -1,5 +1,6 @@
 package ru.ifmo.se.restaurant.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -38,7 +39,8 @@ public class MenuController {
         @ApiResponse(responseCode = "404", description = "Resource not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<CategoryDto> getCategory(@PathVariable Long id) {
+    public ResponseEntity<CategoryDto> getCategory(
+            @Parameter(description = "Category ID", required = true, example = "1") @PathVariable Long id) {
         return ResponseEntity.ok(menuService.getCategoryById(id));
     }
 
@@ -50,8 +52,8 @@ public class MenuController {
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     public ResponseEntity<Page<CategoryDto>> getAllCategories(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(menuService.getAllCategories(page, size));
     }
 
@@ -62,7 +64,9 @@ public class MenuController {
         @ApiResponse(responseCode = "404", description = "Resource not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<CategoryDto> updateCategory(@PathVariable Long id, @Valid @RequestBody CategoryDto dto) {
+    public ResponseEntity<CategoryDto> updateCategory(
+            @Parameter(description = "Category ID", required = true, example = "1") @PathVariable Long id,
+            @Valid @RequestBody CategoryDto dto) {
         return ResponseEntity.ok(menuService.updateCategory(id, dto));
     }
 
@@ -72,7 +76,8 @@ public class MenuController {
         @ApiResponse(responseCode = "204", description = "No content"),
         @ApiResponse(responseCode = "404", description = "Resource not found")
     })
-    public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCategory(
+            @Parameter(description = "Category ID", required = true, example = "1") @PathVariable Long id) {
         menuService.deleteCategory(id);
         return ResponseEntity.noContent().build();
     }
@@ -94,7 +99,8 @@ public class MenuController {
         @ApiResponse(responseCode = "404", description = "Resource not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<DishDto> getDish(@PathVariable Long id) {
+    public ResponseEntity<DishDto> getDish(
+            @Parameter(description = "Dish ID", required = true, example = "1") @PathVariable Long id) {
         return ResponseEntity.ok(menuService.getDishById(id));
     }
 
@@ -106,8 +112,8 @@ public class MenuController {
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     public ResponseEntity<Page<DishDto>> getAllDishes(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(menuService.getAllDishes(page, size));
     }
 
@@ -119,9 +125,9 @@ public class MenuController {
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     public ResponseEntity<Page<DishDto>> getDishesByCategory(
-            @PathVariable Long categoryId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @Parameter(description = "Category ID", required = true, example = "1") @PathVariable Long categoryId,
+            @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(menuService.getDishesByCategory(categoryId, page, size));
     }
 
@@ -132,7 +138,9 @@ public class MenuController {
         @ApiResponse(responseCode = "404", description = "Resource not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<DishDto> updateDish(@PathVariable Long id, @Valid @RequestBody DishDto dto) {
+    public ResponseEntity<DishDto> updateDish(
+            @Parameter(description = "Dish ID", required = true, example = "1") @PathVariable Long id,
+            @Valid @RequestBody DishDto dto) {
         return ResponseEntity.ok(menuService.updateDish(id, dto));
     }
 
@@ -142,7 +150,8 @@ public class MenuController {
         @ApiResponse(responseCode = "204", description = "No content"),
         @ApiResponse(responseCode = "404", description = "Resource not found")
     })
-    public ResponseEntity<Void> deleteDish(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteDish(
+            @Parameter(description = "Dish ID", required = true, example = "1") @PathVariable Long id) {
         menuService.deleteDish(id);
         return ResponseEntity.noContent().build();
     }

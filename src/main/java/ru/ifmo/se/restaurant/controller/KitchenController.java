@@ -1,5 +1,6 @@
 package ru.ifmo.se.restaurant.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.data.domain.Page;
@@ -40,8 +41,8 @@ public class KitchenController {
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     public ResponseEntity<Page<KitchenQueueDto>> getAllKitchenQueueItems(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(kitchenService.getAllKitchenQueueItems(page, size));
     }
 
@@ -53,8 +54,8 @@ public class KitchenController {
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     public ResponseEntity<KitchenQueueDto> updateDishStatus(
-            @PathVariable Long queueId,
-            @RequestParam DishStatus status) {
+            @Parameter(description = "Queue ID", required = true, example = "1") @PathVariable Long queueId,
+            @Parameter(description = "Dish status", example = "PREPARING") @RequestParam DishStatus status) {
         return ResponseEntity.ok(kitchenService.updateDishStatus(queueId, status));
     }
 }
