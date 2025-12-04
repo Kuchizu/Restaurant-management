@@ -1,5 +1,7 @@
 package ru.ifmo.se.restaurant.controller;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -21,18 +23,32 @@ public class SupplierController {
 
     @PostMapping
     @io.swagger.v3.oas.annotations.Operation(summary = "Create a new supplier")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Created"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<SupplierDto> createSupplier(@Valid @RequestBody SupplierDto dto) {
         return new ResponseEntity<>(supplierService.createSupplier(dto), HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get supplier by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<SupplierDto> getSupplier(@PathVariable Long id) {
         return ResponseEntity.ok(supplierService.getSupplierById(id));
     }
 
     @GetMapping
     @io.swagger.v3.oas.annotations.Operation(summary = "Get all suppliers")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<Page<SupplierDto>> getAllSuppliers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -41,12 +57,21 @@ public class SupplierController {
 
     @PutMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Update supplier")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<SupplierDto> updateSupplier(@PathVariable Long id, @Valid @RequestBody SupplierDto dto) {
         return ResponseEntity.ok(supplierService.updateSupplier(id, dto));
     }
 
     @DeleteMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Delete supplier")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "No content"),
+        @ApiResponse(responseCode = "404", description = "Resource not found")
+    })
     public ResponseEntity<Void> deleteSupplier(@PathVariable Long id) {
         supplierService.deleteSupplier(id);
         return ResponseEntity.noContent().build();
@@ -54,18 +79,32 @@ public class SupplierController {
 
     @PostMapping("/supply-orders")
     @io.swagger.v3.oas.annotations.Operation(summary = "Create a new supply order")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Created"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<SupplyOrderDto> createSupplyOrder(@Valid @RequestBody SupplyOrderDto dto) {
         return new ResponseEntity<>(supplierService.createSupplyOrder(dto), HttpStatus.CREATED);
     }
 
     @GetMapping("/supply-orders/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get supply order by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<SupplyOrderDto> getSupplyOrder(@PathVariable Long id) {
         return ResponseEntity.ok(supplierService.getSupplyOrderById(id));
     }
 
     @GetMapping("/supply-orders")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get all supply orders")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<Page<SupplyOrderDto>> getAllSupplyOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -74,6 +113,10 @@ public class SupplierController {
 
     @PostMapping("/supply-orders/{orderId}/receive")
     @io.swagger.v3.oas.annotations.Operation(summary = "Receive supply order")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Created"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<SupplyOrderDto> receiveSupplyOrder(@PathVariable Long orderId) {
         return ResponseEntity.ok(supplierService.receiveSupplyOrder(orderId));
     }

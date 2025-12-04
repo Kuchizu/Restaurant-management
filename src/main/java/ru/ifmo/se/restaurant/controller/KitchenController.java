@@ -1,5 +1,7 @@
 package ru.ifmo.se.restaurant.controller;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,12 +23,22 @@ public class KitchenController {
 
     @GetMapping("/queue")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get kitchen queue")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<List<KitchenQueueDto>> getKitchenQueue() {
         return ResponseEntity.ok(kitchenService.getKitchenQueue());
     }
 
     @GetMapping("/queue/all")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get all kitchen queue items")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<Page<KitchenQueueDto>> getAllKitchenQueueItems(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -35,6 +47,11 @@ public class KitchenController {
 
     @PatchMapping("/queue/{queueId}/status")
     @io.swagger.v3.oas.annotations.Operation(summary = "Update dish status")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<KitchenQueueDto> updateDishStatus(
             @PathVariable Long queueId,
             @RequestParam DishStatus status) {

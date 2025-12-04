@@ -1,5 +1,7 @@
 package ru.ifmo.se.restaurant.controller;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,10 @@ public class IngredientController {
 
     @PostMapping
     @io.swagger.v3.oas.annotations.Operation(summary = "Create a new ingredient")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Created"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<IngredientDto> createIngredient(@Valid @RequestBody IngredientDto dto) {
         ru.ifmo.se.restaurant.model.entity.Ingredient ingredient = new ru.ifmo.se.restaurant.model.entity.Ingredient();
         ingredient.setName(dto.getName());
@@ -31,6 +37,11 @@ public class IngredientController {
 
     @GetMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get ingredient by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<IngredientDto> getIngredient(@PathVariable @NonNull Long id) {
         ru.ifmo.se.restaurant.model.entity.Ingredient ingredient = ingredientRepository.findById(id)
             .orElseThrow(() -> new ru.ifmo.se.restaurant.exception.ResourceNotFoundException("Ingredient not found with id: " + id));
@@ -39,6 +50,11 @@ public class IngredientController {
 
     @GetMapping
     @io.swagger.v3.oas.annotations.Operation(summary = "Get all ingredients")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<Page<IngredientDto>> getAllIngredients(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -52,23 +68,32 @@ public class IngredientController {
 
     @PutMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Update ingredient")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<IngredientDto> updateIngredient(@PathVariable @NonNull Long id, @Valid @RequestBody IngredientDto dto) {
         ru.ifmo.se.restaurant.model.entity.Ingredient ingredient = ingredientRepository.findById(id)
             .orElseThrow(() -> new ru.ifmo.se.restaurant.exception.ResourceNotFoundException("Ingredient not found with id: " + id));
-        
+
         ingredient.setName(dto.getName());
         ingredient.setUnit(dto.getUnit());
         ingredient = ingredientRepository.save(ingredient);
-        
+
         return ResponseEntity.ok(toDto(ingredient));
     }
 
     @DeleteMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Delete ingredient")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "No content"),
+        @ApiResponse(responseCode = "404", description = "Resource not found")
+    })
     public ResponseEntity<Void> deleteIngredient(@PathVariable @NonNull Long id) {
         ru.ifmo.se.restaurant.model.entity.Ingredient ingredient = ingredientRepository.findById(id)
             .orElseThrow(() -> new ru.ifmo.se.restaurant.exception.ResourceNotFoundException("Ingredient not found with id: " + id));
-        
+
         ingredientRepository.delete(ingredient);
         return ResponseEntity.noContent().build();
     }

@@ -1,5 +1,7 @@
 package ru.ifmo.se.restaurant.controller;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,11 @@ public class ReportingController {
 
     @GetMapping("/revenue")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get revenue for date range")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<Map<String, Object>> getRevenue(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
@@ -36,6 +43,11 @@ public class ReportingController {
 
     @GetMapping("/popular-dishes")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get popular dishes")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<Map<String, Object>> getPopularDishes(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
@@ -45,6 +57,11 @@ public class ReportingController {
 
     @GetMapping("/profitability")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get profitability report")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<Map<String, Object>> getProfitability(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
@@ -53,6 +70,11 @@ public class ReportingController {
 
     @GetMapping("/dishes-by-revenue")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get dishes sorted by revenue")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<Page<DishDto>> getDishesByRevenue(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,

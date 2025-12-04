@@ -1,5 +1,7 @@
 package ru.ifmo.se.restaurant.controller;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -29,18 +31,32 @@ public class OrderController {
 
     @PostMapping
     @io.swagger.v3.oas.annotations.Operation(summary = "Create a new order")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Created"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<OrderDto> createOrder(@Valid @RequestBody OrderDto dto) {
         return new ResponseEntity<>(orderService.createOrder(dto), HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get order by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<OrderDto> getOrder(@PathVariable @NonNull Long id) {
         return ResponseEntity.ok(orderService.getOrderById(id));
     }
 
     @GetMapping
     @io.swagger.v3.oas.annotations.Operation(summary = "Get all orders")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<Page<OrderDto>> getAllOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -49,6 +65,10 @@ public class OrderController {
 
     @PostMapping("/{orderId}/items")
     @io.swagger.v3.oas.annotations.Operation(summary = "Add item to order")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Created"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<OrderDto> addItemToOrder(
             @PathVariable Long orderId,
             @Valid @RequestBody OrderItemDto itemDto) {
@@ -57,6 +77,10 @@ public class OrderController {
 
     @DeleteMapping("/{orderId}/items/{itemId}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Remove item from order")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "No content"),
+        @ApiResponse(responseCode = "404", description = "Resource not found")
+    })
     public ResponseEntity<Void> removeItemFromOrder(
             @PathVariable Long orderId,
             @PathVariable Long itemId) {
@@ -66,12 +90,20 @@ public class OrderController {
 
     @PostMapping("/{orderId}/send-to-kitchen")
     @io.swagger.v3.oas.annotations.Operation(summary = "Send order to kitchen")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Created"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<OrderDto> sendOrderToKitchen(@PathVariable Long orderId) {
         return ResponseEntity.ok(orderService.sendOrderToKitchen(orderId));
     }
 
     @PostMapping("/{orderId}/close")
     @io.swagger.v3.oas.annotations.Operation(summary = "Close order")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Created"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<OrderDto> closeOrder(@PathVariable Long orderId) {
         return ResponseEntity.ok(orderService.closeOrder(orderId));
     }

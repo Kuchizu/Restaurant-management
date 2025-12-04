@@ -1,5 +1,7 @@
 package ru.ifmo.se.restaurant.controller;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -24,18 +26,32 @@ public class InventoryController {
 
     @PostMapping
     @io.swagger.v3.oas.annotations.Operation(summary = "Add inventory")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Created"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<InventoryDto> addInventory(@Valid @RequestBody InventoryDto dto) {
         return new ResponseEntity<>(inventoryService.addInventory(dto), HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get inventory by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<InventoryDto> getInventory(@PathVariable Long id) {
         return ResponseEntity.ok(inventoryService.getInventoryById(id));
     }
 
     @GetMapping
     @io.swagger.v3.oas.annotations.Operation(summary = "Get all inventory items")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<Page<InventoryDto>> getAllInventory(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -47,6 +63,11 @@ public class InventoryController {
 
     @GetMapping("/expiring")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get expiring inventory")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<List<InventoryDto>> getExpiringInventory(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return ResponseEntity.ok(inventoryService.getExpiringInventory(date));
@@ -54,6 +75,11 @@ public class InventoryController {
 
     @PutMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Update inventory")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<InventoryDto> updateInventory(
             @PathVariable Long id,
             @Valid @RequestBody InventoryDto dto) {
@@ -62,6 +88,10 @@ public class InventoryController {
 
     @DeleteMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Delete inventory")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "No content"),
+        @ApiResponse(responseCode = "404", description = "Resource not found")
+    })
     public ResponseEntity<Void> deleteInventory(@PathVariable Long id) {
         inventoryService.deleteInventory(id);
         return ResponseEntity.noContent().build();
