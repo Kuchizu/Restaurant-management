@@ -1,5 +1,7 @@
 package ru.ifmo.se.restaurant.controller;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -22,6 +24,10 @@ public class EmployeeController {
 
     @PostMapping
     @io.swagger.v3.oas.annotations.Operation(summary = "Create a new employee")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Created"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<EmployeeDto> createEmployee(@Valid @RequestBody EmployeeDto dto) {
         ru.ifmo.se.restaurant.model.entity.Employee employee = new ru.ifmo.se.restaurant.model.entity.Employee();
         employee.setFirstName(dto.getFirstName());
@@ -36,6 +42,11 @@ public class EmployeeController {
 
     @GetMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get employee by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<EmployeeDto> getEmployee(@PathVariable @NonNull Long id) {
         ru.ifmo.se.restaurant.model.entity.Employee employee = employeeRepository.findById(id)
             .orElseThrow(() -> new ru.ifmo.se.restaurant.exception.ResourceNotFoundException("Employee not found with id: " + id));
@@ -44,6 +55,11 @@ public class EmployeeController {
 
     @GetMapping
     @io.swagger.v3.oas.annotations.Operation(summary = "Get all employees")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<Page<EmployeeDto>> getAllEmployees(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -57,6 +73,11 @@ public class EmployeeController {
 
     @GetMapping("/role/{role}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get employees by role")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<Page<EmployeeDto>> getEmployeesByRole(
             @PathVariable EmployeeRole role,
             @RequestParam(defaultValue = "0") int page,
@@ -68,10 +89,15 @@ public class EmployeeController {
 
     @PutMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Update employee")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<EmployeeDto> updateEmployee(@PathVariable @NonNull Long id, @Valid @RequestBody EmployeeDto dto) {
         ru.ifmo.se.restaurant.model.entity.Employee employee = employeeRepository.findById(id)
             .orElseThrow(() -> new ru.ifmo.se.restaurant.exception.ResourceNotFoundException("Employee not found with id: " + id));
-        
+
         employee.setFirstName(dto.getFirstName());
         employee.setLastName(dto.getLastName());
         employee.setEmail(dto.getEmail());
@@ -80,17 +106,21 @@ public class EmployeeController {
         if (dto.getIsActive() != null) {
             employee.setIsActive(dto.getIsActive());
         }
-        
+
         employee = employeeRepository.save(employee);
         return ResponseEntity.ok(toDto(employee));
     }
 
     @DeleteMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Delete employee")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "No content"),
+        @ApiResponse(responseCode = "404", description = "Resource not found")
+    })
     public ResponseEntity<Void> deleteEmployee(@PathVariable @NonNull Long id) {
         ru.ifmo.se.restaurant.model.entity.Employee employee = employeeRepository.findById(id)
             .orElseThrow(() -> new ru.ifmo.se.restaurant.exception.ResourceNotFoundException("Employee not found with id: " + id));
-        
+
         employee.setIsActive(false);
         employeeRepository.save(employee);
         return ResponseEntity.noContent().build();

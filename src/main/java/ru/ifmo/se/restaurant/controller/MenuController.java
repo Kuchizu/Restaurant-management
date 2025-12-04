@@ -1,5 +1,7 @@
 package ru.ifmo.se.restaurant.controller;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -21,18 +23,32 @@ public class MenuController {
 
     @PostMapping("/categories")
     @io.swagger.v3.oas.annotations.Operation(summary = "Create a new category")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Created"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<CategoryDto> createCategory(@Valid @RequestBody CategoryDto dto) {
         return new ResponseEntity<>(menuService.createCategory(dto), HttpStatus.CREATED);
     }
 
     @GetMapping("/categories/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get category by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<CategoryDto> getCategory(@PathVariable Long id) {
         return ResponseEntity.ok(menuService.getCategoryById(id));
     }
 
     @GetMapping("/categories")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get all categories")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<Page<CategoryDto>> getAllCategories(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -41,12 +57,21 @@ public class MenuController {
 
     @PutMapping("/categories/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Update category")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<CategoryDto> updateCategory(@PathVariable Long id, @Valid @RequestBody CategoryDto dto) {
         return ResponseEntity.ok(menuService.updateCategory(id, dto));
     }
 
     @DeleteMapping("/categories/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Delete category")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "No content"),
+        @ApiResponse(responseCode = "404", description = "Resource not found")
+    })
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
         menuService.deleteCategory(id);
         return ResponseEntity.noContent().build();
@@ -54,18 +79,32 @@ public class MenuController {
 
     @PostMapping("/dishes")
     @io.swagger.v3.oas.annotations.Operation(summary = "Create a new dish")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Created"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<DishDto> createDish(@Valid @RequestBody DishDto dto) {
         return new ResponseEntity<>(menuService.createDish(dto), HttpStatus.CREATED);
     }
 
     @GetMapping("/dishes/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get dish by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<DishDto> getDish(@PathVariable Long id) {
         return ResponseEntity.ok(menuService.getDishById(id));
     }
 
     @GetMapping("/dishes")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get all dishes")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<Page<DishDto>> getAllDishes(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -74,6 +113,11 @@ public class MenuController {
 
     @GetMapping("/dishes/category/{categoryId}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get dishes by category")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<Page<DishDto>> getDishesByCategory(
             @PathVariable Long categoryId,
             @RequestParam(defaultValue = "0") int page,
@@ -83,12 +127,21 @@ public class MenuController {
 
     @PutMapping("/dishes/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Update dish")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<DishDto> updateDish(@PathVariable Long id, @Valid @RequestBody DishDto dto) {
         return ResponseEntity.ok(menuService.updateDish(id, dto));
     }
 
     @DeleteMapping("/dishes/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Delete dish")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "No content"),
+        @ApiResponse(responseCode = "404", description = "Resource not found")
+    })
     public ResponseEntity<Void> deleteDish(@PathVariable Long id) {
         menuService.deleteDish(id);
         return ResponseEntity.noContent().build();

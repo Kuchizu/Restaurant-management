@@ -1,5 +1,7 @@
 package ru.ifmo.se.restaurant.controller;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -21,18 +23,32 @@ public class TableController {
 
     @PostMapping
     @io.swagger.v3.oas.annotations.Operation(summary = "Create a new table")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Created"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<TableDto> createTable(@Valid @RequestBody TableDto dto) {
         return new ResponseEntity<>(tableService.createTable(dto), HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get table by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<TableDto> getTable(@PathVariable Long id) {
         return ResponseEntity.ok(tableService.getTableById(id));
     }
 
     @GetMapping
     @io.swagger.v3.oas.annotations.Operation(summary = "Get all tables")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<Page<TableDto>> getAllTables(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -44,6 +60,11 @@ public class TableController {
 
     @GetMapping("/status/{status}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get tables by status")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<Page<TableDto>> getTablesByStatus(
             @PathVariable TableStatus status,
             @RequestParam(defaultValue = "0") int page,
@@ -53,12 +74,21 @@ public class TableController {
 
     @PutMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Update table")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(responseCode = "404", description = "Resource not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     public ResponseEntity<TableDto> updateTable(@PathVariable Long id, @Valid @RequestBody TableDto dto) {
         return ResponseEntity.ok(tableService.updateTable(id, dto));
     }
 
     @DeleteMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Delete table")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "No content"),
+        @ApiResponse(responseCode = "404", description = "Resource not found")
+    })
     public ResponseEntity<Void> deleteTable(@PathVariable Long id) {
         tableService.deleteTable(id);
         return ResponseEntity.noContent().build();
