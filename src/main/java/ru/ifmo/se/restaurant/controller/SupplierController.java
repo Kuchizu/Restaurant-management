@@ -1,5 +1,6 @@
 package ru.ifmo.se.restaurant.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -38,7 +39,8 @@ public class SupplierController {
         @ApiResponse(responseCode = "404", description = "Resource not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<SupplierDto> getSupplier(@PathVariable Long id) {
+    public ResponseEntity<SupplierDto> getSupplier(
+            @Parameter(description = "Supplier ID", required = true, example = "1") @PathVariable Long id) {
         return ResponseEntity.ok(supplierService.getSupplierById(id));
     }
 
@@ -50,8 +52,8 @@ public class SupplierController {
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     public ResponseEntity<Page<SupplierDto>> getAllSuppliers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(supplierService.getAllSuppliers(page, size));
     }
 
@@ -62,7 +64,9 @@ public class SupplierController {
         @ApiResponse(responseCode = "404", description = "Resource not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<SupplierDto> updateSupplier(@PathVariable Long id, @Valid @RequestBody SupplierDto dto) {
+    public ResponseEntity<SupplierDto> updateSupplier(
+            @Parameter(description = "Supplier ID", required = true, example = "1") @PathVariable Long id,
+            @Valid @RequestBody SupplierDto dto) {
         return ResponseEntity.ok(supplierService.updateSupplier(id, dto));
     }
 
@@ -72,7 +76,8 @@ public class SupplierController {
         @ApiResponse(responseCode = "204", description = "No content"),
         @ApiResponse(responseCode = "404", description = "Resource not found")
     })
-    public ResponseEntity<Void> deleteSupplier(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteSupplier(
+            @Parameter(description = "Supplier ID", required = true, example = "1") @PathVariable Long id) {
         supplierService.deleteSupplier(id);
         return ResponseEntity.noContent().build();
     }
@@ -94,7 +99,8 @@ public class SupplierController {
         @ApiResponse(responseCode = "404", description = "Resource not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<SupplyOrderDto> getSupplyOrder(@PathVariable Long id) {
+    public ResponseEntity<SupplyOrderDto> getSupplyOrder(
+            @Parameter(description = "Supply order ID", required = true, example = "1") @PathVariable Long id) {
         return ResponseEntity.ok(supplierService.getSupplyOrderById(id));
     }
 
@@ -106,8 +112,8 @@ public class SupplierController {
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     public ResponseEntity<Page<SupplyOrderDto>> getAllSupplyOrders(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(supplierService.getAllSupplyOrders(page, size));
     }
 
@@ -117,7 +123,8 @@ public class SupplierController {
         @ApiResponse(responseCode = "201", description = "Created"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<SupplyOrderDto> receiveSupplyOrder(@PathVariable Long orderId) {
+    public ResponseEntity<SupplyOrderDto> receiveSupplyOrder(
+            @Parameter(description = "Supply order ID", required = true, example = "1") @PathVariable Long orderId) {
         return ResponseEntity.ok(supplierService.receiveSupplyOrder(orderId));
     }
 }

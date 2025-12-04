@@ -1,5 +1,6 @@
 package ru.ifmo.se.restaurant.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -38,7 +39,8 @@ public class TableController {
         @ApiResponse(responseCode = "404", description = "Resource not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<TableDto> getTable(@PathVariable Long id) {
+    public ResponseEntity<TableDto> getTable(
+            @Parameter(description = "Table ID", required = true, example = "1") @PathVariable Long id) {
         return ResponseEntity.ok(tableService.getTableById(id));
     }
 
@@ -50,8 +52,8 @@ public class TableController {
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     public ResponseEntity<Page<TableDto>> getAllTables(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size) {
         Page<TableDto> result = tableService.getAllTables(page, size);
         return ResponseEntity.ok()
             .header("X-Total-Count", String.valueOf(result.getTotalElements()))
@@ -66,9 +68,9 @@ public class TableController {
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     public ResponseEntity<Page<TableDto>> getTablesByStatus(
-            @PathVariable TableStatus status,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @Parameter(description = "Table status", required = true, example = "AVAILABLE") @PathVariable TableStatus status,
+            @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(tableService.getTablesByStatus(status, page, size));
     }
 
@@ -79,7 +81,9 @@ public class TableController {
         @ApiResponse(responseCode = "404", description = "Resource not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<TableDto> updateTable(@PathVariable Long id, @Valid @RequestBody TableDto dto) {
+    public ResponseEntity<TableDto> updateTable(
+            @Parameter(description = "Table ID", required = true, example = "1") @PathVariable Long id,
+            @Valid @RequestBody TableDto dto) {
         return ResponseEntity.ok(tableService.updateTable(id, dto));
     }
 
@@ -89,7 +93,8 @@ public class TableController {
         @ApiResponse(responseCode = "204", description = "No content"),
         @ApiResponse(responseCode = "404", description = "Resource not found")
     })
-    public ResponseEntity<Void> deleteTable(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTable(
+            @Parameter(description = "Table ID", required = true, example = "1") @PathVariable Long id) {
         tableService.deleteTable(id);
         return ResponseEntity.noContent().build();
     }

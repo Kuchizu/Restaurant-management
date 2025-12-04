@@ -1,5 +1,6 @@
 package ru.ifmo.se.restaurant.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -30,9 +31,9 @@ public class BillingController {
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     public ResponseEntity<BillDto> createBill(
-            @RequestParam @NonNull Long orderId,
-            @RequestParam(required = false) BigDecimal discount,
-            @RequestParam(required = false) String notes) {
+            @Parameter(description = "Order ID", required = true, example = "1") @RequestParam @NonNull Long orderId,
+            @Parameter(description = "Discount amount", example = "10.00") @RequestParam(required = false) BigDecimal discount,
+            @Parameter(description = "Additional notes", example = "10% discount applied") @RequestParam(required = false) String notes) {
         return new ResponseEntity<>(billingService.finalizeOrder(orderId, discount, notes), HttpStatus.CREATED);
     }
 
@@ -43,9 +44,9 @@ public class BillingController {
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     public ResponseEntity<BillDto> finalizeOrder(
-            @PathVariable @NonNull Long orderId,
-            @RequestParam(required = false) BigDecimal discount,
-            @RequestParam(required = false) String notes) {
+            @Parameter(description = "Order ID", required = true, example = "1") @PathVariable @NonNull Long orderId,
+            @Parameter(description = "Discount amount", example = "10.00") @RequestParam(required = false) BigDecimal discount,
+            @Parameter(description = "Additional notes", example = "10% discount applied") @RequestParam(required = false) String notes) {
         return new ResponseEntity<>(billingService.finalizeOrder(orderId, discount, notes), HttpStatus.CREATED);
     }
 
@@ -56,7 +57,8 @@ public class BillingController {
         @ApiResponse(responseCode = "404", description = "Resource not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<BillDto> getBill(@PathVariable @NonNull Long id) {
+    public ResponseEntity<BillDto> getBill(
+            @Parameter(description = "Bill ID", required = true, example = "1") @PathVariable @NonNull Long id) {
         return ResponseEntity.ok(billingService.getBillById(id));
     }
 
@@ -68,8 +70,8 @@ public class BillingController {
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     public ResponseEntity<Page<BillDto>> getAllBills(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size) {
         Page<BillDto> result = billingService.getAllBills(page, size);
         return ResponseEntity.ok()
             .header("X-Total-Count", String.valueOf(result.getTotalElements()))
@@ -83,7 +85,8 @@ public class BillingController {
         @ApiResponse(responseCode = "404", description = "Resource not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<BillDto> getBillByOrderId(@PathVariable @NonNull Long orderId) {
+    public ResponseEntity<BillDto> getBillByOrderId(
+            @Parameter(description = "Order ID", required = true, example = "1") @PathVariable @NonNull Long orderId) {
         return ResponseEntity.ok(billingService.getBillByOrderId(orderId));
     }
 
@@ -94,7 +97,9 @@ public class BillingController {
         @ApiResponse(responseCode = "404", description = "Resource not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<BillDto> updateBill(@PathVariable @NonNull Long id, @Valid @RequestBody BillDto dto) {
+    public ResponseEntity<BillDto> updateBill(
+            @Parameter(description = "Bill ID", required = true, example = "1") @PathVariable @NonNull Long id,
+            @Valid @RequestBody BillDto dto) {
         return ResponseEntity.ok(billingService.updateBill(id, dto));
     }
 
@@ -104,7 +109,8 @@ public class BillingController {
         @ApiResponse(responseCode = "204", description = "No content"),
         @ApiResponse(responseCode = "404", description = "Resource not found")
     })
-    public ResponseEntity<Void> deleteBill(@PathVariable @NonNull Long id) {
+    public ResponseEntity<Void> deleteBill(
+            @Parameter(description = "Bill ID", required = true, example = "1") @PathVariable @NonNull Long id) {
         billingService.deleteBill(id);
         return ResponseEntity.noContent().build();
     }
