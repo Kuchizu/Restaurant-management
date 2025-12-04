@@ -1,5 +1,6 @@
 package ru.ifmo.se.restaurant.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -12,6 +13,7 @@ import ru.ifmo.se.restaurant.model.TableStatus;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TableDto {
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
     @NotNull(message = "Table number cannot be null")
@@ -28,4 +30,3 @@ public class TableDto {
 
     private Boolean isActive;
 }
-

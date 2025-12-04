@@ -1,5 +1,6 @@
 package ru.ifmo.se.restaurant.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -15,6 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DishDto {
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
     @NotBlank(message = "Dish name cannot be blank")
@@ -41,4 +43,3 @@ public class DishDto {
 
     private Boolean isActive;
 }
-

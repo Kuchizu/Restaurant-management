@@ -1,5 +1,6 @@
 package ru.ifmo.se.restaurant.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,6 +14,7 @@ import ru.ifmo.se.restaurant.model.EmployeeRole;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmployeeDto {
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
     @NotBlank(message = "First name cannot be blank")
@@ -35,4 +37,3 @@ public class EmployeeDto {
 
     private Boolean isActive;
 }
-

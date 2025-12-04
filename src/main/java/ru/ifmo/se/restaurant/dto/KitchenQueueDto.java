@@ -1,5 +1,6 @@
 package ru.ifmo.se.restaurant.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class KitchenQueueDto {
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
     @NotNull(message = "Order ID cannot be null")
@@ -34,4 +36,3 @@ public class KitchenQueueDto {
 
     private LocalDateTime completedAt;
 }
-

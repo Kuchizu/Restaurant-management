@@ -1,5 +1,6 @@
 package ru.ifmo.se.restaurant.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BillDto {
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
     @NotNull(message = "Order ID cannot be null")
@@ -31,4 +33,3 @@ public class BillDto {
     @Size(max = 500, message = "Notes cannot exceed 500 characters")
     private String notes;
 }
-

@@ -1,5 +1,6 @@
 package ru.ifmo.se.restaurant.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SupplyOrderIngredientDto {
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
     @NotNull(message = "Ingredient ID cannot be null")
@@ -27,4 +29,3 @@ public class SupplyOrderIngredientDto {
     @Positive(message = "Price per unit must be positive")
     private BigDecimal pricePerUnit;
 }
-
