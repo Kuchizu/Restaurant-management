@@ -51,8 +51,8 @@ public class BillingService {
             discount = BigDecimal.ZERO;
         }
 
-        if (discount.compareTo(order.getTotalAmount()) > 0) {
-            throw new BusinessException("Discount cannot exceed order total");
+        if (discount.compareTo(order.getTotalAmount()) >= 0) {
+            throw new BusinessException("Discount cannot be equal to or exceed order total");
         }
 
         BigDecimal subtotal = order.getTotalAmount().subtract(discount);
