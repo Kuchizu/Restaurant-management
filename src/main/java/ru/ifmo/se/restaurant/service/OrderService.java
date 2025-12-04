@@ -48,9 +48,9 @@ public class OrderService {
 
     @Transactional
     public OrderDto createOrder(OrderDto dto) {
-        Table table = tableRepository.findById(dto.getTableId())
+        Table table = tableRepository.findByIdForUpdate(dto.getTableId())
             .orElseThrow(() -> new ResourceNotFoundException("Table not found with id: " + dto.getTableId()));
-        
+
         if (table.getStatus() == TableStatus.OCCUPIED) {
             throw new BusinessException("Table is already occupied");
         }

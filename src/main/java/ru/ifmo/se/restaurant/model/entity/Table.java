@@ -46,5 +46,8 @@ public class Table {
 
     @Column(nullable = false)
     private Boolean isActive = true;
+
+    @Version
+    private Long version;
 }
 

@@ -45,5 +45,8 @@ public class Inventory {
 
     @Column(nullable = false)
     private LocalDate receivedDate = java.time.LocalDate.now();
+
+    @Version
+    private Long version;
 }
 

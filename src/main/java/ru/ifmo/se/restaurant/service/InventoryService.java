@@ -1,8 +1,10 @@
 package ru.ifmo.se.restaurant.service;
 
+import jakarta.persistence.OptimisticLockException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.se.restaurant.dto.InventoryDto;
@@ -46,36 +48,41 @@ public class InventoryService {
 
     @Transactional
     public void reserveIngredientsForOrder(List<OrderItem> orderItems) {
-        for (OrderItem item : orderItems) {
-            if (item.getDish().getIngredients() != null) {
-                for (Ingredient ingredient : item.getDish().getIngredients()) {
-                    Integer requiredQuantity = item.getQuantity();
-                    List<Inventory> availableInventories = inventoryRepository.findAvailableForReservation(
-                        ingredient.getId(),
-                        requiredQuantity,
-                        LocalDate.now()
-                    );
+        try {
+            for (OrderItem item : orderItems) {
+                if (item.getDish().getIngredients() != null) {
+                    for (Ingredient ingredient : item.getDish().getIngredients()) {
+                        Integer requiredQuantity = item.getQuantity();
+                        List<Inventory> availableInventories = inventoryRepository.findAvailableForReservation(
+                            ingredient.getId(),
+                            requiredQuantity,
+                            LocalDate.now()
+                        );
 
-                    if (availableInventories.isEmpty()) {
-                        throw new BusinessException("Insufficient inventory for ingredient: " + ingredient.getName());
-                    }
+                        if (availableInventories.isEmpty()) {
+                            throw new BusinessException("Insufficient inventory for ingredient: " + ingredient.getName());
+                        }
 
-                    int remainingQuantity = requiredQuantity;
-                    for (Inventory inventory : availableInventories) {
-                        int available = inventory.getQuantity() - inventory.getReservedQuantity();
-                        if (remainingQuantity <= 0) break;
+                        int remainingQuantity = requiredQuantity;
+                        for (Inventory inventory : availableInventories) {
+                            int available = inventory.getQuantity() - inventory.getReservedQuantity();
+                            if (remainingQuantity <= 0) break;
 
-                        int toReserve = Math.min(remainingQuantity, available);
-                        inventory.setReservedQuantity(inventory.getReservedQuantity() + toReserve);
-                        remainingQuantity -= toReserve;
-                        inventoryRepository.save(inventory);
-                    }
+                            int toReserve = Math.min(remainingQuantity, available);
+                            inventory.setReservedQuantity(inventory.getReservedQuantity() + toReserve);
+                            remainingQuantity -= toReserve;
+                            Inventory saved = inventoryRepository.save(inventory);
+                            inventoryRepository.flush();
+                        }
 
-                    if (remainingQuantity > 0) {
-                        throw new BusinessException("Insufficient inventory for ingredient: " + ingredient.getName());
+                        if (remainingQuantity > 0) {
+                            throw new BusinessException("Insufficient inventory for ingredient: " + ingredient.getName());
+                        }
                     }
                 }
             }
+        } catch (OptimisticLockException | ObjectOptimisticLockingFailureException e) {
+            throw new BusinessException("Inventory was updated by another process. Please try again.");
         }
     }
 
