@@ -10,6 +10,7 @@ import ru.ifmo.se.restaurant.dto.InventoryDto;
 import ru.ifmo.se.restaurant.dto.SupplierDto;
 import ru.ifmo.se.restaurant.dto.SupplyOrderDto;
 import ru.ifmo.se.restaurant.dto.SupplyOrderIngredientDto;
+import ru.ifmo.se.restaurant.exception.BusinessException;
 import ru.ifmo.se.restaurant.exception.ResourceNotFoundException;
 import ru.ifmo.se.restaurant.model.entity.*;
 import ru.ifmo.se.restaurant.model.SupplyOrderStatus;
@@ -124,9 +125,9 @@ public class SupplierService {
         SupplyOrder supplyOrder = supplyOrderRepository.findById(orderId)
             .orElseThrow(() -> new ResourceNotFoundException("Supply order not found with id: " + orderId));
 
-        if (supplyOrder.getStatus() != SupplyOrderStatus.IN_TRANSIT && 
+        if (supplyOrder.getStatus() != SupplyOrderStatus.IN_TRANSIT &&
             supplyOrder.getStatus() != SupplyOrderStatus.ORDERED) {
-            throw new RuntimeException("Supply order cannot be received with status: " + supplyOrder.getStatus());
+            throw new BusinessException("Supply order cannot be received with status: " + supplyOrder.getStatus());
         }
 
         supplyOrder.setStatus(SupplyOrderStatus.RECEIVED);
