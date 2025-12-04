@@ -75,18 +75,21 @@ public class BillingService {
         return toBillDto(savedBill);
     }
 
+    @Transactional(readOnly = true)
     public BillDto getBillByOrderId(@NonNull Long orderId) {
         Bill bill = billRepository.findByOrderId(orderId)
             .orElseThrow(() -> new ResourceNotFoundException("Bill not found for order id: " + orderId));
         return toBillDto(bill);
     }
 
+    @Transactional(readOnly = true)
     public BillDto getBillById(@NonNull Long id) {
         Bill bill = billRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Bill not found with id: " + id));
         return toBillDto(bill);
     }
 
+    @Transactional(readOnly = true)
     public Page<BillDto> getAllBills(int page, int size) {
         return billRepository.findAll(PageRequest.of(page, Math.min(size, 50)))
             .map(this::toBillDto);

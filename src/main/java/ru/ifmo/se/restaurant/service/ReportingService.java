@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.se.restaurant.dto.DishDto;
 import ru.ifmo.se.restaurant.model.entity.Dish;
 import ru.ifmo.se.restaurant.model.entity.Order;
@@ -21,6 +22,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class ReportingService {
     private final BillRepository billRepository;
     private final OrderRepository orderRepository;

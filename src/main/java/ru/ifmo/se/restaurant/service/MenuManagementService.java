@@ -44,12 +44,14 @@ public class MenuManagementService {
         return categoryMapper.toDto(categoryRepository.save(category));
     }
 
+    @Transactional(readOnly = true)
     public CategoryDto getCategoryById(Long id) {
         Category category = categoryRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
         return categoryMapper.toDto(category);
     }
 
+    @Transactional(readOnly = true)
     public Page<CategoryDto> getAllCategories(int page, int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
         return categoryRepository.findByIsActiveTrue(pageable)
@@ -95,18 +97,21 @@ public class MenuManagementService {
         return toDishDto(saved);
     }
 
+    @Transactional(readOnly = true)
     public DishDto getDishById(Long id) {
         Dish dish = dishRepository.findByIdAndIsActiveTrue(id)
             .orElseThrow(() -> new ResourceNotFoundException("Dish not found with id: " + id));
         return toDishDto(dish);
     }
 
+    @Transactional(readOnly = true)
     public Page<DishDto> getAllDishes(int page, int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
         return dishRepository.findByIsActiveTrue(pageable)
             .map(this::toDishDto);
     }
 
+    @Transactional(readOnly = true)
     public Page<DishDto> getDishesByCategory(Long categoryId, int page, int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
         return dishRepository.findByCategoryIdAndIsActiveTrue(categoryId, pageable)

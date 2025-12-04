@@ -103,17 +103,20 @@ public class InventoryService {
         }
     }
 
+    @Transactional(readOnly = true)
     public InventoryDto getInventoryById(Long id) {
         Inventory inventory = inventoryRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Inventory not found with id: " + id));
         return toDto(inventory);
     }
 
+    @Transactional(readOnly = true)
     public Page<InventoryDto> getAllInventory(int page, int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
         return inventoryRepository.findAll(pageable).map(this::toDto);
     }
 
+    @Transactional(readOnly = true)
     public List<InventoryDto> getExpiringInventory(LocalDate date) {
         return inventoryRepository.findExpiringSoon(date).stream()
             .map(this::toDto)

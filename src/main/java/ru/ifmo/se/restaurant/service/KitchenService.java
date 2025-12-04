@@ -43,6 +43,7 @@ public class KitchenService {
         }
     }
 
+    @Transactional(readOnly = true)
     public List<KitchenQueueDto> getKitchenQueue() {
         List<DishStatus> activeStatuses = Arrays.asList(DishStatus.PENDING, DishStatus.IN_PROGRESS);
         return kitchenQueueRepository.findByStatusesOrderByCreatedAtAsc(activeStatuses)
@@ -70,18 +71,18 @@ public class KitchenService {
         return toDto(kitchenQueueRepository.save(queueItem));
     }
 
-    @Transactional
-    private void checkAndUpdateOrderStatus(Order order) {
+    public void checkAndUpdateOrderStatus(Order order) {
         List<KitchenQueue> queueItems = kitchenQueueRepository.findByOrderId(order.getId());
         boolean allReady = queueItems.stream()
             .allMatch(item -> item.getStatus() == DishStatus.READY || item.getStatus() == DishStatus.SERVED);
-        
+
         if (allReady && order.getStatus() == OrderStatus.IN_KITCHEN) {
             order.setStatus(OrderStatus.PREPARING);
             orderRepository.save(order);
         }
     }
 
+    @Transactional(readOnly = true)
     public Page<KitchenQueueDto> getAllKitchenQueueItems(int page, int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
         return kitchenQueueRepository.findAll(pageable).map(this::toDto);

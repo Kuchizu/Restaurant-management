@@ -191,12 +191,14 @@ public class OrderService {
         return toOrderDto(order);
     }
 
+    @Transactional(readOnly = true)
     public OrderDto getOrderById(Long id) {
         Order order = orderRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
         return toOrderDto(order);
     }
 
+    @Transactional(readOnly = true)
     public Page<OrderDto> getAllOrders(int page, int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
         return orderRepository.findAll(pageable).map(this::toOrderDto);
