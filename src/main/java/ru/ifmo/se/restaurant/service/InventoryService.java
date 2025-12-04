@@ -134,14 +134,20 @@ public class InventoryService {
     public InventoryDto updateInventory(Long id, InventoryDto dto) {
         Inventory inventory = inventoryRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Inventory not found with id: " + id));
-        
-        inventory.setQuantity(dto.getQuantity());
-        inventory.setReservedQuantity(dto.getReservedQuantity());
+
+        if (dto.getQuantity() != null) {
+            inventory.setQuantity(dto.getQuantity());
+        }
+        if (dto.getReservedQuantity() != null) {
+            inventory.setReservedQuantity(dto.getReservedQuantity());
+        }
         if (dto.getPricePerUnit() != null) {
             inventory.setPricePerUnit(dto.getPricePerUnit());
         }
-        inventory.setExpiryDate(dto.getExpiryDate());
-        
+        if (dto.getExpiryDate() != null) {
+            inventory.setExpiryDate(dto.getExpiryDate());
+        }
+
         return toDto(inventoryRepository.save(inventory));
     }
 

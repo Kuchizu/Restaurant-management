@@ -43,10 +43,14 @@ public class BillingService {
             throw new BusinessException("Bill already exists for this order");
         }
 
+        if (order.getTotalAmount() == null || order.getTotalAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("Order total is invalid");
+        }
+
         if (discount == null) {
             discount = BigDecimal.ZERO;
         }
-        
+
         if (discount.compareTo(order.getTotalAmount()) > 0) {
             throw new BusinessException("Discount cannot exceed order total");
         }

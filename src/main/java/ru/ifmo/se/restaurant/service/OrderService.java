@@ -75,6 +75,10 @@ public class OrderService {
                 Dish dish = dishRepository.findByIdAndIsActiveTrue(itemDto.getDishId())
                     .orElseThrow(() -> new ResourceNotFoundException("Dish not found with id: " + itemDto.getDishId()));
 
+                if (dish.getPrice() == null) {
+                    throw new BusinessException("Dish price is not set for dish id: " + itemDto.getDishId());
+                }
+
                 OrderItem item = new OrderItem();
                 item.setOrder(savedOrder);
                 item.setDish(dish);
@@ -84,7 +88,7 @@ public class OrderService {
 
                 OrderItem savedItem = orderItemRepository.save(item);
                 savedOrder.getItems().add(savedItem);
-                
+
                 total = total.add(dish.getPrice().multiply(BigDecimal.valueOf(itemDto.getQuantity())));
             }
             savedOrder.setTotalAmount(total);
@@ -108,6 +112,10 @@ public class OrderService {
 
         Dish dish = dishRepository.findByIdAndIsActiveTrue(itemDto.getDishId())
             .orElseThrow(() -> new ResourceNotFoundException("Dish not found with id: " + itemDto.getDishId()));
+
+        if (dish.getPrice() == null) {
+            throw new BusinessException("Dish price is not set for dish id: " + itemDto.getDishId());
+        }
 
         OrderItem item = new OrderItem();
         item.setOrder(order);
@@ -140,6 +148,10 @@ public class OrderService {
 
         if (!item.getOrder().getId().equals(orderId)) {
             throw new BusinessException("Order item does not belong to this order");
+        }
+
+        if (item.getPrice() == null) {
+            throw new BusinessException("Order item price is null");
         }
 
         BigDecimal itemTotal = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));

@@ -33,6 +33,9 @@ public class KitchenService {
 
     @Transactional
     public void addOrderToKitchenQueue(Order order) {
+        if (order.getItems() == null || order.getItems().isEmpty()) {
+            throw new ru.ifmo.se.restaurant.exception.BusinessException("Cannot add empty order to kitchen queue");
+        }
         for (OrderItem item : order.getItems()) {
             KitchenQueue queueItem = new KitchenQueue();
             queueItem.setOrder(order);

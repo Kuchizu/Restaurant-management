@@ -52,6 +52,9 @@ public class ReportingService {
         for (Order order : orders) {
             List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
             for (OrderItem item : items) {
+                if (item.getDish() == null || item.getDish().getId() == null) {
+                    continue;
+                }
                 Long dishId = item.getDish().getId();
                 dishQuantityMap.merge(dishId, item.getQuantity(), Integer::sum);
                 dishMap.putIfAbsent(dishId, item.getDish());
@@ -87,6 +90,9 @@ public class ReportingService {
         for (Order order : orders) {
             List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
             for (OrderItem item : items) {
+                if (item.getDish() == null || item.getDish().getCost() == null) {
+                    continue;
+                }
                 BigDecimal itemCost = item.getDish().getCost().multiply(BigDecimal.valueOf(item.getQuantity()));
                 totalCost = totalCost.add(itemCost);
             }
@@ -117,6 +123,9 @@ public class ReportingService {
         for (Order order : orders) {
             List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
             for (OrderItem item : items) {
+                if (item.getDish() == null || item.getDish().getId() == null || item.getPrice() == null) {
+                    continue;
+                }
                 Long dishId = item.getDish().getId();
                 BigDecimal itemRevenue = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
                 dishRevenueMap.merge(dishId, itemRevenue, BigDecimal::add);
