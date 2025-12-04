@@ -7,31 +7,25 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.se.restaurant.dto.InventoryDto;
 import ru.ifmo.se.restaurant.exception.BusinessException;
-import ru.ifmo.se.restaurant.exception.ResourceNotFoundException;
 import ru.ifmo.se.restaurant.model.entity.Inventory;
 import ru.ifmo.se.restaurant.model.entity.Ingredient;
 import ru.ifmo.se.restaurant.model.entity.OrderItem;
-import ru.ifmo.se.restaurant.repository.IngredientRepository;
-import ru.ifmo.se.restaurant.repository.InventoryRepository;
+import ru.ifmo.se.restaurant.dataaccess.InventoryDataAccess;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Service
 public class InventoryService {
-    private final InventoryRepository inventoryRepository;
-    private final IngredientRepository ingredientRepository;
+    private final InventoryDataAccess inventoryDataAccess;
 
-    public InventoryService(InventoryRepository inventoryRepository,
-                           IngredientRepository ingredientRepository) {
-        this.inventoryRepository = inventoryRepository;
-        this.ingredientRepository = ingredientRepository;
+    public InventoryService(InventoryDataAccess inventoryDataAccess) {
+        this.inventoryDataAccess = inventoryDataAccess;
     }
 
     @Transactional
     public InventoryDto addInventory(InventoryDto dto) {
-        Ingredient ingredient = ingredientRepository.findById(dto.getIngredientId())
-            .orElseThrow(() -> new ResourceNotFoundException("Ingredient not found with id: " + dto.getIngredientId()));
+        Ingredient ingredient = inventoryDataAccess.findIngredientById(dto.getIngredientId());
 
         Inventory inventory = new Inventory();
         inventory.setIngredient(ingredient);
@@ -41,7 +35,7 @@ public class InventoryService {
         inventory.setExpiryDate(dto.getExpiryDate());
         inventory.setReceivedDate(dto.getReceivedDate() != null ? dto.getReceivedDate() : LocalDate.now());
 
-        return toDto(inventoryRepository.save(inventory));
+        return toDto(inventoryDataAccess.saveInventory(inventory));
     }
 
     @Transactional
@@ -50,7 +44,7 @@ public class InventoryService {
             if (item.getDish().getIngredients() != null) {
                 for (Ingredient ingredient : item.getDish().getIngredients()) {
                     Integer requiredQuantity = item.getQuantity();
-                    List<Inventory> availableInventories = inventoryRepository.findAvailableForReservation(
+                    List<Inventory> availableInventories = inventoryDataAccess.findAvailableForReservation(
                         ingredient.getId(),
                         requiredQuantity,
                         LocalDate.now()
@@ -68,7 +62,7 @@ public class InventoryService {
                         int toReserve = Math.min(remainingQuantity, available);
                         inventory.setReservedQuantity(inventory.getReservedQuantity() + toReserve);
                         remainingQuantity -= toReserve;
-                        inventoryRepository.save(inventory);
+                        inventoryDataAccess.saveInventory(inventory);
                     }
 
                     if (remainingQuantity > 0) {
@@ -85,7 +79,7 @@ public class InventoryService {
             if (item.getDish().getIngredients() != null) {
                 for (Ingredient ingredient : item.getDish().getIngredients()) {
                     Integer requiredQuantity = item.getQuantity();
-                    List<Inventory> inventories = inventoryRepository.findByIngredientId(ingredient.getId());
+                    List<Inventory> inventories = inventoryDataAccess.findByIngredientId(ingredient.getId());
 
                     int remainingQuantity = requiredQuantity;
                     for (Inventory inventory : inventories) {
@@ -96,7 +90,7 @@ public class InventoryService {
                         inventory.setReservedQuantity(inventory.getReservedQuantity() - toConsume);
                         inventory.setQuantity(inventory.getQuantity() - toConsume);
                         remainingQuantity -= toConsume;
-                        inventoryRepository.save(inventory);
+                        inventoryDataAccess.saveInventory(inventory);
                     }
                 }
             }
@@ -104,27 +98,25 @@ public class InventoryService {
     }
 
     public InventoryDto getInventoryById(Long id) {
-        Inventory inventory = inventoryRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Inventory not found with id: " + id));
+        Inventory inventory = inventoryDataAccess.findInventoryById(id);
         return toDto(inventory);
     }
 
     public Page<InventoryDto> getAllInventory(int page, int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
-        return inventoryRepository.findAll(pageable).map(this::toDto);
+        return inventoryDataAccess.findAllInventory(pageable).map(this::toDto);
     }
 
     public List<InventoryDto> getExpiringInventory(LocalDate date) {
-        return inventoryRepository.findExpiringSoon(date).stream()
+        return inventoryDataAccess.findExpiringSoon(date).stream()
             .map(this::toDto)
             .toList();
     }
 
     @Transactional
     public InventoryDto updateInventory(Long id, InventoryDto dto) {
-        Inventory inventory = inventoryRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Inventory not found with id: " + id));
-        
+        Inventory inventory = inventoryDataAccess.findInventoryById(id);
+
         inventory.setQuantity(dto.getQuantity());
         inventory.setReservedQuantity(dto.getReservedQuantity());
         if (dto.getPricePerUnit() != null) {
@@ -132,14 +124,13 @@ public class InventoryService {
         }
         inventory.setExpiryDate(dto.getExpiryDate());
         
-        return toDto(inventoryRepository.save(inventory));
+        return toDto(inventoryDataAccess.saveInventory(inventory));
     }
 
     @Transactional
     public void deleteInventory(Long id) {
-        Inventory inventory = inventoryRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Inventory not found with id: " + id));
-        inventoryRepository.delete(inventory);
+        Inventory inventory = inventoryDataAccess.findInventoryById(id);
+        inventoryDataAccess.deleteInventory(inventory);
     }
 
     private InventoryDto toDto(Inventory inventory) {

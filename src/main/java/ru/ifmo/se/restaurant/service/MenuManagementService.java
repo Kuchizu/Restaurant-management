@@ -5,6 +5,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import ru.ifmo.se.restaurant.dataaccess.MenuManagementDataAccess;
 import ru.ifmo.se.restaurant.dto.CategoryDto;
 import ru.ifmo.se.restaurant.dto.DishDto;
 import ru.ifmo.se.restaurant.exception.ResourceNotFoundException;
@@ -12,27 +14,18 @@ import ru.ifmo.se.restaurant.mapper.CategoryMapper;
 import ru.ifmo.se.restaurant.model.entity.Category;
 import ru.ifmo.se.restaurant.model.entity.Dish;
 import ru.ifmo.se.restaurant.model.entity.Ingredient;
-import ru.ifmo.se.restaurant.repository.CategoryRepository;
-import ru.ifmo.se.restaurant.repository.DishRepository;
-import ru.ifmo.se.restaurant.repository.IngredientRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class MenuManagementService {
-    private final CategoryRepository categoryRepository;
-    private final DishRepository dishRepository;
-    private final IngredientRepository ingredientRepository;
+    private final MenuManagementDataAccess dataAccess;
     private final CategoryMapper categoryMapper;
 
-    public MenuManagementService(CategoryRepository categoryRepository,
-                                DishRepository dishRepository,
-                                IngredientRepository ingredientRepository,
+    public MenuManagementService(MenuManagementDataAccess dataAccess,
                                 CategoryMapper categoryMapper) {
-        this.categoryRepository = categoryRepository;
-        this.dishRepository = dishRepository;
-        this.ingredientRepository = ingredientRepository;
+        this.dataAccess = dataAccess;
         this.categoryMapper = categoryMapper;
     }
 
@@ -41,41 +34,40 @@ public class MenuManagementService {
     public CategoryDto createCategory(CategoryDto dto) {
         Category category = categoryMapper.toEntity(dto);
         category.setId(null);
-        return categoryMapper.toDto(categoryRepository.save(category));
+        return categoryMapper.toDto(dataAccess.saveCategory(category));
     }
 
     public CategoryDto getCategoryById(Long id) {
-        Category category = categoryRepository.findById(id)
+        Category category = dataAccess.findCategoryById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
         return categoryMapper.toDto(category);
     }
 
     public Page<CategoryDto> getAllCategories(int page, int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
-        return categoryRepository.findByIsActiveTrue(pageable)
-            .map(categoryMapper::toDto);
+        return dataAccess.findActiveCategories(pageable).map(categoryMapper::toDto);
     }
 
     @Transactional
     public CategoryDto updateCategory(Long id, CategoryDto dto) {
-        Category category = categoryRepository.findById(id)
+        Category category = dataAccess.findCategoryById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
         category.setName(dto.getName());
         category.setDescription(dto.getDescription());
-        return categoryMapper.toDto(categoryRepository.save(category));
+        return categoryMapper.toDto(dataAccess.saveCategory(category));
     }
 
     @Transactional
     public void deleteCategory(Long id) {
-        Category category = categoryRepository.findById(id)
+        Category category = dataAccess.findCategoryById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
-        categoryRepository.delete(category);
+        dataAccess.deleteCategory(category);
     }
 
     // Dish CRUD
     @Transactional
     public DishDto createDish(DishDto dto) {
-        Category category = categoryRepository.findById(dto.getCategoryId())
+        Category category = dataAccess.findCategoryById(dto.getCategoryId())
             .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + dto.getCategoryId()));
         
         Dish dish = new Dish();
@@ -87,39 +79,37 @@ public class MenuManagementService {
         dish.setIsActive(true);
         
         if (dto.getIngredientIds() != null && !dto.getIngredientIds().isEmpty()) {
-            List<Ingredient> ingredients = ingredientRepository.findAllById(dto.getIngredientIds());
+            List<Ingredient> ingredients = dataAccess.findIngredientsByIds(dto.getIngredientIds());
             dish.setIngredients(ingredients);
         }
         
-        Dish saved = dishRepository.save(dish);
+        Dish saved = dataAccess.saveDish(dish);
         return toDishDto(saved);
     }
 
     public DishDto getDishById(Long id) {
-        Dish dish = dishRepository.findByIdAndIsActiveTrue(id)
+        Dish dish = dataAccess.findActiveDishById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Dish not found with id: " + id));
         return toDishDto(dish);
     }
 
     public Page<DishDto> getAllDishes(int page, int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
-        return dishRepository.findByIsActiveTrue(pageable)
-            .map(this::toDishDto);
+        return dataAccess.findActiveDishes(pageable).map(this::toDishDto);
     }
 
     public Page<DishDto> getDishesByCategory(Long categoryId, int page, int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
-        return dishRepository.findByCategoryIdAndIsActiveTrue(categoryId, pageable)
-            .map(this::toDishDto);
+        return dataAccess.findDishesByCategory(categoryId, pageable).map(this::toDishDto);
     }
 
     @Transactional
     public DishDto updateDish(Long id, DishDto dto) {
-        Dish dish = dishRepository.findByIdAndIsActiveTrue(id)
+        Dish dish = dataAccess.findActiveDishById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Dish not found with id: " + id));
         
         if (dto.getCategoryId() != null && !dto.getCategoryId().equals(dish.getCategory().getId())) {
-            Category category = categoryRepository.findById(dto.getCategoryId())
+            Category category = dataAccess.findCategoryById(dto.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + dto.getCategoryId()));
             dish.setCategory(category);
         }
@@ -130,19 +120,19 @@ public class MenuManagementService {
         dish.setCost(dto.getCost());
         
         if (dto.getIngredientIds() != null) {
-            List<Ingredient> ingredients = ingredientRepository.findAllById(dto.getIngredientIds());
+            List<Ingredient> ingredients = dataAccess.findIngredientsByIds(dto.getIngredientIds());
             dish.setIngredients(ingredients);
         }
         
-        return toDishDto(dishRepository.save(dish));
+        return toDishDto(dataAccess.saveDish(dish));
     }
 
     @Transactional
     public void deleteDish(Long id) {
-        Dish dish = dishRepository.findByIdAndIsActiveTrue(id)
+        Dish dish = dataAccess.findActiveDishById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Dish not found with id: " + id));
         dish.setIsActive(false);
-        dishRepository.save(dish);
+        dataAccess.saveDish(dish);
     }
 
     private DishDto toDishDto(Dish dish) {

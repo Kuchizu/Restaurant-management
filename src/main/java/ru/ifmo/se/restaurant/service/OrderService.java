@@ -5,18 +5,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import ru.ifmo.se.restaurant.dataaccess.OrderDataAccess;
 import ru.ifmo.se.restaurant.dto.OrderDto;
 import ru.ifmo.se.restaurant.dto.OrderItemDto;
 import ru.ifmo.se.restaurant.exception.BusinessException;
-import ru.ifmo.se.restaurant.exception.ResourceNotFoundException;
 import ru.ifmo.se.restaurant.model.entity.*;
 import ru.ifmo.se.restaurant.model.OrderStatus;
 import ru.ifmo.se.restaurant.model.TableStatus;
-import ru.ifmo.se.restaurant.repository.DishRepository;
-import ru.ifmo.se.restaurant.repository.EmployeeRepository;
-import ru.ifmo.se.restaurant.repository.OrderItemRepository;
-import ru.ifmo.se.restaurant.repository.OrderRepository;
-import ru.ifmo.se.restaurant.repository.TableRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,38 +21,24 @@ import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
-    private final OrderRepository orderRepository;
-    private final OrderItemRepository orderItemRepository;
-    private final TableRepository tableRepository;
-    private final EmployeeRepository employeeRepository;
-    private final DishRepository dishRepository;
+    private final OrderDataAccess orderDataAccess;
     private final KitchenService kitchenService;
 
-    public OrderService(OrderRepository orderRepository,
-                       OrderItemRepository orderItemRepository,
-                       TableRepository tableRepository,
-                       EmployeeRepository employeeRepository,
-                       DishRepository dishRepository,
+    public OrderService(OrderDataAccess orderDataAccess,
                        KitchenService kitchenService) {
-        this.orderRepository = orderRepository;
-        this.orderItemRepository = orderItemRepository;
-        this.tableRepository = tableRepository;
-        this.employeeRepository = employeeRepository;
-        this.dishRepository = dishRepository;
+        this.orderDataAccess = orderDataAccess;
         this.kitchenService = kitchenService;
     }
 
     @Transactional
     public OrderDto createOrder(OrderDto dto) {
-        Table table = tableRepository.findById(dto.getTableId())
-            .orElseThrow(() -> new ResourceNotFoundException("Table not found with id: " + dto.getTableId()));
-        
+        Table table = orderDataAccess.findTableById(dto.getTableId());
+
         if (table.getStatus() == TableStatus.OCCUPIED) {
             throw new BusinessException("Table is already occupied");
         }
 
-        Employee waiter = employeeRepository.findById(dto.getWaiterId())
-            .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + dto.getWaiterId()));
+        Employee waiter = orderDataAccess.findWaiterById(dto.getWaiterId());
 
         Order order = new Order();
         order.setTable(table);
@@ -67,13 +49,12 @@ public class OrderService {
         order.setTotalAmount(BigDecimal.ZERO);
         order.setItems(new ArrayList<>());
 
-        Order savedOrder = orderRepository.save(order);
+        Order savedOrder = orderDataAccess.saveOrder(order);
 
         BigDecimal total = BigDecimal.ZERO;
         if (dto.getItems() != null && !dto.getItems().isEmpty()) {
             for (OrderItemDto itemDto : dto.getItems()) {
-                Dish dish = dishRepository.findByIdAndIsActiveTrue(itemDto.getDishId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Dish not found with id: " + itemDto.getDishId()));
+                Dish dish = orderDataAccess.findActiveDishById(itemDto.getDishId());
 
                 OrderItem item = new OrderItem();
                 item.setOrder(savedOrder);
@@ -82,32 +63,30 @@ public class OrderService {
                 item.setPrice(dish.getPrice());
                 item.setSpecialRequest(itemDto.getSpecialRequest());
 
-                OrderItem savedItem = orderItemRepository.save(item);
+                OrderItem savedItem = orderDataAccess.saveOrderItem(item);
                 savedOrder.getItems().add(savedItem);
                 
                 total = total.add(dish.getPrice().multiply(BigDecimal.valueOf(itemDto.getQuantity())));
             }
             savedOrder.setTotalAmount(total);
-            savedOrder = orderRepository.save(savedOrder);
+            savedOrder = orderDataAccess.saveOrder(savedOrder);
         }
 
         table.setStatus(TableStatus.OCCUPIED);
-        tableRepository.save(table);
+        orderDataAccess.saveTable(table);
 
         return toOrderDto(savedOrder);
     }
 
     @Transactional
     public OrderDto addItemToOrder(Long orderId, OrderItemDto itemDto) {
-        Order order = orderRepository.findById(orderId)
-            .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        Order order = orderDataAccess.findOrderById(orderId);
         
         if (order.getStatus() != OrderStatus.CREATED && order.getStatus() != OrderStatus.IN_KITCHEN) {
             throw new BusinessException("Cannot add items to order with status: " + order.getStatus());
         }
 
-        Dish dish = dishRepository.findByIdAndIsActiveTrue(itemDto.getDishId())
-            .orElseThrow(() -> new ResourceNotFoundException("Dish not found with id: " + itemDto.getDishId()));
+        Dish dish = orderDataAccess.findActiveDishById(itemDto.getDishId());
 
         OrderItem item = new OrderItem();
         item.setOrder(order);
@@ -116,27 +95,25 @@ public class OrderService {
         item.setPrice(dish.getPrice());
         item.setSpecialRequest(itemDto.getSpecialRequest());
 
-        OrderItem savedItem = orderItemRepository.save(item);
+        OrderItem savedItem = orderDataAccess.saveOrderItem(item);
         order.getItems().add(savedItem);
 
         BigDecimal itemTotal = dish.getPrice().multiply(BigDecimal.valueOf(itemDto.getQuantity()));
         order.setTotalAmount(order.getTotalAmount().add(itemTotal));
         
-        order = orderRepository.save(order);
+        order = orderDataAccess.saveOrder(order);
         return toOrderDto(order);
     }
 
     @Transactional
     public void removeItemFromOrder(Long orderId, Long itemId) {
-        Order order = orderRepository.findById(orderId)
-            .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        Order order = orderDataAccess.findOrderById(orderId);
         
         if (order.getStatus() != OrderStatus.CREATED && order.getStatus() != OrderStatus.IN_KITCHEN) {
             throw new BusinessException("Cannot remove items from order with status: " + order.getStatus());
         }
 
-        OrderItem item = orderItemRepository.findById(itemId)
-            .orElseThrow(() -> new ResourceNotFoundException("Order item not found with id: " + itemId));
+        OrderItem item = orderDataAccess.findOrderItemById(itemId);
 
         if (!item.getOrder().getId().equals(orderId)) {
             throw new BusinessException("Order item does not belong to this order");
@@ -145,15 +122,14 @@ public class OrderService {
         BigDecimal itemTotal = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
         order.setTotalAmount(order.getTotalAmount().subtract(itemTotal));
         
-        orderItemRepository.delete(item);
+        orderDataAccess.deleteOrderItem(item);
         order.getItems().remove(item);
-        orderRepository.save(order);
+        orderDataAccess.saveOrder(order);
     }
 
     @Transactional
     public OrderDto sendOrderToKitchen(Long orderId) {
-        Order order = orderRepository.findById(orderId)
-            .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        Order order = orderDataAccess.findOrderById(orderId);
         
         if (order.getStatus() != OrderStatus.CREATED) {
             throw new BusinessException("Order can only be sent to kitchen from CREATED status");
@@ -164,7 +140,7 @@ public class OrderService {
         }
 
         order.setStatus(OrderStatus.IN_KITCHEN);
-        order = orderRepository.save(order);
+        order = orderDataAccess.saveOrder(order);
 
         kitchenService.addOrderToKitchenQueue(order);
 
@@ -173,8 +149,7 @@ public class OrderService {
 
     @Transactional
     public OrderDto closeOrder(Long orderId) {
-        Order order = orderRepository.findById(orderId)
-            .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        Order order = orderDataAccess.findOrderById(orderId);
         
         if (order.getStatus() != OrderStatus.DELIVERED) {
             throw new BusinessException("Order can only be closed from DELIVERED status");
@@ -182,24 +157,23 @@ public class OrderService {
 
         order.setStatus(OrderStatus.CLOSED);
         order.setClosedAt(LocalDateTime.now());
-        order = orderRepository.save(order);
+        order = orderDataAccess.saveOrder(order);
 
         Table table = order.getTable();
         table.setStatus(TableStatus.FREE);
-        tableRepository.save(table);
+        orderDataAccess.saveTable(table);
 
         return toOrderDto(order);
     }
 
     public OrderDto getOrderById(Long id) {
-        Order order = orderRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
+        Order order = orderDataAccess.findOrderById(id);
         return toOrderDto(order);
     }
 
     public Page<OrderDto> getAllOrders(int page, int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
-        return orderRepository.findAll(pageable).map(this::toOrderDto);
+        return orderDataAccess.findAllOrders(pageable).map(this::toOrderDto);
     }
 
     private OrderDto toOrderDto(Order order) {

@@ -6,6 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import ru.ifmo.se.restaurant.dataaccess.SupplierDataAccess;
 import ru.ifmo.se.restaurant.dto.InventoryDto;
 import ru.ifmo.se.restaurant.dto.SupplierDto;
 import ru.ifmo.se.restaurant.dto.SupplyOrderDto;
@@ -13,10 +15,6 @@ import ru.ifmo.se.restaurant.dto.SupplyOrderIngredientDto;
 import ru.ifmo.se.restaurant.exception.ResourceNotFoundException;
 import ru.ifmo.se.restaurant.model.entity.*;
 import ru.ifmo.se.restaurant.model.SupplyOrderStatus;
-import ru.ifmo.se.restaurant.repository.IngredientRepository;
-import ru.ifmo.se.restaurant.repository.SupplierRepository;
-import ru.ifmo.se.restaurant.repository.SupplyOrderIngredientRepository;
-import ru.ifmo.se.restaurant.repository.SupplyOrderRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -24,21 +22,12 @@ import java.util.stream.Collectors;
 
 @Service
 public class SupplierService {
-    private final SupplierRepository supplierRepository;
-    private final SupplyOrderRepository supplyOrderRepository;
-    private final SupplyOrderIngredientRepository supplyOrderIngredientRepository;
-    private final IngredientRepository ingredientRepository;
+    private final SupplierDataAccess supplierDataAccess;
     private final InventoryService inventoryService;
 
-    public SupplierService(SupplierRepository supplierRepository,
-                          SupplyOrderRepository supplyOrderRepository,
-                          SupplyOrderIngredientRepository supplyOrderIngredientRepository,
-                          IngredientRepository ingredientRepository,
+    public SupplierService(SupplierDataAccess supplierDataAccess,
                           InventoryService inventoryService) {
-        this.supplierRepository = supplierRepository;
-        this.supplyOrderRepository = supplyOrderRepository;
-        this.supplyOrderIngredientRepository = supplyOrderIngredientRepository;
-        this.ingredientRepository = ingredientRepository;
+        this.supplierDataAccess = supplierDataAccess;
         this.inventoryService = inventoryService;
     }
 
@@ -51,45 +40,43 @@ public class SupplierService {
         supplier.setPhone(dto.getPhone());
         supplier.setNotes(dto.getNotes());
         supplier.setIsActive(true);
-        return toSupplierDto(supplierRepository.save(supplier));
+        return toSupplierDto(supplierDataAccess.saveSupplier(supplier));
     }
 
     public SupplierDto getSupplierById(@NonNull Long id) {
-        Supplier supplier = supplierRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + id));
+        Supplier supplier = supplierDataAccess.findSupplierById(id);
         return toSupplierDto(supplier);
     }
 
     public Page<SupplierDto> getAllSuppliers(int page, int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
-        return supplierRepository.findByIsActiveTrue(pageable)
+        return supplierDataAccess.findAllSuppliersByIsActiveTrue(pageable)
             .map(this::toSupplierDto);
     }
 
     @Transactional
     public SupplierDto updateSupplier(@NonNull Long id, SupplierDto dto) {
-        Supplier supplier = supplierRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + id));
+        Supplier supplier = supplierDataAccess.findSupplierById(id)
+        
         supplier.setName(dto.getName());
         supplier.setAddress(dto.getAddress());
         supplier.setEmail(dto.getEmail());
         supplier.setPhone(dto.getPhone());
         supplier.setNotes(dto.getNotes());
-        return toSupplierDto(supplierRepository.save(supplier));
+        return toSupplierDto(supplierDataAccess.saveSupplier(supplier));
     }
 
     @Transactional
     public void deleteSupplier(@NonNull Long id) {
-        Supplier supplier = supplierRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + id));
+        Supplier supplier = supplierDataAccess.findSupplierById(id)
+    
         supplier.setIsActive(false);
-        supplierRepository.save(supplier);
+        supplierDataAccess.saveSupplier(supplier);
     }
 
     @Transactional
     public SupplyOrderDto createSupplyOrder(SupplyOrderDto dto) {
-        Supplier supplier = supplierRepository.findById(dto.getSupplierId())
-            .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + dto.getSupplierId()));
+        Supplier supplier = supplierDataAccess.findSupplierById(dto.getSupplierId());
 
         SupplyOrder supplyOrder = new SupplyOrder();
         supplyOrder.setSupplier(supplier);
@@ -98,12 +85,11 @@ public class SupplierService {
         supplyOrder.setNotes(dto.getNotes());
         supplyOrder.setIngredients(new ArrayList<>());
 
-        SupplyOrder saved = supplyOrderRepository.save(supplyOrder);
+        SupplyOrder saved = supplierDataAccess.saveSupplyOrder(supplyOrder);
 
         if (dto.getIngredients() != null && !dto.getIngredients().isEmpty()) {
             for (SupplyOrderIngredientDto ingredientDto : dto.getIngredients()) {
-                Ingredient ingredient = ingredientRepository.findById(ingredientDto.getIngredientId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Ingredient not found with id: " + ingredientDto.getIngredientId()));
+                Ingredient ingredient = supplierDataAccess.findIngredientById(ingredientDto.getIngredientId());
 
                 SupplyOrderIngredient orderIngredient = new SupplyOrderIngredient();
                 orderIngredient.setSupplyOrder(saved);
@@ -111,7 +97,7 @@ public class SupplierService {
                 orderIngredient.setQuantity(ingredientDto.getQuantity());
                 orderIngredient.setPricePerUnit(ingredientDto.getPricePerUnit());
 
-                supplyOrderIngredientRepository.save(orderIngredient);
+                supplierDataAccess.saveSupplyOrderIngredient(orderIngredient);
                 saved.getIngredients().add(orderIngredient);
             }
         }
@@ -121,8 +107,7 @@ public class SupplierService {
 
     @Transactional
     public SupplyOrderDto receiveSupplyOrder(@NonNull Long orderId) {
-        SupplyOrder supplyOrder = supplyOrderRepository.findById(orderId)
-            .orElseThrow(() -> new ResourceNotFoundException("Supply order not found with id: " + orderId));
+        SupplyOrder supplyOrder = supplierDataAccess.findSupplyOrderById(orderId);
 
         if (supplyOrder.getStatus() != SupplyOrderStatus.IN_TRANSIT && 
             supplyOrder.getStatus() != SupplyOrderStatus.ORDERED) {
@@ -131,7 +116,7 @@ public class SupplierService {
 
         supplyOrder.setStatus(SupplyOrderStatus.RECEIVED);
         supplyOrder.setReceivedAt(LocalDateTime.now());
-        supplyOrder = supplyOrderRepository.save(supplyOrder);
+        supplyOrder = supplierDataAccess.saveSupplyOrder(supplyOrder);
 
         for (SupplyOrderIngredient orderIngredient : supplyOrder.getIngredients()) {
             InventoryDto inventoryDto = new InventoryDto();
@@ -147,14 +132,13 @@ public class SupplierService {
     }
 
     public SupplyOrderDto getSupplyOrderById(@NonNull Long id) {
-        SupplyOrder supplyOrder = supplyOrderRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Supply order not found with id: " + id));
+        SupplyOrder supplyOrder = supplierDataAccess.findSupplyOrderById(id);
         return toSupplyOrderDto(supplyOrder);
     }
 
     public Page<SupplyOrderDto> getAllSupplyOrders(int page, int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
-        return supplyOrderRepository.findAll(pageable).map(this::toSupplyOrderDto);
+        return supplierDataAccess.findAllSupplyOrders(pageable).map(this::toSupplyOrderDto);
     }
 
     private SupplierDto toSupplierDto(Supplier supplier) {
