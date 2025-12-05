@@ -5,25 +5,346 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
-    <changeSet id="003-clear-all-tables" author="restaurant" runAlways="true">
-        <validCheckSum>9:cfd325bb5ee4d9f508a2e68980d17fa2</validCheckSum>
-        <validCheckSum>9:496c7a7da4354b98151db46bfa4740c7</validCheckSum>
+    <changeSet id="003-drop-all-tables" author="restaurant" runAlways="true">
         <sql>
-            DELETE FROM bills;
-            DELETE FROM kitchen_queue;
-            DELETE FROM inventory;
-            DELETE FROM supply_order_ingredients;
-            DELETE FROM supply_orders;
-            DELETE FROM suppliers;
-            DELETE FROM order_items;
-            DELETE FROM orders;
-            DELETE FROM dish_ingredients;
-            DELETE FROM dishes;
-            DELETE FROM ingredients;
-            DELETE FROM categories;
-            DELETE FROM tables;
-            DELETE FROM employees;
+            DROP TABLE IF EXISTS bills CASCADE;
+            DROP TABLE IF EXISTS kitchen_queue CASCADE;
+            DROP TABLE IF EXISTS inventory CASCADE;
+            DROP TABLE IF EXISTS supply_order_ingredients CASCADE;
+            DROP TABLE IF EXISTS supply_orders CASCADE;
+            DROP TABLE IF EXISTS suppliers CASCADE;
+            DROP TABLE IF EXISTS order_items CASCADE;
+            DROP TABLE IF EXISTS orders CASCADE;
+            DROP TABLE IF EXISTS dish_ingredients CASCADE;
+            DROP TABLE IF EXISTS dishes CASCADE;
+            DROP TABLE IF EXISTS ingredients CASCADE;
+            DROP TABLE IF EXISTS categories CASCADE;
+            DROP TABLE IF EXISTS tables CASCADE;
+            DROP TABLE IF EXISTS employees CASCADE;
         </sql>
+    </changeSet>
+
+    <!-- Recreate schema -->
+    <changeSet id="003-recreate-categories" author="restaurant" runAlways="true">
+        <createTable tableName="categories">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="description" type="VARCHAR(500)"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="003-recreate-ingredients" author="restaurant" runAlways="true">
+        <createTable tableName="ingredients">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="unit" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="003-recreate-dishes" author="restaurant" runAlways="true">
+        <createTable tableName="dishes">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(1000)"/>
+            <column name="price" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cost" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_dish_category" references="categories(id)"/>
+            </column>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex indexName="idx_dish_category" tableName="dishes">
+            <column name="category_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="003-recreate-dish-ingredients" author="restaurant" runAlways="true">
+        <createTable tableName="dish_ingredients">
+            <column name="dish_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_dish_ingredient_dish" references="dishes(id)"/>
+            </column>
+            <column name="ingredient_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_dish_ingredient_ingredient" references="ingredients(id)"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="dish_ingredients" columnNames="dish_id,ingredient_id"/>
+    </changeSet>
+
+    <changeSet id="003-recreate-tables" author="restaurant" runAlways="true">
+        <createTable tableName="tables">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="table_number" type="INTEGER">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="capacity" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location" type="VARCHAR(200)"/>
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="003-recreate-employees" author="restaurant" runAlways="true">
+        <createTable tableName="employees">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="first_name" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_name" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(100)">
+                <constraints unique="true"/>
+            </column>
+            <column name="phone" type="VARCHAR(20)"/>
+            <column name="role" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="003-recreate-orders" author="restaurant" runAlways="true">
+        <createTable tableName="orders">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="table_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_order_table" references="tables(id)"/>
+            </column>
+            <column name="waiter_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_order_waiter" references="employees(id)"/>
+            </column>
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_amount" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="special_requests" type="VARCHAR(500)"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="closed_at" type="TIMESTAMP"/>
+        </createTable>
+        <createIndex indexName="idx_order_table" tableName="orders">
+            <column name="table_id"/>
+        </createIndex>
+        <createIndex indexName="idx_order_waiter" tableName="orders">
+            <column name="waiter_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="003-recreate-order-items" author="restaurant" runAlways="true">
+        <createTable tableName="order_items">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_order_item_order" references="orders(id)"/>
+            </column>
+            <column name="dish_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_order_item_dish" references="dishes(id)"/>
+            </column>
+            <column name="quantity" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="special_request" type="VARCHAR(500)"/>
+        </createTable>
+        <createIndex indexName="idx_order_item_order" tableName="order_items">
+            <column name="order_id"/>
+        </createIndex>
+        <createIndex indexName="idx_order_item_dish" tableName="order_items">
+            <column name="dish_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="003-recreate-suppliers" author="restaurant" runAlways="true">
+        <createTable tableName="suppliers">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="address" type="VARCHAR(200)"/>
+            <column name="email" type="VARCHAR(100)"/>
+            <column name="phone" type="VARCHAR(20)"/>
+            <column name="notes" type="VARCHAR(500)"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="003-recreate-supply-orders" author="restaurant" runAlways="true">
+        <createTable tableName="supply_orders">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="supplier_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_supply_order_supplier" references="suppliers(id)"/>
+            </column>
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ordered_at" type="TIMESTAMP"/>
+            <column name="received_at" type="TIMESTAMP"/>
+            <column name="notes" type="VARCHAR(1000)"/>
+        </createTable>
+        <createIndex indexName="idx_supply_order_supplier" tableName="supply_orders">
+            <column name="supplier_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="003-recreate-supply-order-ingredients" author="restaurant" runAlways="true">
+        <createTable tableName="supply_order_ingredients">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="supply_order_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_supply_order_ingredient_order" references="supply_orders(id)"/>
+            </column>
+            <column name="ingredient_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_supply_order_ingredient_ingredient" references="ingredients(id)"/>
+            </column>
+            <column name="quantity" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price_per_unit" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex indexName="idx_supply_order_ingredient_order" tableName="supply_order_ingredients">
+            <column name="supply_order_id"/>
+        </createIndex>
+        <createIndex indexName="idx_supply_order_ingredient_ingredient" tableName="supply_order_ingredients">
+            <column name="ingredient_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="003-recreate-inventory" author="restaurant" runAlways="true">
+        <createTable tableName="inventory">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ingredient_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_inventory_ingredient" references="ingredients(id)"/>
+            </column>
+            <column name="quantity" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reserved_quantity" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price_per_unit" type="DECIMAL(10,2)"/>
+            <column name="expiry_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="received_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+        <createIndex indexName="idx_inventory_ingredient" tableName="inventory">
+            <column name="ingredient_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="003-recreate-kitchen-queue" author="restaurant" runAlways="true">
+        <createTable tableName="kitchen_queue">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_kitchen_queue_order" references="orders(id)"/>
+            </column>
+            <column name="order_item_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_kitchen_queue_order_item" references="order_items(id)"/>
+            </column>
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="started_at" type="TIMESTAMP"/>
+            <column name="completed_at" type="TIMESTAMP"/>
+        </createTable>
+        <createIndex indexName="idx_kitchen_queue_order" tableName="kitchen_queue">
+            <column name="order_id"/>
+        </createIndex>
+        <createIndex indexName="idx_kitchen_queue_order_item" tableName="kitchen_queue">
+            <column name="order_item_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="003-recreate-bills" author="restaurant" runAlways="true">
+        <createTable tableName="bills">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_id" type="BIGINT">
+                <constraints nullable="false" unique="true" foreignKeyName="fk_bill_order" references="orders(id)"/>
+            </column>
+            <column name="subtotal" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="discount" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tax" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="issued_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="VARCHAR(500)"/>
+        </createTable>
     </changeSet>
 
     <!-- Заполнение категорий -->

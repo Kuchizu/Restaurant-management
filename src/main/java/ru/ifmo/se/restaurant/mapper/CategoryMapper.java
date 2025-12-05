@@ -25,4 +25,3 @@ public class CategoryMapper implements Mapper<Category, CategoryDto> {
         return entity;
     }
 }
-

@@ -71,6 +71,7 @@
     </changeSet>
 
     <changeSet id="005-create-tables" author="restaurant">
+        <validCheckSum>9:b698855210b1b53a522daaafd2c2fc72</validCheckSum>
         <createTable tableName="tables">
             <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true" nullable="false"/>
@@ -88,6 +89,7 @@
             <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
                 <constraints nullable="false"/>
             </column>
+            <column name="version" type="BIGINT"/>
         </createTable>
     </changeSet>
 
@@ -241,6 +243,7 @@
     </changeSet>
 
     <changeSet id="012-create-inventory" author="restaurant">
+        <validCheckSum>9:a4f7e873beaea6c7f79997a0edfaecce</validCheckSum>
         <createTable tableName="inventory">
             <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true" nullable="false"/>
@@ -261,6 +264,7 @@
             <column name="received_date" type="DATE">
                 <constraints nullable="false"/>
             </column>
+            <column name="version" type="BIGINT"/>
         </createTable>
         <createIndex indexName="idx_inventory_ingredient" tableName="inventory">
             <column name="ingredient_id"/>
