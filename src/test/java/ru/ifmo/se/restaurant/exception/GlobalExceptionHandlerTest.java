@@ -107,11 +107,11 @@ class GlobalExceptionHandlerTest {
 
         ResponseEntity<Map<String, Object>> response = exceptionHandler.handleGenericException(exception);
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(500, response.getBody().get("status"));
-        assertEquals("Internal Server Error", response.getBody().get("error"));
-        assertEquals("Generic error", response.getBody().get("message"));
+        assertEquals(400, response.getBody().get("status"));
+        assertEquals("Request Processing Failed", response.getBody().get("error"));
+        assertEquals("Unable to process your request. Please verify your input and try again.", response.getBody().get("message"));
         assertNotNull(response.getBody().get("timestamp"));
     }
 }

@@ -53,6 +53,23 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
+
+    maxParallelForks = 1
+
+    minHeapSize = "512m"
+    maxHeapSize = "1024m"
+
+    jvmArgs = [
+        '-XX:+UseG1GC',
+        '-XX:MaxGCPauseMillis=100',
+        '-XX:MaxMetaspaceSize=512m'
+    ]
+
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+        showStandardStreams = false
+    }
 }
 
 jacocoTestReport {
