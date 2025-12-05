@@ -8,6 +8,9 @@ import org.springframework.stereotype.Service;
 
 import ru.ifmo.se.restaurant.dataaccess.ReportingDataAccess;
 import ru.ifmo.se.restaurant.dto.DishDto;
+import ru.ifmo.se.restaurant.dto.DishPopularityDto;
+import ru.ifmo.se.restaurant.dto.PopularDishesReportDto;
+import ru.ifmo.se.restaurant.dto.ProfitabilityReportDto;
 import ru.ifmo.se.restaurant.model.entity.Dish;
 import ru.ifmo.se.restaurant.model.entity.Order;
 import ru.ifmo.se.restaurant.model.entity.OrderItem;
@@ -32,7 +35,7 @@ public class ReportingService {
         return revenue != null ? revenue : BigDecimal.ZERO;
     }
 
-    public Map<String, Object> getPopularDishes(LocalDateTime startDate, LocalDateTime endDate, int limit) {
+    public PopularDishesReportDto getPopularDishes(LocalDateTime startDate, LocalDateTime endDate, int limit) {
         List<Order> orders = reportingDataAccess.findOrdersByDateRange(startDate, endDate);
         Map<Long, Integer> dishQuantityMap = new HashMap<>();
         Map<Long, Dish> dishMap = new HashMap<>();
@@ -46,32 +49,24 @@ public class ReportingService {
             }
         }
 
-        List<Map<String, Object>> popularDishes = dishQuantityMap.entrySet().stream()
+        List<DishPopularityDto> popularDishes = dishQuantityMap.entrySet().stream()
             .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
             .limit(limit)
             .map(entry -> {
                 Dish dish = dishMap.get(entry.getKey());
-                Map<String, Object> dishInfo = new HashMap<>();
-                dishInfo.put("dishId", dish.getId());
-                dishInfo.put("dishName", dish.getName());
-                dishInfo.put("quantity", entry.getValue());
-                return dishInfo;
+                return new DishPopularityDto(dish.getId(), dish.getName(), entry.getValue());
             })
             .collect(Collectors.toList());
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("startDate", startDate);
-        result.put("endDate", endDate);
-        result.put("popularDishes", popularDishes);
-        return result;
+        return new PopularDishesReportDto(startDate, endDate, popularDishes);
     }
 
-    public Map<String, Object> getProfitability(LocalDateTime startDate, LocalDateTime endDate) {
+    public ProfitabilityReportDto getProfitability(LocalDateTime startDate, LocalDateTime endDate) {
         BigDecimal revenue = getRevenue(startDate, endDate);
-        
+
         List<Order> orders = reportingDataAccess.findOrdersByDateRange(startDate, endDate);
         BigDecimal totalCost = BigDecimal.ZERO;
-        
+
         for (Order order : orders) {
             List<OrderItem> items = reportingDataAccess.findOrderItemsByOrderId(order.getId());
             for (OrderItem item : items) {
@@ -79,20 +74,13 @@ public class ReportingService {
                 totalCost = totalCost.add(itemCost);
             }
         }
-        
+
         BigDecimal profit = revenue.subtract(totalCost);
-        BigDecimal profitMargin = revenue.compareTo(BigDecimal.ZERO) > 0 
+        BigDecimal profitMargin = revenue.compareTo(BigDecimal.ZERO) > 0
             ? profit.divide(revenue, 4, java.math.RoundingMode.HALF_UP).multiply(new BigDecimal("100"))
             : BigDecimal.ZERO;
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("startDate", startDate);
-        result.put("endDate", endDate);
-        result.put("revenue", revenue);
-        result.put("totalCost", totalCost);
-        result.put("profit", profit);
-        result.put("profitMargin", profitMargin);
-        return result;
+        return new ProfitabilityReportDto(startDate, endDate, revenue, totalCost, profit, profitMargin);
     }
 
     public Page<DishDto> getDishesByRevenue(int page, int size, LocalDateTime startDate, LocalDateTime endDate) {
