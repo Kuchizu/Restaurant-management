@@ -5,15 +5,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import ru.ifmo.se.restaurant.dataaccess.KitchenDataAccess;
 import ru.ifmo.se.restaurant.dto.KitchenQueueDto;
-import ru.ifmo.se.restaurant.exception.ResourceNotFoundException;
 import ru.ifmo.se.restaurant.model.entity.KitchenQueue;
 import ru.ifmo.se.restaurant.model.entity.Order;
 import ru.ifmo.se.restaurant.model.entity.OrderItem;
 import ru.ifmo.se.restaurant.model.DishStatus;
 import ru.ifmo.se.restaurant.model.OrderStatus;
-import ru.ifmo.se.restaurant.repository.KitchenQueueRepository;
-import ru.ifmo.se.restaurant.repository.OrderRepository;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -22,34 +21,27 @@ import java.util.stream.Collectors;
 
 @Service
 public class KitchenService {
-    private final KitchenQueueRepository kitchenQueueRepository;
-    private final OrderRepository orderRepository;
+    private final KitchenDataAccess dataAccess;
 
-    public KitchenService(KitchenQueueRepository kitchenQueueRepository,
-                          OrderRepository orderRepository) {
-        this.kitchenQueueRepository = kitchenQueueRepository;
-        this.orderRepository = orderRepository;
+    public KitchenService(KitchenDataAccess dataAccess) {
+        this.dataAccess = dataAccess;
     }
 
     @Transactional
     public void addOrderToKitchenQueue(Order order) {
-        if (order.getItems() == null || order.getItems().isEmpty()) {
-            throw new ru.ifmo.se.restaurant.exception.BusinessException("Cannot add empty order to kitchen queue");
-        }
         for (OrderItem item : order.getItems()) {
             KitchenQueue queueItem = new KitchenQueue();
             queueItem.setOrder(order);
             queueItem.setOrderItem(item);
             queueItem.setStatus(DishStatus.PENDING);
             queueItem.setCreatedAt(LocalDateTime.now());
-            kitchenQueueRepository.save(queueItem);
+            dataAccess.saveKitchenQueue(queueItem);
         }
     }
 
-    @Transactional(readOnly = true)
     public List<KitchenQueueDto> getKitchenQueue() {
         List<DishStatus> activeStatuses = Arrays.asList(DishStatus.PENDING, DishStatus.IN_PROGRESS);
-        return kitchenQueueRepository.findByStatusesOrderByCreatedAtAsc(activeStatuses)
+        return dataAccess.findByStatusesOrderByCreatedAtAsc(activeStatuses)
             .stream()
             .map(this::toDto)
             .collect(Collectors.toList());
@@ -57,8 +49,7 @@ public class KitchenService {
 
     @Transactional
     public KitchenQueueDto updateDishStatus(Long queueId, DishStatus status) {
-        KitchenQueue queueItem = kitchenQueueRepository.findById(queueId)
-            .orElseThrow(() -> new ResourceNotFoundException("Kitchen queue item not found with id: " + queueId));
+        KitchenQueue queueItem = dataAccess.findKitchenQueueById(queueId);
 
         queueItem.setStatus(status);
         
@@ -71,24 +62,24 @@ public class KitchenService {
             checkAndUpdateOrderStatus(queueItem.getOrder());
         }
 
-        return toDto(kitchenQueueRepository.save(queueItem));
+        return toDto(dataAccess.saveKitchenQueue(queueItem));
     }
 
-    public void checkAndUpdateOrderStatus(Order order) {
-        List<KitchenQueue> queueItems = kitchenQueueRepository.findByOrderId(order.getId());
+    @Transactional
+    private void checkAndUpdateOrderStatus(Order order) {
+        List<KitchenQueue> queueItems = dataAccess.findByOrderId(order.getId());
         boolean allReady = queueItems.stream()
             .allMatch(item -> item.getStatus() == DishStatus.READY || item.getStatus() == DishStatus.SERVED);
-
+        
         if (allReady && order.getStatus() == OrderStatus.IN_KITCHEN) {
-            order.setStatus(OrderStatus.READY);
-            orderRepository.save(order);
+            order.setStatus(OrderStatus.PREPARING);
+            dataAccess.saveOrder(order);
         }
     }
 
-    @Transactional(readOnly = true)
     public Page<KitchenQueueDto> getAllKitchenQueueItems(int page, int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
-        return kitchenQueueRepository.findAll(pageable).map(this::toDto);
+        return dataAccess.findAllKitchenQueues(pageable).map(this::toDto);
     }
 
     private KitchenQueueDto toDto(KitchenQueue queue) {

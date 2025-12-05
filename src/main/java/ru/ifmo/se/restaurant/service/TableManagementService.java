@@ -6,18 +6,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import ru.ifmo.se.restaurant.dataaccess.TableManagementDataAccess;
 import ru.ifmo.se.restaurant.dto.TableDto;
 import ru.ifmo.se.restaurant.exception.ResourceNotFoundException;
 import ru.ifmo.se.restaurant.model.entity.Table;
 import ru.ifmo.se.restaurant.model.TableStatus;
-import ru.ifmo.se.restaurant.repository.TableRepository;
 
 @Service
 public class TableManagementService {
-    private final TableRepository tableRepository;
+    private final TableManagementDataAccess dataAccess;
 
-    public TableManagementService(TableRepository tableRepository) {
-        this.tableRepository = tableRepository;
+    public TableManagementService(TableManagementDataAccess dataAccess) {
+        this.dataAccess = dataAccess;
     }
 
     @Transactional
@@ -28,30 +29,30 @@ public class TableManagementService {
         table.setLocation(dto.getLocation());
         table.setStatus(dto.getStatus() != null ? dto.getStatus() : TableStatus.FREE);
         table.setIsActive(true);
-        return toDto(tableRepository.save(table));
+        return toDto(dataAccess.saveTable(table));
     }
 
     public TableDto getTableById(@NonNull Long id) {
-        Table table = tableRepository.findById(id)
+        Table table = dataAccess.findTableById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Table not found with id: " + id));
         return toDto(table);
     }
 
     public Page<TableDto> getAllTables(int page, int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
-        return tableRepository.findByIsActiveTrue(pageable)
+        return dataAccess.findActiveTables(pageable)
             .map(this::toDto);
     }
 
     public Page<TableDto> getTablesByStatus(TableStatus status, int page, int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
-        return tableRepository.findByStatusAndIsActiveTrue(status, pageable)
+        return dataAccess.findTablesByStatusAndActive(status, pageable)
             .map(this::toDto);
     }
 
     @Transactional
     public TableDto updateTable(@NonNull Long id, TableDto dto) {
-        Table table = tableRepository.findById(id)
+        Table table = dataAccess.findTableById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Table not found with id: " + id));
         table.setTableNumber(dto.getTableNumber());
         table.setCapacity(dto.getCapacity());
@@ -59,15 +60,15 @@ public class TableManagementService {
         if (dto.getStatus() != null) {
             table.setStatus(dto.getStatus());
         }
-        return toDto(tableRepository.save(table));
+        return toDto(dataAccess.saveTable(table));
     }
 
     @Transactional
     public void deleteTable(@NonNull Long id) {
-        Table table = tableRepository.findById(id)
+        Table table = dataAccess.findTableById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Table not found with id: " + id));
         table.setIsActive(false);
-        tableRepository.save(table);
+        dataAccess.saveTable(table);
     }
 
     private TableDto toDto(Table table) {
