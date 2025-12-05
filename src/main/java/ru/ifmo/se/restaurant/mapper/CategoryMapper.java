@@ -20,7 +20,6 @@ public class CategoryMapper implements Mapper<Category, CategoryDto> {
     public Category toEntity(CategoryDto dto) {
         if (dto == null) return null;
         Category entity = new Category();
-        entity.setId(dto.getId());
         entity.setName(dto.getName());
         entity.setDescription(dto.getDescription());
         return entity;

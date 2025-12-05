@@ -39,7 +39,6 @@ public class MenuManagementService {
     @Transactional
     public CategoryDto createCategory(CategoryDto dto) {
         Category category = categoryMapper.toEntity(dto);
-        category.setId(null);
         return categoryMapper.toDto(categoryRepository.save(category));
     }
 
