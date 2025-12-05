@@ -12,7 +12,6 @@ import ru.ifmo.se.restaurant.dto.InventoryDto;
 import ru.ifmo.se.restaurant.dto.SupplierDto;
 import ru.ifmo.se.restaurant.dto.SupplyOrderDto;
 import ru.ifmo.se.restaurant.dto.SupplyOrderIngredientDto;
-import ru.ifmo.se.restaurant.exception.ResourceNotFoundException;
 import ru.ifmo.se.restaurant.model.entity.*;
 import ru.ifmo.se.restaurant.model.SupplyOrderStatus;
 
@@ -56,7 +55,7 @@ public class SupplierService {
 
     @Transactional
     public SupplierDto updateSupplier(@NonNull Long id, SupplierDto dto) {
-        Supplier supplier = supplierDataAccess.findSupplierById(id)
+        Supplier supplier = supplierDataAccess.findSupplierById(id);
         
         supplier.setName(dto.getName());
         supplier.setAddress(dto.getAddress());
@@ -68,7 +67,7 @@ public class SupplierService {
 
     @Transactional
     public void deleteSupplier(@NonNull Long id) {
-        Supplier supplier = supplierDataAccess.findSupplierById(id)
+        Supplier supplier = supplierDataAccess.findSupplierById(id);
     
         supplier.setIsActive(false);
         supplierDataAccess.saveSupplier(supplier);
