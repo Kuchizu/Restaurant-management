@@ -8,6 +8,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.ifmo.se.restaurant.dto.DishDto;
+import ru.ifmo.se.restaurant.dto.PopularDishesReportDto;
+import ru.ifmo.se.restaurant.dto.ProfitabilityReportDto;
 import ru.ifmo.se.restaurant.service.ReportingService;
 
 import java.math.BigDecimal;
@@ -49,7 +51,7 @@ public class ReportingController {
         @ApiResponse(responseCode = "404", description = "Resource not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<Map<String, Object>> getPopularDishes(
+    public ResponseEntity<PopularDishesReportDto> getPopularDishes(
             @Parameter(description = "Start date", example = "2025-12-01T00:00:00") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @Parameter(description = "End date", example = "2025-12-31T23:59:59") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
             @Parameter(description = "Number of dishes to return", example = "10") @RequestParam(defaultValue = "10") int limit) {
@@ -63,7 +65,7 @@ public class ReportingController {
         @ApiResponse(responseCode = "404", description = "Resource not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<Map<String, Object>> getProfitability(
+    public ResponseEntity<ProfitabilityReportDto> getProfitability(
             @Parameter(description = "Start date", example = "2025-12-01T00:00:00") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @Parameter(description = "End date", example = "2025-12-31T23:59:59") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
         return ResponseEntity.ok(reportingService.getProfitability(startDate, endDate));

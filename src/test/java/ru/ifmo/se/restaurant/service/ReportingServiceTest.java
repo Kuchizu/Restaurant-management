@@ -87,11 +87,11 @@ class ReportingServiceTest extends BaseIntegrationTest {
         LocalDateTime startDate = LocalDateTime.now().minusDays(30);
         LocalDateTime endDate = LocalDateTime.now();
 
-        Map<String, Object> result = reportingService.getPopularDishes(startDate, endDate, 10);
+        PopularDishesReportDto result = reportingService.getPopularDishes(startDate, endDate, 10);
         assertNotNull(result);
-        assertTrue(result.containsKey("popularDishes"));
-        assertTrue(result.containsKey("startDate"));
-        assertTrue(result.containsKey("endDate"));
+        assertNotNull(result.getPopularDishes());
+        assertNotNull(result.getStartDate());
+        assertNotNull(result.getEndDate());
     }
 
     @Test
@@ -99,12 +99,12 @@ class ReportingServiceTest extends BaseIntegrationTest {
         LocalDateTime startDate = LocalDateTime.now().minusDays(30);
         LocalDateTime endDate = LocalDateTime.now();
 
-        Map<String, Object> result = reportingService.getProfitability(startDate, endDate);
+        ProfitabilityReportDto result = reportingService.getProfitability(startDate, endDate);
         assertNotNull(result);
-        assertTrue(result.containsKey("revenue"));
-        assertTrue(result.containsKey("totalCost"));
-        assertTrue(result.containsKey("profit"));
-        assertTrue(result.containsKey("profitMargin"));
+        assertNotNull(result.getRevenue());
+        assertNotNull(result.getTotalCost());
+        assertNotNull(result.getProfit());
+        assertNotNull(result.getProfitMargin());
     }
 
     @Test
@@ -131,11 +131,11 @@ class ReportingServiceTest extends BaseIntegrationTest {
         LocalDateTime startDate = LocalDateTime.now().minusDays(30);
         LocalDateTime endDate = LocalDateTime.now();
 
-        Map<String, Object> result = reportingService.getPopularDishes(startDate, endDate, 5);
+        PopularDishesReportDto result = reportingService.getPopularDishes(startDate, endDate, 5);
         assertNotNull(result);
-        assertTrue(result.containsKey("popularDishes"));
-        assertEquals(startDate, result.get("startDate"));
-        assertEquals(endDate, result.get("endDate"));
+        assertNotNull(result.getPopularDishes());
+        assertEquals(startDate, result.getStartDate());
+        assertEquals(endDate, result.getEndDate());
     }
 
     @Test
@@ -143,13 +143,13 @@ class ReportingServiceTest extends BaseIntegrationTest {
         LocalDateTime startDate = LocalDateTime.now().minusYears(10);
         LocalDateTime endDate = LocalDateTime.now().minusYears(9);
 
-        Map<String, Object> result = reportingService.getProfitability(startDate, endDate);
+        ProfitabilityReportDto result = reportingService.getProfitability(startDate, endDate);
         assertNotNull(result);
-        assertTrue(result.containsKey("revenue"));
-        assertTrue(result.containsKey("totalCost"));
-        assertTrue(result.containsKey("profit"));
-        assertTrue(result.containsKey("profitMargin"));
-        assertEquals(BigDecimal.ZERO, result.get("profitMargin"));
+        assertNotNull(result.getRevenue());
+        assertNotNull(result.getTotalCost());
+        assertNotNull(result.getProfit());
+        assertNotNull(result.getProfitMargin());
+        assertEquals(BigDecimal.ZERO, result.getProfitMargin());
     }
 
     @Test
@@ -178,9 +178,9 @@ class ReportingServiceTest extends BaseIntegrationTest {
         LocalDateTime startDate = LocalDateTime.now().minusYears(10);
         LocalDateTime endDate = LocalDateTime.now().minusYears(9);
 
-        Map<String, Object> result = reportingService.getPopularDishes(startDate, endDate, 10);
+        PopularDishesReportDto result = reportingService.getPopularDishes(startDate, endDate, 10);
         assertNotNull(result);
-        assertTrue(result.containsKey("popularDishes"));
+        assertNotNull(result.getPopularDishes());
     }
 
     @Test
@@ -221,10 +221,10 @@ class ReportingServiceTest extends BaseIntegrationTest {
         LocalDateTime startDate = LocalDateTime.now().minusDays(1);
         LocalDateTime endDate = LocalDateTime.now().plusDays(1);
 
-        Map<String, Object> result = reportingService.getPopularDishes(startDate, endDate, 5);
+        PopularDishesReportDto result = reportingService.getPopularDishes(startDate, endDate, 5);
         assertNotNull(result);
-        assertTrue(result.containsKey("popularDishes"));
-        List<?> dishes = (List<?>) result.get("popularDishes");
+        assertNotNull(result.getPopularDishes());
+        List<DishPopularityDto> dishes = result.getPopularDishes();
         assertFalse(dishes.isEmpty());
     }
 
@@ -242,12 +242,12 @@ class ReportingServiceTest extends BaseIntegrationTest {
         LocalDateTime startDate = LocalDateTime.now().minusDays(1);
         LocalDateTime endDate = LocalDateTime.now().plusDays(1);
 
-        Map<String, Object> result = reportingService.getProfitability(startDate, endDate);
+        ProfitabilityReportDto result = reportingService.getProfitability(startDate, endDate);
         assertNotNull(result);
-        BigDecimal revenue = (BigDecimal) result.get("revenue");
-        BigDecimal totalCost = (BigDecimal) result.get("totalCost");
-        BigDecimal profit = (BigDecimal) result.get("profit");
-        BigDecimal profitMargin = (BigDecimal) result.get("profitMargin");
+        BigDecimal revenue = result.getRevenue();
+        BigDecimal totalCost = result.getTotalCost();
+        BigDecimal profit = result.getProfit();
+        BigDecimal profitMargin = result.getProfitMargin();
 
         assertNotNull(revenue);
         assertNotNull(totalCost);

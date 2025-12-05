@@ -6,35 +6,29 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.se.restaurant.dto.DishDto;
-import ru.ifmo.se.restaurant.model.entity.Dish;
-import ru.ifmo.se.restaurant.model.entity.Order;
-import ru.ifmo.se.restaurant.model.entity.OrderItem;
+import ru.ifmo.se.restaurant.dto.DishPopularityDto;
+import ru.ifmo.se.restaurant.dto.PopularDishesReportDto;
+import ru.ifmo.se.restaurant.dto.ProfitabilityReportDto;
 import ru.ifmo.se.restaurant.repository.BillRepository;
 import ru.ifmo.se.restaurant.repository.DishRepository;
 import ru.ifmo.se.restaurant.repository.OrderItemRepository;
-import ru.ifmo.se.restaurant.repository.OrderRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
 public class ReportingService {
     private final BillRepository billRepository;
-    private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final DishRepository dishRepository;
 
     public ReportingService(BillRepository billRepository,
-                          OrderRepository orderRepository,
                           OrderItemRepository orderItemRepository,
                           DishRepository dishRepository) {
         this.billRepository = billRepository;
-        this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.dishRepository = dishRepository;
     }
@@ -44,110 +38,61 @@ public class ReportingService {
         return revenue != null ? revenue : BigDecimal.ZERO;
     }
 
-    public Map<String, Object> getPopularDishes(LocalDateTime startDate, LocalDateTime endDate, int limit) {
-        List<Order> orders = orderRepository.findByDateRangeWithItems(startDate, endDate);
-        Map<Long, Integer> dishQuantityMap = new HashMap<>();
-        Map<Long, Dish> dishMap = new HashMap<>();
+    public PopularDishesReportDto getPopularDishes(LocalDateTime startDate, LocalDateTime endDate, int limit) {
+        List<Object[]> results = orderItemRepository.findPopularDishes(startDate, endDate);
 
-        for (Order order : orders) {
-            for (OrderItem item : order.getItems()) {
-                if (item.getDish() == null || item.getDish().getId() == null) {
-                    continue;
-                }
-                Long dishId = item.getDish().getId();
-                dishQuantityMap.merge(dishId, item.getQuantity(), Integer::sum);
-                dishMap.putIfAbsent(dishId, item.getDish());
-            }
-        }
-
-        List<Map<String, Object>> popularDishes = dishQuantityMap.entrySet().stream()
-            .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+        List<DishPopularityDto> popularDishes = results.stream()
             .limit(limit)
-            .map(entry -> {
-                Dish dish = dishMap.get(entry.getKey());
-                Map<String, Object> dishInfo = new HashMap<>();
-                dishInfo.put("dishId", dish.getId());
-                dishInfo.put("dishName", dish.getName());
-                dishInfo.put("quantity", entry.getValue());
-                return dishInfo;
-            })
+            .map(row -> new DishPopularityDto(
+                ((Number) row[0]).longValue(),
+                (String) row[1],
+                ((Number) row[2]).intValue()
+            ))
             .collect(Collectors.toList());
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("startDate", startDate);
-        result.put("endDate", endDate);
-        result.put("popularDishes", popularDishes);
-        return result;
+        return new PopularDishesReportDto(startDate, endDate, popularDishes);
     }
 
-    public Map<String, Object> getProfitability(LocalDateTime startDate, LocalDateTime endDate) {
+    public ProfitabilityReportDto getProfitability(LocalDateTime startDate, LocalDateTime endDate) {
         BigDecimal revenue = getRevenue(startDate, endDate);
+        BigDecimal totalCost = orderItemRepository.calculateTotalCost(startDate, endDate);
 
-        List<Order> orders = orderRepository.findByDateRangeWithItems(startDate, endDate);
-        BigDecimal totalCost = BigDecimal.ZERO;
-
-        for (Order order : orders) {
-            for (OrderItem item : order.getItems()) {
-                if (item.getDish() == null || item.getDish().getCost() == null) {
-                    continue;
-                }
-                BigDecimal itemCost = item.getDish().getCost().multiply(BigDecimal.valueOf(item.getQuantity()));
-                totalCost = totalCost.add(itemCost);
-            }
+        if (totalCost == null) {
+            totalCost = BigDecimal.ZERO;
         }
-        
+
         BigDecimal profit = revenue.subtract(totalCost);
-        BigDecimal profitMargin = revenue.compareTo(BigDecimal.ZERO) > 0 
+        BigDecimal profitMargin = revenue.compareTo(BigDecimal.ZERO) > 0
             ? profit.divide(revenue, 4, java.math.RoundingMode.HALF_UP).multiply(new BigDecimal("100"))
             : BigDecimal.ZERO;
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("startDate", startDate);
-        result.put("endDate", endDate);
-        result.put("revenue", revenue);
-        result.put("totalCost", totalCost);
-        result.put("profit", profit);
-        result.put("profitMargin", profitMargin);
-        return result;
+        return new ProfitabilityReportDto(startDate, endDate, revenue, totalCost, profit, profitMargin);
     }
 
     public Page<DishDto> getDishesByRevenue(int page, int size, LocalDateTime startDate, LocalDateTime endDate) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
-        List<Order> orders = orderRepository.findByDateRangeWithItems(startDate, endDate);
-
-        Map<Long, BigDecimal> dishRevenueMap = new HashMap<>();
-        Map<Long, Dish> dishMap = new HashMap<>();
-
-        for (Order order : orders) {
-            for (OrderItem item : order.getItems()) {
-                if (item.getDish() == null || item.getDish().getId() == null || item.getPrice() == null) {
-                    continue;
-                }
-                Long dishId = item.getDish().getId();
-                BigDecimal itemRevenue = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
-                dishRevenueMap.merge(dishId, itemRevenue, BigDecimal::add);
-                dishMap.putIfAbsent(dishId, item.getDish());
-            }
-        }
-
-        List<Dish> sortedDishes = dishRevenueMap.entrySet().stream()
-            .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
-            .map(entry -> dishMap.get(entry.getKey()))
-            .collect(Collectors.toList());
+        List<Object[]> results = orderItemRepository.findDishesByRevenue(startDate, endDate);
 
         int start = page * size;
-        int end = Math.min(start + size, sortedDishes.size());
-        List<Dish> pagedDishes = sortedDishes.subList(start, end);
+        int end = Math.min(start + size, results.size());
 
-        return dishRepository.findAll(PageRequest.of(page, size))
-            .map(dish -> {
-                DishDto dto = new DishDto();
-                dto.setId(dish.getId());
-                dto.setName(dish.getName());
-                dto.setPrice(dish.getPrice());
-                dto.setCost(dish.getCost());
-                return dto;
-            });
+        if (start >= results.size()) {
+            return dishRepository.findAll(pageable).map(this::convertToDishDto);
+        }
+
+        List<Long> dishIds = results.subList(start, end).stream()
+            .map(row -> ((Number) row[0]).longValue())
+            .collect(Collectors.toList());
+
+        return dishRepository.findAll(pageable).map(this::convertToDishDto);
+    }
+
+    private DishDto convertToDishDto(ru.ifmo.se.restaurant.model.entity.Dish dish) {
+        DishDto dto = new DishDto();
+        dto.setId(dish.getId());
+        dto.setName(dish.getName());
+        dto.setPrice(dish.getPrice());
+        dto.setCost(dish.getCost());
+        return dto;
     }
 }
-
