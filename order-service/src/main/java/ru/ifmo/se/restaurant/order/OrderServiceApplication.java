@@ -8,6 +8,6 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @EnableDiscoveryClient
 public class OrderServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(OrderServiceApplication.java, args);
+        SpringApplication.run(OrderServiceApplication.class, args);
     }
 }

@@ -8,6 +8,6 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @EnableDiscoveryClient
 public class KitchenServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(KitchenServiceApplication.java, args);
+        SpringApplication.run(KitchenServiceApplication.class, args);
     }
 }
