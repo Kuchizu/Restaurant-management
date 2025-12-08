@@ -1,0 +1,31 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: kitchen-service
+  cloud:
+    config:
+      uri: http://localhost:8888
+      fail-fast: false
+  datasource:
+    url: jdbc:postgresql://localhost:5433/kitchen_db
+    username: restaurant_user
+    password: restaurant_pass
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    preferIpAddress: true
