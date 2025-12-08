@@ -64,4 +64,8 @@ public class SupplierDataAccess {
     public SupplyOrderIngredient saveSupplyOrderIngredient(SupplyOrderIngredient ingr) {
         return supplyOrderIngredientRepository.save(ingr);
     }
+
+    public void deleteSupplier(Supplier supplier) {
+        supplierRepository.delete(supplier);
+    }
 }

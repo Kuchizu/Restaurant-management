@@ -32,7 +32,7 @@ public class TableDto {
     @Schema(description = "Table location in restaurant", example = "Main dining area, near window")
     private String location;
 
-    @Schema(description = "Current table status", example = "AVAILABLE")
+    @Schema(description = "Current table status", example = "FREE")
     private TableStatus status;
 
     @Schema(description = "Whether table is active", example = "true")

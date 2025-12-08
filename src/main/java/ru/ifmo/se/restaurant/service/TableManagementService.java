@@ -67,8 +67,7 @@ public class TableManagementService {
     public void deleteTable(@NonNull Long id) {
         Table table = dataAccess.findTableById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Table not found with id: " + id));
-        table.setIsActive(false);
-        dataAccess.saveTable(table);
+        dataAccess.deleteTable(table);
     }
 
     private TableDto toDto(Table table) {

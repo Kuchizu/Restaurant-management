@@ -7,7 +7,6 @@
 
     <include file="db/changelog/changes/001-initial-schema.xml"/>
     <include file="db/changelog/changes/002-add-category-is-active.xml"/>
-    <include file="db/changelog/changes/003-clear-and-seed-data.xml"/>
+    <!-- <include file="db/changelog/changes/003-clear-and-seed-data.xml"/> -->
 
 </databaseChangeLog>
-

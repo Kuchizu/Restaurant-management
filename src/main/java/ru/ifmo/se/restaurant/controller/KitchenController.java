@@ -55,7 +55,7 @@ public class KitchenController {
     })
     public ResponseEntity<KitchenQueueDto> updateDishStatus(
             @Parameter(description = "Queue ID", required = true, example = "1") @PathVariable Long queueId,
-            @Parameter(description = "Dish status", example = "PREPARING") @RequestParam DishStatus status) {
+            @Parameter(description = "Dish status", example = "IN_PROGRESS") @RequestParam DishStatus status) {
         return ResponseEntity.ok(kitchenService.updateDishStatus(queueId, status));
     }
 }

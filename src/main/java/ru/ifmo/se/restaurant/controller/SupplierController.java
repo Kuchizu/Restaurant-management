@@ -116,16 +116,4 @@ public class SupplierController {
             @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(supplierService.getAllSupplyOrders(page, size));
     }
-
-    @PostMapping("/supply-orders/{orderId}/receive")
-    @io.swagger.v3.oas.annotations.Operation(summary = "Receive supply order")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Created"),
-        @ApiResponse(responseCode = "400", description = "Invalid input")
-    })
-    public ResponseEntity<SupplyOrderDto> receiveSupplyOrder(
-            @Parameter(description = "Supply order ID", required = true, example = "1") @PathVariable Long orderId) {
-        return ResponseEntity.ok(supplierService.receiveSupplyOrder(orderId));
-    }
 }
-

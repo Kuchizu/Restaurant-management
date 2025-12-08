@@ -36,4 +36,5 @@ public class MenuManagementDataAccess {
     public Page<Dish> findActiveDishes(Pageable pageable) { return dishRepository.findByIsActiveTrue(pageable); }
     public Page<Dish> findDishesByCategory(Long categoryId, Pageable pageable) { return dishRepository.findByCategoryIdAndIsActiveTrue(categoryId, pageable); }
     public List<Ingredient> findIngredientsByIds(List<Long> ids) { return ingredientRepository.findAllById(ids); }
+    public void deleteDish(Dish dish) { dishRepository.delete(dish); }
 }

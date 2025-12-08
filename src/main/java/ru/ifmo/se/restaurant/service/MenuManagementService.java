@@ -131,8 +131,7 @@ public class MenuManagementService {
     public void deleteDish(Long id) {
         Dish dish = dataAccess.findActiveDishById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Dish not found with id: " + id));
-        dish.setIsActive(false);
-        dataAccess.saveDish(dish);
+        dataAccess.deleteDish(dish);
     }
 
     private DishDto toDishDto(Dish dish) {

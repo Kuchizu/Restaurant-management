@@ -10,7 +10,7 @@ spring:
   
   jpa:
     hibernate:
-      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:create-drop}
     show-sql: ${SPRING_JPA_SHOW_SQL:false}
     properties:
       hibernate:
@@ -20,9 +20,9 @@ spring:
           batch_size: 20
         order_inserts: true
         order_updates: true
-  
+
   liquibase:
-    enabled: ${SPRING_LIQUIBASE_ENABLED:true}
+    enabled: ${SPRING_LIQUIBASE_ENABLED:false}
     change-log: classpath:db/changelog/db.changelog-master.xml
   
   jackson:

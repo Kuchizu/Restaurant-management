@@ -27,8 +27,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-restaurant_db}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-restaurant_user}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-restaurant_pass}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      SPRING_LIQUIBASE_ENABLED: ${SPRING_LIQUIBASE_ENABLED:-true}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+      SPRING_LIQUIBASE_ENABLED: false
       SERVER_PORT: 49999
     depends_on:
       postgres:
@@ -37,4 +37,3 @@ services:
 
 volumes:
   postgres_data:
-

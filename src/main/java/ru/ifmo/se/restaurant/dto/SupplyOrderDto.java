@@ -28,7 +28,7 @@ public class SupplyOrderDto {
     @Schema(description = "Supplier name", example = "Fresh Foods Inc.")
     private String supplierName;
 
-    @Schema(description = "Supply order status", example = "PENDING")
+    @Schema(description = "Supply order status", example = "CREATED")
     private SupplyOrderStatus status;
 
     @Schema(description = "Creation timestamp", example = "2025-12-05T10:00:00")

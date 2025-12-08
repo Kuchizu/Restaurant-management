@@ -68,9 +68,7 @@ public class SupplierService {
     @Transactional
     public void deleteSupplier(@NonNull Long id) {
         Supplier supplier = supplierDataAccess.findSupplierById(id);
-    
-        supplier.setIsActive(false);
-        supplierDataAccess.saveSupplier(supplier);
+        supplierDataAccess.deleteSupplier(supplier);
     }
 
     @Transactional

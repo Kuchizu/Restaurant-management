@@ -17,4 +17,5 @@ public class TableManagementDataAccess {
     public Optional<Table> findTableById(Long id) { return tableRepository.findById(id); }
     public Page<Table> findActiveTables(Pageable pageable) { return tableRepository.findByIsActiveTrue(pageable); }
     public Page<Table> findTablesByStatusAndActive(TableStatus status, Pageable pageable) { return tableRepository.findByStatusAndIsActiveTrue(status, pageable); }
+    public void deleteTable(Table table) { tableRepository.delete(table); }
 }
