@@ -1,39 +1,92 @@
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: restaurant-postgres
+  order-db:
+    image: postgres:16-alpine
+    container_name: order-db
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-restaurant_db}
-      POSTGRES_USER: ${POSTGRES_USER:-restaurant_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-restaurant_pass}
+      POSTGRES_DB: order_db
+      POSTGRES_USER: restaurant_user
+      POSTGRES_PASSWORD: restaurant_pass
     ports:
-      - "${POSTGRES_PORT:-48999}:5432"
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - order_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-restaurant_user} -d ${POSTGRES_DB:-restaurant_db}"]
+      test: ["CMD-SHELL", "pg_isready -U restaurant_user -d order_db"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: restaurant-app
-    ports:
-      - "${APP_PORT:-49999}:49999"
+  kitchen-db:
+    image: postgres:16-alpine
+    container_name: kitchen-db
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-restaurant_db}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-restaurant_user}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-restaurant_pass}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
-      SPRING_LIQUIBASE_ENABLED: false
-      SERVER_PORT: 49999
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: unless-stopped
+      POSTGRES_DB: kitchen_db
+      POSTGRES_USER: restaurant_user
+      POSTGRES_PASSWORD: restaurant_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - kitchen_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U restaurant_user -d kitchen_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  menu-db:
+    image: postgres:16-alpine
+    container_name: menu-db
+    environment:
+      POSTGRES_DB: menu_db
+      POSTGRES_USER: restaurant_user
+      POSTGRES_PASSWORD: restaurant_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - menu_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U restaurant_user -d menu_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  inventory-db:
+    image: postgres:16-alpine
+    container_name: inventory-db
+    environment:
+      POSTGRES_DB: inventory_db
+      POSTGRES_USER: restaurant_user
+      POSTGRES_PASSWORD: restaurant_pass
+    ports:
+      - "5435:5432"
+    volumes:
+      - inventory_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U restaurant_user -d inventory_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  billing-db:
+    image: postgres:16-alpine
+    container_name: billing-db
+    environment:
+      POSTGRES_DB: billing_db
+      POSTGRES_USER: restaurant_user
+      POSTGRES_PASSWORD: restaurant_pass
+    ports:
+      - "5436:5432"
+    volumes:
+      - billing_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U restaurant_user -d billing_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  postgres_data:
+  order_data:
+  kitchen_data:
+  menu_data:
+  inventory_data:
+  billing_data:
