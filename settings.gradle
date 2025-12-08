@@ -2,4 +2,13 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
 }
 
-rootProject.name = 'restaurant-management'
+rootProject.name = 'restaurant-microservices'
+
+include 'eureka-server'
+include 'config-server'
+include 'api-gateway'
+include 'order-service'
+include 'kitchen-service'
+include 'menu-service'
+include 'inventory-service'
+include 'billing-service'
