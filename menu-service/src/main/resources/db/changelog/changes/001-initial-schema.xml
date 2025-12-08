@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="1" author="menu-service">
+        <createTable tableName="categories">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="description" type="VARCHAR(500)"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="ingredients">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="unit" type="VARCHAR(50)"/>
+        </createTable>
+
+        <createTable tableName="dishes">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(200)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="description" type="VARCHAR(1000)"/>
+            <column name="price" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cost" type="DECIMAL(10,2)"/>
+            <column name="category_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="dish_ingredients">
+            <column name="dish_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ingredient_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="dishes" baseColumnNames="category_id"
+                                 constraintName="fk_dish_category"
+                                 referencedTableName="categories" referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint baseTableName="dish_ingredients" baseColumnNames="dish_id"
+                                 constraintName="fk_dish_ingredients_dish"
+                                 referencedTableName="dishes" referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint baseTableName="dish_ingredients" baseColumnNames="ingredient_id"
+                                 constraintName="fk_dish_ingredients_ingredient"
+                                 referencedTableName="ingredients" referencedColumnNames="id"/>
+
+        <addPrimaryKey tableName="dish_ingredients" columnNames="dish_id, ingredient_id"/>
+    </changeSet>
+
+    <changeSet id="2" author="menu-service">
+        <insert tableName="categories">
+            <column name="name" value="Appetizers"/>
+            <column name="description" value="Starters and small bites"/>
+        </insert>
+        <insert tableName="categories">
+            <column name="name" value="Main Courses"/>
+            <column name="description" value="Main dishes"/>
+        </insert>
+        <insert tableName="categories">
+            <column name="name" value="Desserts"/>
+            <column name="description" value="Sweet treats"/>
+        </insert>
+        <insert tableName="categories">
+            <column name="name" value="Beverages"/>
+            <column name="description" value="Drinks"/>
+        </insert>
+
+        <insert tableName="ingredients">
+            <column name="name" value="Tomato"/>
+            <column name="unit" value="kg"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="name" value="Cheese"/>
+            <column name="unit" value="kg"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="name" value="Flour"/>
+            <column name="unit" value="kg"/>
+        </insert>
+
+        <insert tableName="dishes">
+            <column name="name" value="Margherita Pizza"/>
+            <column name="description" value="Classic pizza with tomato and cheese"/>
+            <column name="price" value="12.99"/>
+            <column name="cost" value="4.50"/>
+            <column name="category_id" valueComputed="(SELECT id FROM categories WHERE name = 'Main Courses')"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
