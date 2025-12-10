@@ -15,6 +15,10 @@ subprojects {
     group = 'ru.ifmo.se.restaurant'
     version = '1.0.0'
 
+    tasks.withType(JavaExec) {
+        jvmArgs = ['-Xmx256m', '-Xms128m', '-XX:MaxMetaspaceSize=128m']
+    }
+
     java {
         toolchain {
             languageVersion = JavaLanguageVersion.of(21)

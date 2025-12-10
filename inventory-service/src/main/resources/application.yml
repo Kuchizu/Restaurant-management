@@ -11,7 +11,7 @@ spring:
       uri: http://localhost:8888
       fail-fast: false
   datasource:
-    url: jdbc:postgresql://localhost:5434/inventory_db
+    url: jdbc:postgresql://localhost:5435/inventory_db
     username: restaurant_user
     password: restaurant_pass
   jpa:
