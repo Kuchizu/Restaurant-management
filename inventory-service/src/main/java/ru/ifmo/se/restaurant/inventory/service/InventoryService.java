@@ -1,6 +1,7 @@
 package ru.ifmo.se.restaurant.inventory.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.se.restaurant.inventory.dto.IngredientDto;
@@ -8,6 +9,7 @@ import ru.ifmo.se.restaurant.inventory.dto.InventoryDto;
 import ru.ifmo.se.restaurant.inventory.entity.Ingredient;
 import ru.ifmo.se.restaurant.inventory.entity.Inventory;
 import ru.ifmo.se.restaurant.inventory.exception.ResourceNotFoundException;
+import ru.ifmo.se.restaurant.inventory.exception.ValidationException;
 import ru.ifmo.se.restaurant.inventory.repository.IngredientRepository;
 import ru.ifmo.se.restaurant.inventory.repository.InventoryRepository;
 
@@ -16,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class InventoryService {
@@ -35,7 +38,7 @@ public class InventoryService {
     }
 
     public List<InventoryDto> getLowStockInventory() {
-        return inventoryRepository.findByQuantityLessThanMinQuantity().stream()
+        return inventoryRepository.findLowStockItems().stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
@@ -142,6 +145,14 @@ public class InventoryService {
     }
 
     private InventoryDto toDto(Inventory inventory) {
+        if (inventory.getIngredient() == null) {
+            log.error("Inventory {} has null ingredient - data integrity issue", inventory.getId());
+            throw new ValidationException(
+                "Inventory item has no ingredient assigned",
+                "ingredient",
+                null
+            );
+        }
         InventoryDto dto = new InventoryDto();
         dto.setId(inventory.getId());
         dto.setIngredientId(inventory.getIngredient().getId());

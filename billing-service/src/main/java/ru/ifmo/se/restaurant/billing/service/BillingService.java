@@ -10,7 +10,9 @@ import ru.ifmo.se.restaurant.billing.dto.OrderDto;
 import ru.ifmo.se.restaurant.billing.entity.Bill;
 import ru.ifmo.se.restaurant.billing.entity.BillStatus;
 import ru.ifmo.se.restaurant.billing.entity.PaymentMethod;
+import ru.ifmo.se.restaurant.billing.exception.BusinessConflictException;
 import ru.ifmo.se.restaurant.billing.exception.ResourceNotFoundException;
+import ru.ifmo.se.restaurant.billing.exception.ServiceUnavailableException;
 import ru.ifmo.se.restaurant.billing.repository.BillRepository;
 
 import java.math.BigDecimal;
@@ -55,12 +57,21 @@ public class BillingService {
     @Transactional
     public BillDto generateBill(Long orderId) {
         billRepository.findByOrderId(orderId).ifPresent(existingBill -> {
-            throw new RuntimeException("Bill already exists for this order");
+            throw new BusinessConflictException(
+                "Bill already exists for this order",
+                "Bill",
+                orderId,
+                "Existing bill ID: " + existingBill.getId()
+            );
         });
 
         OrderDto order = orderServiceClient.getOrder(orderId);
         if (order == null) {
-            throw new RuntimeException("Order service unavailable or order not found");
+            throw new ServiceUnavailableException(
+                "Order service is currently unavailable",
+                "order-service",
+                "getOrder"
+            );
         }
 
         Bill bill = new Bill();
@@ -93,7 +104,12 @@ public class BillingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Bill not found"));
 
         if (bill.getStatus() != BillStatus.PENDING) {
-            throw new RuntimeException("Cannot apply discount to non-pending bill");
+            throw new BusinessConflictException(
+                "Cannot apply discount to non-pending bill",
+                "Bill",
+                billId,
+                "Current status: " + bill.getStatus()
+            );
         }
 
         bill.setDiscountAmount(discountAmount);
@@ -111,7 +127,12 @@ public class BillingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Bill not found"));
 
         if (bill.getStatus() != BillStatus.PENDING) {
-            throw new RuntimeException("Bill is not in pending status");
+            throw new BusinessConflictException(
+                "Cannot pay bill: must be in PENDING status",
+                "Bill",
+                billId,
+                "Current status: " + bill.getStatus()
+            );
         }
 
         bill.setStatus(BillStatus.PAID);
@@ -127,7 +148,12 @@ public class BillingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Bill not found"));
 
         if (bill.getStatus() == BillStatus.PAID) {
-            throw new RuntimeException("Cannot cancel paid bill");
+            throw new BusinessConflictException(
+                "Cannot cancel paid bill",
+                "Bill",
+                billId,
+                "Bill has already been paid"
+            );
         }
 
         bill.setStatus(BillStatus.CANCELLED);

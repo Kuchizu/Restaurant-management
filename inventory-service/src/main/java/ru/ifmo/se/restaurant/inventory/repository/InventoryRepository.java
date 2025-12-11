@@ -1,6 +1,7 @@
 package ru.ifmo.se.restaurant.inventory.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import ru.ifmo.se.restaurant.inventory.entity.Inventory;
 
@@ -10,5 +11,7 @@ import java.util.Optional;
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     Optional<Inventory> findByIngredientId(Long ingredientId);
-    List<Inventory> findByQuantityLessThanMinQuantity();
+
+    @Query("SELECT i FROM Inventory i WHERE i.quantity < i.minQuantity")
+    List<Inventory> findLowStockItems();
 }

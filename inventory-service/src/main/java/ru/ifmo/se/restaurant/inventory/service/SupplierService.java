@@ -1,6 +1,7 @@
 package ru.ifmo.se.restaurant.inventory.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.se.restaurant.inventory.dto.SupplierDto;
@@ -8,6 +9,7 @@ import ru.ifmo.se.restaurant.inventory.dto.SupplyOrderDto;
 import ru.ifmo.se.restaurant.inventory.dto.SupplyOrderItemDto;
 import ru.ifmo.se.restaurant.inventory.entity.*;
 import ru.ifmo.se.restaurant.inventory.exception.ResourceNotFoundException;
+import ru.ifmo.se.restaurant.inventory.exception.ValidationException;
 import ru.ifmo.se.restaurant.inventory.repository.*;
 
 import java.math.BigDecimal;
@@ -15,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SupplierService {
@@ -177,6 +180,14 @@ public class SupplierService {
     }
 
     private SupplyOrderDto toSupplyOrderDto(SupplyOrder supplyOrder) {
+        if (supplyOrder.getSupplier() == null) {
+            log.error("SupplyOrder {} has null supplier - data integrity issue", supplyOrder.getId());
+            throw new ValidationException(
+                "Supply order has no supplier assigned",
+                "supplier",
+                null
+            );
+        }
         SupplyOrderDto dto = new SupplyOrderDto();
         dto.setId(supplyOrder.getId());
         dto.setSupplierId(supplyOrder.getSupplier().getId());
@@ -197,6 +208,14 @@ public class SupplierService {
     }
 
     private SupplyOrderItemDto toSupplyOrderItemDto(SupplyOrderIngredient item) {
+        if (item.getIngredient() == null) {
+            log.error("SupplyOrderIngredient {} has null ingredient - data integrity issue", item.getId());
+            throw new ValidationException(
+                "Supply order item has no ingredient assigned",
+                "ingredient",
+                null
+            );
+        }
         SupplyOrderItemDto dto = new SupplyOrderItemDto();
         dto.setId(item.getId());
         dto.setIngredientId(item.getIngredient().getId());

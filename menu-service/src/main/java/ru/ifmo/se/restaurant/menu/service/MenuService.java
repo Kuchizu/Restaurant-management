@@ -12,6 +12,8 @@ import ru.ifmo.se.restaurant.menu.entity.Category;
 import ru.ifmo.se.restaurant.menu.entity.Dish;
 import ru.ifmo.se.restaurant.menu.entity.Ingredient;
 import ru.ifmo.se.restaurant.menu.exception.ResourceNotFoundException;
+import ru.ifmo.se.restaurant.menu.exception.ValidationException;
+import lombok.extern.slf4j.Slf4j;
 import ru.ifmo.se.restaurant.menu.repository.CategoryRepository;
 import ru.ifmo.se.restaurant.menu.repository.DishRepository;
 import ru.ifmo.se.restaurant.menu.repository.IngredientRepository;
@@ -19,6 +21,7 @@ import ru.ifmo.se.restaurant.menu.repository.IngredientRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MenuService {
@@ -168,6 +171,14 @@ public class MenuService {
     }
 
     private DishDto toDishDto(Dish dish) {
+        if (dish.getCategory() == null) {
+            log.error("Dish {} has null category - data integrity issue", dish.getId());
+            throw new ValidationException(
+                "Dish has no category assigned",
+                "category",
+                null
+            );
+        }
         return new DishDto(
             dish.getId(),
             dish.getName(),
