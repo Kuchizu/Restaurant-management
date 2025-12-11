@@ -16,7 +16,15 @@ subprojects {
     version = '1.0.0'
 
     tasks.withType(JavaExec) {
-        jvmArgs = ['-Xmx256m', '-Xms128m', '-XX:MaxMetaspaceSize=128m']
+        jvmArgs = [
+            '-Xmx512m',
+            '-Xms128m',
+            '-XX:MaxMetaspaceSize=256m',
+            '-XX:+UseG1GC',
+            '-XX:+UseStringDeduplication',
+            '-XX:MaxGCPauseMillis=100',
+            '-XX:+UseCompressedOops'
+        ]
     }
 
     java {
