@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
+import org.springframework.web.reactive.resource.NoResourceFoundException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import ru.ifmo.se.restaurant.kitchen.dto.ErrorResponse;
@@ -125,6 +126,20 @@ public class GlobalExceptionHandler {
                 .details(Map.of("errors", fieldErrors))
                 .build();
         return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public Mono<ResponseEntity<ErrorResponse>> handleNoResourceFound(
+            NoResourceFoundException ex, ServerWebExchange exchange) {
+        // Don't log - these are benign 404s for missing static resources (favicon.ico, actuator endpoints, etc.)
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.NOT_FOUND.value())
+                .error("Not Found")
+                .message("Resource not found")
+                .path(exchange.getRequest().getPath().value())
+                .build();
+        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(error));
     }
 
     @ExceptionHandler(Exception.class)
