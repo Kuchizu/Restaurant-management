@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import ru.ifmo.se.restaurant.order.dto.DishResponse;
+import ru.ifmo.se.restaurant.order.exception.ServiceUnavailableException;
 
 @Component
 @RequiredArgsConstructor
@@ -25,11 +26,11 @@ public class MenuServiceClient {
     }
 
     private Mono<DishResponse> fallbackGetDish(Long dishId, Throwable throwable) {
-        log.warn("Menu service unavailable, using fallback for dish {}. Error: {}", dishId, throwable.getMessage());
-        DishResponse fallback = new DishResponse();
-        fallback.setId(dishId);
-        fallback.setName("Unknown Dish");
-        fallback.setIsActive(true);
-        return Mono.just(fallback);
+        log.error("Menu service unavailable for dish {}. Error: {}", dishId, throwable.getMessage());
+        return Mono.error(new ServiceUnavailableException(
+            "Menu service is currently unavailable",
+            "menu-service",
+            "getDish"
+        ));
     }
 }

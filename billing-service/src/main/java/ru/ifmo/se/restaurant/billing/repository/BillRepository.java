@@ -1,5 +1,7 @@
 package ru.ifmo.se.restaurant.billing.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import ru.ifmo.se.restaurant.billing.entity.Bill;
@@ -12,4 +14,5 @@ import java.util.Optional;
 public interface BillRepository extends JpaRepository<Bill, Long> {
     Optional<Bill> findByOrderId(Long orderId);
     List<Bill> findByStatus(BillStatus status);
+    Page<Bill> findByStatus(BillStatus status, Pageable pageable);
 }

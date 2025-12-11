@@ -1,0 +1,25 @@
+spring:
+  r2dbc:
+    url: r2dbc:tc:postgresql:///testdb?TC_IMAGE_TAG=15-alpine
+    username: test
+    password: test
+
+  sql:
+    init:
+      mode: always
+
+  cloud:
+    config:
+      enabled: false
+    discovery:
+      enabled: false
+
+eureka:
+  client:
+    enabled: false
+
+logging:
+  level:
+    io.r2dbc: DEBUG
+    org.springframework.r2dbc: DEBUG
+    ru.ifmo.se.restaurant.order: DEBUG

@@ -1,22 +1,22 @@
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
 
 spring:
   application:
     name: order-service
   config:
-    import: optional:configserver:http://localhost:8888
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
   cloud:
     config:
-      uri: http://localhost:8888
+      uri: ${CONFIG_SERVER_URL:http://localhost:8888}
       fail-fast: false
   r2dbc:
-    url: r2dbc:postgresql://localhost:5432/order_db
-    username: restaurant_user
-    password: restaurant_pass
+    url: ${DATABASE_URL:r2dbc:postgresql://localhost:5432/order_db}
+    username: ${DATABASE_USERNAME:restaurant_user}
+    password: ${DATABASE_PASSWORD:restaurant_pass}
   sql:
     init:
-      mode: always
+      mode: ${SQL_INIT_MODE:always}
 
 eureka:
   client:
@@ -42,3 +42,14 @@ resilience4j:
         waitDurationInOpenState: 10000
         permittedNumberOfCallsInHalfOpenState: 3
         automaticTransitionFromOpenToHalfOpenEnabled: true
+
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operationsSorter: method
+    tagsSorter: alpha
+  show-actuator: true
