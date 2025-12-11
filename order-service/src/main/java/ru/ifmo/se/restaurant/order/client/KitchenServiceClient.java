@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import ru.ifmo.se.restaurant.order.dto.KitchenQueueRequest;
+import ru.ifmo.se.restaurant.order.exception.ServiceUnavailableException;
 
 @Component
 @RequiredArgsConstructor
@@ -26,7 +27,11 @@ public class KitchenServiceClient {
     }
 
     private Mono<Void> fallbackAddToQueue(KitchenQueueRequest request, Throwable throwable) {
-        log.warn("Kitchen service unavailable, using fallback. Error: {}", throwable.getMessage());
-        return Mono.empty();
+        log.error("Kitchen service unavailable. Error: {}", throwable.getMessage());
+        return Mono.error(new ServiceUnavailableException(
+            "Kitchen service is currently unavailable",
+            "kitchen-service",
+            "addToQueue"
+        ));
     }
 }

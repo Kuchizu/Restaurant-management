@@ -9,7 +9,9 @@ import ru.ifmo.se.restaurant.order.client.KitchenServiceClient;
 import ru.ifmo.se.restaurant.order.client.MenuServiceClient;
 import ru.ifmo.se.restaurant.order.dto.*;
 import ru.ifmo.se.restaurant.order.entity.*;
+import ru.ifmo.se.restaurant.order.exception.BusinessConflictException;
 import ru.ifmo.se.restaurant.order.exception.ResourceNotFoundException;
+import ru.ifmo.se.restaurant.order.exception.ServiceUnavailableException;
 import ru.ifmo.se.restaurant.order.repository.*;
 
 import java.math.BigDecimal;
@@ -31,7 +33,12 @@ public class OrderService {
             .switchIfEmpty(Mono.error(new ResourceNotFoundException("Table not found")))
             .flatMap(table -> {
                 if (table.getStatus() == TableStatus.OCCUPIED) {
-                    return Mono.error(new RuntimeException("Table is already occupied"));
+                    return Mono.error(new BusinessConflictException(
+                        "Cannot create order: table is already occupied",
+                        "Table",
+                        table.getId(),
+                        "Status: OCCUPIED"
+                    ));
                 }
                 return employeeRepository.findById(dto.getWaiterId())
                     .switchIfEmpty(Mono.error(new ResourceNotFoundException("Employee not found")))
@@ -72,12 +79,19 @@ public class OrderService {
             .switchIfEmpty(Mono.error(new ResourceNotFoundException("Order not found")))
             .flatMap(order -> menuServiceClient.getDish(itemDto.getDishId())
                 .flatMap(dish -> {
+                    if (dish.getPrice() == null) {
+                        return Mono.error(new ServiceUnavailableException(
+                            "Menu service returned invalid data for dish " + itemDto.getDishId(),
+                            "menu-service",
+                            "getDish"
+                        ));
+                    }
                     OrderItem item = new OrderItem();
                     item.setOrderId(orderId);
                     item.setDishId(dish.getId());
                     item.setDishName(dish.getName());
                     item.setQuantity(itemDto.getQuantity());
-                    item.setPrice(dish.getPrice() != null ? dish.getPrice() : BigDecimal.ZERO);
+                    item.setPrice(dish.getPrice());
                     item.setSpecialRequest(itemDto.getSpecialRequest());
 
                     return orderItemRepository.save(item)
@@ -111,7 +125,12 @@ public class OrderService {
             .switchIfEmpty(Mono.error(new ResourceNotFoundException("Order not found")))
             .flatMap(order -> {
                 if (order.getStatus() != OrderStatus.CREATED) {
-                    return Mono.error(new RuntimeException("Order must be in CREATED status"));
+                    return Mono.error(new BusinessConflictException(
+                        "Cannot send to kitchen: order must be in CREATED status",
+                        "Order",
+                        orderId,
+                        "Current status: " + order.getStatus()
+                    ));
                 }
                 order.setStatus(OrderStatus.IN_KITCHEN);
                 return orderRepository.save(order)
