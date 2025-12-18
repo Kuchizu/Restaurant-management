@@ -5,12 +5,14 @@ plugins {
 
 ext {
     springCloudVersion = '2023.0.3'
+    springdocVersion = '2.6.0'
 }
 
 subprojects {
     apply plugin: 'java'
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'jacoco'
 
     group = 'ru.ifmo.se.restaurant'
     version = '1.0.0'
@@ -54,14 +56,110 @@ subprojects {
         annotationProcessor 'org.projectlombok:lombok'
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'org.testcontainers:postgresql:1.19.3'
+        testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+    }
+
+    jacoco {
+        toolVersion = '0.8.11'
     }
 
     tasks.withType(Test) {
         useJUnitPlatform()
+        finalizedBy jacocoTestReport
+    }
+
+    jacocoTestReport {
+        dependsOn test
+        mustRunAfter classes
+
+        reports {
+            xml.required = true
+            html.required = true
+            csv.required = false
+        }
+
+        afterEvaluate {
+            classDirectories.setFrom(files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                    '**/dto/**',
+                    '**/entity/**',
+                    '**/config/**',
+                    '**/exception/**/*Exception.class',
+                    '**/*Application.class',
+                    '**/client/*Fallback.class'
+                ])
+            }))
+        }
+    }
+
+    jacocoTestCoverageVerification {
+        dependsOn jacocoTestReport
+
+        violationRules {
+            rule {
+                enabled = true
+                limit {
+                    minimum = 0.70
+                }
+            }
+
+            rule {
+                enabled = true
+                element = 'CLASS'
+                limit {
+                    counter = 'LINE'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.60
+                }
+                excludes = [
+                    '*.dto.*',
+                    '*.entity.*',
+                    '*.config.*',
+                    '*.*Exception',
+                    '*Application'
+                ]
+            }
+
+            rule {
+                enabled = true
+                element = 'PACKAGE'
+                limit {
+                    counter = 'LINE'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.70
+                }
+                includes = [
+                    '*.service.*',
+                    '*.dataaccess.*'
+                ]
+            }
+        }
+    }
+
+    check {
+        dependsOn jacocoTestCoverageVerification
     }
 
     tasks.withType(JavaCompile) {
         options.encoding = 'UTF-8'
+    }
+}
+
+// Aggregate JaCoCo Report for all microservices
+task jacocoAggregateReport(type: JacocoReport) {
+    dependsOn subprojects*.test
+
+    executionData.setFrom(fileTree(dir: '.', includes: ['**/build/jacoco/test.exec']))
+
+    subprojects.each { subproject ->
+        sourceSets subproject.sourceSets.main
+    }
+
+    reports {
+        xml.required = true
+        html.required = true
+        html.destination = file("${buildDir}/reports/jacoco/aggregate")
     }
 }
 

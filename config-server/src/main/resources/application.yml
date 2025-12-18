@@ -1,16 +1,16 @@
 server:
-  port: 8888
+  port: ${SERVER_PORT:8888}
 
 spring:
   application:
     name: config-server
   profiles:
-    active: native
+    active: ${SPRING_PROFILES_ACTIVE:native}
   cloud:
     config:
       server:
         native:
-          search-locations: classpath:/config
+          search-locations: ${CONFIG_SEARCH_LOCATIONS:classpath:/config}
 
 eureka:
   client:

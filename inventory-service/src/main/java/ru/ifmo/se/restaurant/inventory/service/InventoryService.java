@@ -2,16 +2,21 @@ package ru.ifmo.se.restaurant.inventory.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.ifmo.se.restaurant.inventory.dataaccess.IngredientDataAccess;
+import ru.ifmo.se.restaurant.inventory.dataaccess.InventoryDataAccess;
 import ru.ifmo.se.restaurant.inventory.dto.IngredientDto;
 import ru.ifmo.se.restaurant.inventory.dto.InventoryDto;
 import ru.ifmo.se.restaurant.inventory.entity.Ingredient;
 import ru.ifmo.se.restaurant.inventory.entity.Inventory;
 import ru.ifmo.se.restaurant.inventory.exception.ResourceNotFoundException;
 import ru.ifmo.se.restaurant.inventory.exception.ValidationException;
-import ru.ifmo.se.restaurant.inventory.repository.IngredientRepository;
-import ru.ifmo.se.restaurant.inventory.repository.InventoryRepository;
+import ru.ifmo.se.restaurant.inventory.util.PaginationUtil;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -22,31 +27,40 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class InventoryService {
-    private final InventoryRepository inventoryRepository;
-    private final IngredientRepository ingredientRepository;
+    private final InventoryDataAccess inventoryDataAccess;
+    private final IngredientDataAccess ingredientDataAccess;
 
     public List<InventoryDto> getAllInventory() {
-        return inventoryRepository.findAll().stream()
+        return inventoryDataAccess.findAll().stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
+    public Page<InventoryDto> getAllInventoryPaginated(int page, int size) {
+        Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.ASC, "ingredient.name"));
+        return inventoryDataAccess.findAll(pageable)
+                .map(this::toDto);
+    }
+
+    public Slice<InventoryDto> getAllInventorySlice(int page, int size) {
+        Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.ASC, "ingredient.name"));
+        return inventoryDataAccess.findAllSlice(pageable)
+                .map(this::toDto);
+    }
+
     public InventoryDto getInventoryById(Long id) {
-        return inventoryRepository.findById(id)
-                .map(this::toDto)
-                .orElseThrow(() -> new ResourceNotFoundException("Inventory not found"));
+        return toDto(inventoryDataAccess.getById(id));
     }
 
     public List<InventoryDto> getLowStockInventory() {
-        return inventoryRepository.findLowStockItems().stream()
+        return inventoryDataAccess.findLowStockItems().stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional
     public InventoryDto createInventory(InventoryDto dto) {
-        Ingredient ingredient = ingredientRepository.findById(dto.getIngredientId())
-                .orElseThrow(() -> new ResourceNotFoundException("Ingredient not found"));
+        Ingredient ingredient = ingredientDataAccess.getById(dto.getIngredientId());
 
         Inventory inventory = new Inventory();
         inventory.setIngredient(ingredient);
@@ -55,13 +69,12 @@ public class InventoryService {
         inventory.setMaxQuantity(dto.getMaxQuantity());
         inventory.setLastUpdated(LocalDateTime.now());
 
-        return toDto(inventoryRepository.save(inventory));
+        return toDto(inventoryDataAccess.save(inventory));
     }
 
     @Transactional
     public InventoryDto updateInventory(Long id, InventoryDto dto) {
-        Inventory inventory = inventoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Inventory not found"));
+        Inventory inventory = inventoryDataAccess.getById(id);
 
         if (dto.getQuantity() != null) {
             inventory.setQuantity(dto.getQuantity());
@@ -74,38 +87,47 @@ public class InventoryService {
         }
         inventory.setLastUpdated(LocalDateTime.now());
 
-        return toDto(inventoryRepository.save(inventory));
+        return toDto(inventoryDataAccess.save(inventory));
     }
 
     @Transactional
     public InventoryDto adjustInventory(Long id, BigDecimal quantity) {
-        Inventory inventory = inventoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Inventory not found"));
+        Inventory inventory = inventoryDataAccess.getById(id);
 
         inventory.setQuantity(inventory.getQuantity().add(quantity));
         inventory.setLastUpdated(LocalDateTime.now());
 
-        return toDto(inventoryRepository.save(inventory));
+        return toDto(inventoryDataAccess.save(inventory));
     }
 
     @Transactional
     public void deleteInventory(Long id) {
-        if (!inventoryRepository.existsById(id)) {
+        if (!inventoryDataAccess.existsById(id)) {
             throw new ResourceNotFoundException("Inventory not found");
         }
-        inventoryRepository.deleteById(id);
+        inventoryDataAccess.deleteById(id);
     }
 
     public List<IngredientDto> getAllIngredients() {
-        return ingredientRepository.findAll().stream()
+        return ingredientDataAccess.findAll().stream()
                 .map(this::toIngredientDto)
                 .collect(Collectors.toList());
     }
 
+    public Page<IngredientDto> getAllIngredientsPaginated(int page, int size) {
+        Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.ASC, "name"));
+        return ingredientDataAccess.findAll(pageable)
+                .map(this::toIngredientDto);
+    }
+
+    public Slice<IngredientDto> getAllIngredientsSlice(int page, int size) {
+        Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.ASC, "name"));
+        return ingredientDataAccess.findAllSlice(pageable)
+                .map(this::toIngredientDto);
+    }
+
     public IngredientDto getIngredientById(Long id) {
-        return ingredientRepository.findById(id)
-                .map(this::toIngredientDto)
-                .orElseThrow(() -> new ResourceNotFoundException("Ingredient not found"));
+        return toIngredientDto(ingredientDataAccess.getById(id));
     }
 
     @Transactional
@@ -115,13 +137,12 @@ public class InventoryService {
         ingredient.setUnit(dto.getUnit());
         ingredient.setDescription(dto.getDescription());
 
-        return toIngredientDto(ingredientRepository.save(ingredient));
+        return toIngredientDto(ingredientDataAccess.save(ingredient));
     }
 
     @Transactional
     public IngredientDto updateIngredient(Long id, IngredientDto dto) {
-        Ingredient ingredient = ingredientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Ingredient not found"));
+        Ingredient ingredient = ingredientDataAccess.getById(id);
 
         if (dto.getName() != null) {
             ingredient.setName(dto.getName());
@@ -133,15 +154,15 @@ public class InventoryService {
             ingredient.setDescription(dto.getDescription());
         }
 
-        return toIngredientDto(ingredientRepository.save(ingredient));
+        return toIngredientDto(ingredientDataAccess.save(ingredient));
     }
 
     @Transactional
     public void deleteIngredient(Long id) {
-        if (!ingredientRepository.existsById(id)) {
+        if (!ingredientDataAccess.existsById(id)) {
             throw new ResourceNotFoundException("Ingredient not found");
         }
-        ingredientRepository.deleteById(id);
+        ingredientDataAccess.deleteById(id);
     }
 
     private InventoryDto toDto(Inventory inventory) {

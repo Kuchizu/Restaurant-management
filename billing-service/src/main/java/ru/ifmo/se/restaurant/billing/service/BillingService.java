@@ -2,6 +2,10 @@ package ru.ifmo.se.restaurant.billing.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.se.restaurant.billing.client.OrderServiceClient;
@@ -10,10 +14,11 @@ import ru.ifmo.se.restaurant.billing.dto.OrderDto;
 import ru.ifmo.se.restaurant.billing.entity.Bill;
 import ru.ifmo.se.restaurant.billing.entity.BillStatus;
 import ru.ifmo.se.restaurant.billing.entity.PaymentMethod;
+import ru.ifmo.se.restaurant.billing.dataaccess.BillDataAccess;
 import ru.ifmo.se.restaurant.billing.exception.BusinessConflictException;
 import ru.ifmo.se.restaurant.billing.exception.ResourceNotFoundException;
 import ru.ifmo.se.restaurant.billing.exception.ServiceUnavailableException;
-import ru.ifmo.se.restaurant.billing.repository.BillRepository;
+import ru.ifmo.se.restaurant.billing.util.PaginationUtil;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,39 +29,56 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class BillingService {
-    private final BillRepository billRepository;
+    private final BillDataAccess billDataAccess;
     private final OrderServiceClient orderServiceClient;
 
     private static final BigDecimal TAX_RATE = new BigDecimal("0.10");
     private static final BigDecimal SERVICE_CHARGE_RATE = new BigDecimal("0.05");
 
     public List<BillDto> getAllBills() {
-        return billRepository.findAll().stream()
+        return billDataAccess.findAll().stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
     public BillDto getBillById(Long id) {
-        return billRepository.findById(id)
-                .map(this::toDto)
-                .orElseThrow(() -> new ResourceNotFoundException("Bill not found"));
+        Bill bill = billDataAccess.getById(id);
+        return toDto(bill);
     }
 
     public BillDto getBillByOrderId(Long orderId) {
-        return billRepository.findByOrderId(orderId)
+        return billDataAccess.findByOrderId(orderId)
                 .map(this::toDto)
                 .orElseThrow(() -> new ResourceNotFoundException("Bill not found for order"));
     }
 
     public List<BillDto> getBillsByStatus(BillStatus status) {
-        return billRepository.findByStatus(status).stream()
+        return billDataAccess.findByStatus(status).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
+    public Page<BillDto> getAllBillsPaginated(int page, int size) {
+        Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return billDataAccess.findAll(pageable)
+                .map(this::toDto);
+    }
+
+    public Slice<BillDto> getAllBillsSlice(int page, int size) {
+        Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return billDataAccess.findAllSlice(pageable)
+                .map(this::toDto);
+    }
+
+    public Page<BillDto> getBillsByStatusPaginated(BillStatus status, int page, int size) {
+        Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return billDataAccess.findByStatus(status, pageable)
+                .map(this::toDto);
+    }
+
     @Transactional
     public BillDto generateBill(Long orderId) {
-        billRepository.findByOrderId(orderId).ifPresent(existingBill -> {
+        billDataAccess.findByOrderId(orderId).ifPresent(existingBill -> {
             throw new BusinessConflictException(
                 "Bill already exists for this order",
                 "Bill",
@@ -95,13 +117,12 @@ public class BillingService {
         bill.setStatus(BillStatus.PENDING);
         bill.setCreatedAt(LocalDateTime.now());
 
-        return toDto(billRepository.save(bill));
+        return toDto(billDataAccess.save(bill));
     }
 
     @Transactional
     public BillDto applyDiscount(Long billId, BigDecimal discountAmount) {
-        Bill bill = billRepository.findById(billId)
-                .orElseThrow(() -> new ResourceNotFoundException("Bill not found"));
+        Bill bill = billDataAccess.getById(billId);
 
         if (bill.getStatus() != BillStatus.PENDING) {
             throw new BusinessConflictException(
@@ -118,13 +139,12 @@ public class BillingService {
                 .add(bill.getServiceCharge())
                 .subtract(discountAmount));
 
-        return toDto(billRepository.save(bill));
+        return toDto(billDataAccess.save(bill));
     }
 
     @Transactional
     public BillDto payBill(Long billId, PaymentMethod paymentMethod) {
-        Bill bill = billRepository.findById(billId)
-                .orElseThrow(() -> new ResourceNotFoundException("Bill not found"));
+        Bill bill = billDataAccess.getById(billId);
 
         if (bill.getStatus() != BillStatus.PENDING) {
             throw new BusinessConflictException(
@@ -139,13 +159,12 @@ public class BillingService {
         bill.setPaymentMethod(paymentMethod);
         bill.setPaidAt(LocalDateTime.now());
 
-        return toDto(billRepository.save(bill));
+        return toDto(billDataAccess.save(bill));
     }
 
     @Transactional
     public BillDto cancelBill(Long billId) {
-        Bill bill = billRepository.findById(billId)
-                .orElseThrow(() -> new ResourceNotFoundException("Bill not found"));
+        Bill bill = billDataAccess.getById(billId);
 
         if (bill.getStatus() == BillStatus.PAID) {
             throw new BusinessConflictException(
@@ -157,15 +176,15 @@ public class BillingService {
         }
 
         bill.setStatus(BillStatus.CANCELLED);
-        return toDto(billRepository.save(bill));
+        return toDto(billDataAccess.save(bill));
     }
 
     @Transactional
     public void deleteBill(Long id) {
-        if (!billRepository.existsById(id)) {
+        if (!billDataAccess.existsById(id)) {
             throw new ResourceNotFoundException("Bill not found");
         }
-        billRepository.deleteById(id);
+        billDataAccess.deleteById(id);
     }
 
     private BillDto toDto(Bill bill) {
