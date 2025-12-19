@@ -40,7 +40,7 @@ public class Dish {
     @Column(precision = 10, scale = 2)
     private BigDecimal cost;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id", nullable = false)
     @NotNull(message = "Category cannot be null")
     private Category category;
@@ -48,7 +48,7 @@ public class Dish {
     @Column(nullable = false)
     private Boolean isActive = true;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "dish_ingredients",
         joinColumns = @JoinColumn(name = "dish_id"),

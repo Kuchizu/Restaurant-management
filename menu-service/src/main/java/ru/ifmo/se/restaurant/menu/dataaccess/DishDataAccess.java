@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.se.restaurant.menu.entity.Dish;
 import ru.ifmo.se.restaurant.menu.exception.ResourceNotFoundException;
 import ru.ifmo.se.restaurant.menu.repository.DishRepository;
@@ -24,52 +25,62 @@ public class DishDataAccess {
         return dishRepository.save(dish);
     }
 
+    @Transactional(readOnly = true)
     public Optional<Dish> findById(Long id) {
         log.debug("Finding dish by id: {}", id);
         return dishRepository.findById(id);
     }
 
+    @Transactional(readOnly = true)
     public Dish getById(Long id) {
         return findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Dish not found with id: " + id));
     }
 
+    @Transactional(readOnly = true)
     public List<Dish> findAll() {
         log.debug("Finding all dishes");
         return dishRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public Page<Dish> findAll(Pageable pageable) {
         log.debug("Finding all dishes with pagination: {}", pageable);
         return dishRepository.findAll(pageable);
     }
 
+    @Transactional(readOnly = true)
     public Slice<Dish> findAllSlice(Pageable pageable) {
         log.debug("Finding all dishes slice with pagination: {}", pageable);
         Page<Dish> page = dishRepository.findAll(pageable);
         return page;
     }
 
+    @Transactional(readOnly = true)
     public Optional<Dish> findByName(String name) {
         log.debug("Finding dish by name: {}", name);
         return dishRepository.findByName(name);
     }
 
+    @Transactional(readOnly = true)
     public List<Dish> findByIsActive(Boolean isActive) {
         log.debug("Finding dishes by isActive: {}", isActive);
         return dishRepository.findByIsActive(isActive);
     }
 
+    @Transactional(readOnly = true)
     public List<Dish> findByCategoryId(Long categoryId) {
         log.debug("Finding dishes by categoryId: {}", categoryId);
         return dishRepository.findByCategoryId(categoryId);
     }
 
+    @Transactional(readOnly = true)
     public Optional<Dish> findActiveDishById(Long id) {
         log.debug("Finding active dish by id: {}", id);
         return dishRepository.findActiveDishById(id);
     }
 
+    @Transactional(readOnly = true)
     public boolean existsById(Long id) {
         log.debug("Checking if dish exists by id: {}", id);
         return dishRepository.existsById(id);

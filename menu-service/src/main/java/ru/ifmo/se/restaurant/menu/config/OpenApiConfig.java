@@ -16,8 +16,8 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI menuServiceOpenAPI() {
         Server devServer = new Server();
-        devServer.setUrl("http://localhost:8082");
-        devServer.setDescription("Development Server");
+        devServer.setUrl("http://localhost:8083");
+        devServer.setDescription("Development Server (Direct)");
 
         Server prodServer = new Server();
         prodServer.setUrl("http://localhost:49999/menu");
