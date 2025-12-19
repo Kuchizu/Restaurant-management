@@ -1,10 +1,51 @@
-.gradle
-build
-.idea
+# Build outputs (CRITICAL - excludes 500MB+ of cache)
+**/build/
+**/.gradle/
+**/target/
+**/out/
+
+# IDE (excludes 100MB+)
+.idea/
+.vscode/
 *.iml
-.git
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# Git (excludes version control)
+.git/
 .gitignore
-README.md
-LICENSE
+.gitattributes
+
+# Documentation (not needed for build)
 *.md
+docs/
+LICENSE
+
+# Docker files (recursive include prevention)
+**/Dockerfile*
+**/docker-compose*.yml
+**/.dockerignore
+
+# Test files (tests are skipped)
+**/src/test/
+
+# Logs and temp files
+*.log
+logs/
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node modules if any
+**/node_modules/
 

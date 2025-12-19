@@ -187,11 +187,35 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    @ExceptionHandler(feign.FeignException.class)
+    public ResponseEntity<ErrorResponse> handleFeignException(
+            feign.FeignException ex,
+            HttpServletRequest request) {
+        log.error("Feign client error: {} - {}", ex.status(), ex.getMessage());
+        
+        String message = "External service communication error";
+        if (ex.status() == 404) {
+            message = "Resource not found in external service";
+        } else if (ex.status() >= 500) {
+            message = "External service is unavailable";
+        }
+        
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.SERVICE_UNAVAILABLE.value())
+                .error("Service Unavailable")
+                .message(message)
+                .path(request.getRequestURI())
+                .details(Map.of("externalServiceStatus", ex.status()))
+                .build();
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(
             Exception ex,
             HttpServletRequest request) {
-        log.error("Unexpected error occurred", ex);
+        log.error("Unexpected error occurred: {} - {}", ex.getClass().getName(), ex.getMessage(), ex);
         ErrorResponse error = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())

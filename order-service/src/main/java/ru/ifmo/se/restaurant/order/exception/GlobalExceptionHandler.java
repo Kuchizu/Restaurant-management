@@ -192,13 +192,24 @@ public class GlobalExceptionHandler {
     public Mono<ResponseEntity<ErrorResponse>> handleGenericException(
             Exception ex,
             ServerWebExchange exchange) {
-        log.error("Unexpected error occurred", ex);
+        log.error("Unexpected error occurred: {} - {}", ex.getClass().getName(), ex.getMessage(), ex);
+        
+        // Provide more helpful error message for common issues
+        String message = "An unexpected error occurred. Please contact support.";
+        Map<String, Object> details = new HashMap<>();
+        details.put("exceptionType", ex.getClass().getSimpleName());
+        
+        if (ex.getCause() != null) {
+            details.put("cause", ex.getCause().getMessage());
+        }
+        
         ErrorResponse error = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .error("Internal Server Error")
-                .message("An unexpected error occurred. Please contact support.")
+                .message(message)
                 .path(exchange.getRequest().getPath().value())
+                .details(details)
                 .build();
         return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error));
     }

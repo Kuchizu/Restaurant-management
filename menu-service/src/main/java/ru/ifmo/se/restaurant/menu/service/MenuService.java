@@ -7,6 +7,9 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import ru.ifmo.se.restaurant.menu.dto.CategoryDto;
 import ru.ifmo.se.restaurant.menu.dto.DishDto;
 import ru.ifmo.se.restaurant.menu.dto.IngredientDto;
@@ -34,150 +37,186 @@ public class MenuService {
 
     // Category operations
     @Transactional
-    public CategoryDto createCategory(CategoryDto dto) {
-        Category category = new Category();
-        category.setName(dto.getName());
-        category.setDescription(dto.getDescription());
-        category.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
-        return toCategoryDto(categoryDataAccess.save(category));
+    public Mono<CategoryDto> createCategory(CategoryDto dto) {
+        return Mono.fromCallable(() -> {
+            Category category = new Category();
+            category.setName(dto.getName());
+            category.setDescription(dto.getDescription());
+            category.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
+            return toCategoryDto(categoryDataAccess.save(category));
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    public CategoryDto getCategoryById(Long id) {
-        Category category = categoryDataAccess.getById(id);
-        return toCategoryDto(category);
+    public Mono<CategoryDto> getCategoryById(Long id) {
+        return Mono.fromCallable(() -> {
+            Category category = categoryDataAccess.getById(id);
+            return toCategoryDto(category);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    public List<CategoryDto> getAllCategories() {
-        return categoryDataAccess.findAll().stream()
-            .map(this::toCategoryDto)
-            .collect(Collectors.toList());
+    public Flux<CategoryDto> getAllCategories() {
+        return Flux.defer(() -> {
+            List<Category> categories = categoryDataAccess.findAll();
+            return Flux.fromIterable(categories);
+        }).map(this::toCategoryDto)
+          .subscribeOn(Schedulers.boundedElastic());
     }
 
-    public Page<CategoryDto> getAllCategoriesPaginated(int page, int size) {
-        Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.ASC, "name"));
-        return categoryDataAccess.findAll(pageable)
-                .map(this::toCategoryDto);
+    public Mono<Page<CategoryDto>> getAllCategoriesPaginated(int page, int size) {
+        return Mono.fromCallable(() -> {
+            Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.ASC, "name"));
+            return categoryDataAccess.findAll(pageable)
+                    .map(this::toCategoryDto);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    public Slice<CategoryDto> getAllCategoriesSlice(int page, int size) {
-        Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.ASC, "name"));
-        return categoryDataAccess.findAllSlice(pageable)
-                .map(this::toCategoryDto);
+    public Mono<Slice<CategoryDto>> getAllCategoriesSlice(int page, int size) {
+        return Mono.fromCallable(() -> {
+            Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.ASC, "name"));
+            return categoryDataAccess.findAllSlice(pageable)
+                    .map(this::toCategoryDto);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @Transactional
-    public CategoryDto updateCategory(Long id, CategoryDto dto) {
-        Category category = categoryDataAccess.getById(id);
-        category.setName(dto.getName());
-        category.setDescription(dto.getDescription());
-        category.setIsActive(dto.getIsActive());
-        return toCategoryDto(categoryDataAccess.save(category));
+    public Mono<CategoryDto> updateCategory(Long id, CategoryDto dto) {
+        return Mono.fromCallable(() -> {
+            Category category = categoryDataAccess.getById(id);
+            category.setName(dto.getName());
+            category.setDescription(dto.getDescription());
+            category.setIsActive(dto.getIsActive());
+            return toCategoryDto(categoryDataAccess.save(category));
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @Transactional
-    public void deleteCategory(Long id) {
-        if (!categoryDataAccess.existsById(id)) {
-            throw new ResourceNotFoundException("Category not found with id: " + id);
-        }
-        categoryDataAccess.deleteById(id);
+    public Mono<Void> deleteCategory(Long id) {
+        return Mono.fromRunnable(() -> {
+            if (!categoryDataAccess.existsById(id)) {
+                throw new ResourceNotFoundException("Category not found with id: " + id);
+            }
+            categoryDataAccess.deleteById(id);
+        }).subscribeOn(Schedulers.boundedElastic()).then();
     }
 
     // Dish operations
     @Transactional
-    public DishDto createDish(DishDto dto) {
-        Category category = categoryDataAccess.getById(dto.getCategoryId());
+    public Mono<DishDto> createDish(DishDto dto) {
+        return Mono.fromCallable(() -> {
+            Category category = categoryDataAccess.getById(dto.getCategoryId());
 
-        Dish dish = new Dish();
-        dish.setName(dto.getName());
-        dish.setDescription(dto.getDescription());
-        dish.setPrice(dto.getPrice());
-        dish.setCost(dto.getCost());
-        dish.setCategory(category);
-        dish.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
+            Dish dish = new Dish();
+            dish.setName(dto.getName());
+            dish.setDescription(dto.getDescription());
+            dish.setPrice(dto.getPrice());
+            dish.setCost(dto.getCost());
+            dish.setCategory(category);
+            dish.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
 
-        if (dto.getIngredientIds() != null && !dto.getIngredientIds().isEmpty()) {
-            List<Ingredient> ingredients = ingredientDataAccess.findAllById(dto.getIngredientIds());
-            dish.getIngredients().addAll(ingredients);
-        }
+            if (dto.getIngredientIds() != null && !dto.getIngredientIds().isEmpty()) {
+                List<Ingredient> ingredients = ingredientDataAccess.findAllById(dto.getIngredientIds());
+                dish.getIngredients().addAll(ingredients);
+            }
 
-        return toDishDto(dishDataAccess.save(dish));
+            return toDishDto(dishDataAccess.save(dish));
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    public DishDto getDishById(Long id) {
-        Dish dish = dishDataAccess.getById(id);
-        return toDishDto(dish);
+    public Mono<DishDto> getDishById(Long id) {
+        return Mono.fromCallable(() -> {
+            Dish dish = dishDataAccess.getById(id);
+            return toDishDto(dish);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    public Page<DishDto> getAllDishes(Pageable pageable) {
-        return dishDataAccess.findAll(pageable).map(this::toDishDto);
+    public Mono<Page<DishDto>> getAllDishes(Pageable pageable) {
+        return Mono.fromCallable(() ->
+            dishDataAccess.findAll(pageable).map(this::toDishDto)
+        ).subscribeOn(Schedulers.boundedElastic());
     }
 
-    public Page<DishDto> getAllDishesPaginated(int page, int size) {
-        Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.ASC, "name"));
-        return dishDataAccess.findAll(pageable)
-                .map(this::toDishDto);
+    public Mono<Page<DishDto>> getAllDishesPaginated(int page, int size) {
+        return Mono.fromCallable(() -> {
+            Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.ASC, "name"));
+            return dishDataAccess.findAll(pageable)
+                    .map(this::toDishDto);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    public Slice<DishDto> getAllDishesSlice(int page, int size) {
-        Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.ASC, "name"));
-        return dishDataAccess.findAllSlice(pageable)
-                .map(this::toDishDto);
+    public Mono<Slice<DishDto>> getAllDishesSlice(int page, int size) {
+        return Mono.fromCallable(() -> {
+            Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.ASC, "name"));
+            return dishDataAccess.findAllSlice(pageable)
+                    .map(this::toDishDto);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    public List<DishDto> getActiveDishes() {
-        return dishDataAccess.findByIsActive(true).stream()
-            .map(this::toDishDto)
-            .collect(Collectors.toList());
-    }
-
-    @Transactional
-    public DishDto updateDish(Long id, DishDto dto) {
-        Dish dish = dishDataAccess.getById(id);
-
-        Category category = categoryDataAccess.getById(dto.getCategoryId());
-
-        dish.setName(dto.getName());
-        dish.setDescription(dto.getDescription());
-        dish.setPrice(dto.getPrice());
-        dish.setCost(dto.getCost());
-        dish.setCategory(category);
-        dish.setIsActive(dto.getIsActive());
-
-        if (dto.getIngredientIds() != null) {
-            dish.getIngredients().clear();
-            List<Ingredient> ingredients = ingredientDataAccess.findAllById(dto.getIngredientIds());
-            dish.getIngredients().addAll(ingredients);
-        }
-
-        return toDishDto(dishDataAccess.save(dish));
+    public Flux<DishDto> getActiveDishes() {
+        return Flux.defer(() -> {
+            List<Dish> dishes = dishDataAccess.findByIsActive(true);
+            return Flux.fromIterable(dishes);
+        }).map(this::toDishDto)
+          .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Transactional
-    public void deleteDish(Long id) {
-        if (!dishDataAccess.existsById(id)) {
-            throw new ResourceNotFoundException("Dish not found with id: " + id);
-        }
-        dishDataAccess.deleteById(id);
+    public Mono<DishDto> updateDish(Long id, DishDto dto) {
+        return Mono.fromCallable(() -> {
+            Dish dish = dishDataAccess.getById(id);
+
+            Category category = categoryDataAccess.getById(dto.getCategoryId());
+
+            dish.setName(dto.getName());
+            dish.setDescription(dto.getDescription());
+            dish.setPrice(dto.getPrice());
+            dish.setCost(dto.getCost());
+            dish.setCategory(category);
+            dish.setIsActive(dto.getIsActive());
+
+            if (dto.getIngredientIds() != null) {
+                dish.getIngredients().clear();
+                List<Ingredient> ingredients = ingredientDataAccess.findAllById(dto.getIngredientIds());
+                dish.getIngredients().addAll(ingredients);
+            }
+
+            return toDishDto(dishDataAccess.save(dish));
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @Transactional
+    public Mono<Void> deleteDish(Long id) {
+        return Mono.fromRunnable(() -> {
+            if (!dishDataAccess.existsById(id)) {
+                throw new ResourceNotFoundException("Dish not found with id: " + id);
+            }
+            dishDataAccess.deleteById(id);
+        }).subscribeOn(Schedulers.boundedElastic()).then();
     }
 
     // Ingredient operations
     @Transactional
-    public IngredientDto createIngredient(IngredientDto dto) {
-        Ingredient ingredient = new Ingredient();
-        ingredient.setName(dto.getName());
-        ingredient.setUnit(dto.getUnit());
-        return toIngredientDto(ingredientDataAccess.save(ingredient));
+    public Mono<IngredientDto> createIngredient(IngredientDto dto) {
+        return Mono.fromCallable(() -> {
+            Ingredient ingredient = new Ingredient();
+            ingredient.setName(dto.getName());
+            ingredient.setUnit(dto.getUnit());
+            return toIngredientDto(ingredientDataAccess.save(ingredient));
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    public IngredientDto getIngredientById(Long id) {
-        Ingredient ingredient = ingredientDataAccess.getById(id);
-        return toIngredientDto(ingredient);
+    public Mono<IngredientDto> getIngredientById(Long id) {
+        return Mono.fromCallable(() -> {
+            Ingredient ingredient = ingredientDataAccess.getById(id);
+            return toIngredientDto(ingredient);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    public List<IngredientDto> getAllIngredients() {
-        return ingredientDataAccess.findAll().stream()
-            .map(this::toIngredientDto)
-            .collect(Collectors.toList());
+    public Flux<IngredientDto> getAllIngredients() {
+        return Flux.defer(() -> {
+            List<Ingredient> ingredients = ingredientDataAccess.findAll();
+            return Flux.fromIterable(ingredients);
+        }).map(this::toIngredientDto)
+          .subscribeOn(Schedulers.boundedElastic());
     }
 
     // Mappers

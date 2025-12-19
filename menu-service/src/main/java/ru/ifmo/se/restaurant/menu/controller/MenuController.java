@@ -18,6 +18,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.ifmo.se.restaurant.menu.dto.CategoryDto;
 import ru.ifmo.se.restaurant.menu.dto.DishDto;
 import ru.ifmo.se.restaurant.menu.dto.ErrorResponse;
@@ -25,6 +27,7 @@ import ru.ifmo.se.restaurant.menu.dto.IngredientDto;
 import ru.ifmo.se.restaurant.menu.service.MenuService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Tag(name = "Menu Service", description = "Menu Service - управление меню ресторана")
 @RestController
@@ -60,8 +63,9 @@ public class MenuController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/categories")
-    public ResponseEntity<CategoryDto> createCategory(@Valid @RequestBody CategoryDto dto) {
-        return new ResponseEntity<>(menuService.createCategory(dto), HttpStatus.CREATED);
+    public Mono<ResponseEntity<CategoryDto>> createCategory(@Valid @RequestBody CategoryDto dto) {
+        return menuService.createCategory(dto)
+                .map(category -> new ResponseEntity<>(category, HttpStatus.CREATED));
     }
 
     @Operation(summary = "Получить все категории с пагинацией и total count",
@@ -71,21 +75,21 @@ public class MenuController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class)))
     })
     @GetMapping("/categories/paged")
-    public ResponseEntity<Page<CategoryDto>> getAllCategoriesPaged(
+    public Mono<ResponseEntity<Page<CategoryDto>>> getAllCategoriesPaged(
             @Parameter(description = "Номер страницы (начиная с 0)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Размер страницы (максимум 50)", example = "20")
             @RequestParam(defaultValue = "20") int size) {
 
-        Page<CategoryDto> categories = menuService.getAllCategoriesPaginated(page, size);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Total-Count", String.valueOf(categories.getTotalElements()));
-        headers.add("X-Total-Pages", String.valueOf(categories.getTotalPages()));
-        headers.add("X-Page-Number", String.valueOf(categories.getNumber()));
-        headers.add("X-Page-Size", String.valueOf(categories.getSize()));
-
-        return ResponseEntity.ok().headers(headers).body(categories);
+        return menuService.getAllCategoriesPaginated(page, size)
+                .map(categories -> {
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.add("X-Total-Count", String.valueOf(categories.getTotalElements()));
+                    headers.add("X-Total-Pages", String.valueOf(categories.getTotalPages()));
+                    headers.add("X-Page-Number", String.valueOf(categories.getNumber()));
+                    headers.add("X-Page-Size", String.valueOf(categories.getSize()));
+                    return ResponseEntity.ok().headers(headers).body(categories);
+                });
     }
 
     @Operation(summary = "Получить категории для бесконечной прокрутки (без total count)",
@@ -95,21 +99,21 @@ public class MenuController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Slice.class)))
     })
     @GetMapping("/categories/infinite-scroll")
-    public ResponseEntity<Slice<CategoryDto>> getAllCategoriesInfiniteScroll(
+    public Mono<ResponseEntity<Slice<CategoryDto>>> getAllCategoriesInfiniteScroll(
             @Parameter(description = "Номер страницы (начиная с 0)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Размер страницы (максимум 50)", example = "20")
             @RequestParam(defaultValue = "20") int size) {
 
-        Slice<CategoryDto> categories = menuService.getAllCategoriesSlice(page, size);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Has-Next", String.valueOf(categories.hasNext()));
-        headers.add("X-Has-Previous", String.valueOf(categories.hasPrevious()));
-        headers.add("X-Page-Number", String.valueOf(categories.getNumber()));
-        headers.add("X-Page-Size", String.valueOf(categories.getSize()));
-
-        return ResponseEntity.ok().headers(headers).body(categories);
+        return menuService.getAllCategoriesSlice(page, size)
+                .map(categories -> {
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.add("X-Has-Next", String.valueOf(categories.hasNext()));
+                    headers.add("X-Has-Previous", String.valueOf(categories.hasPrevious()));
+                    headers.add("X-Page-Number", String.valueOf(categories.getNumber()));
+                    headers.add("X-Page-Size", String.valueOf(categories.getSize()));
+                    return ResponseEntity.ok().headers(headers).body(categories);
+                });
     }
 
     @Operation(summary = "Получить все категории", description = "Возвращает список всех категорий без пагинации")
@@ -118,8 +122,10 @@ public class MenuController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = CategoryDto.class)))
     })
     @GetMapping("/categories")
-    public ResponseEntity<List<CategoryDto>> getAllCategories() {
-        return ResponseEntity.ok(menuService.getAllCategories());
+    public Mono<ResponseEntity<List<CategoryDto>>> getAllCategories() {
+        return menuService.getAllCategories()
+                .collectList()
+                .map(ResponseEntity::ok);
     }
 
     @Operation(summary = "Получить категорию по ID", description = "Возвращает категорию по указанному идентификатору")
@@ -130,10 +136,11 @@ public class MenuController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/categories/{id}")
-    public ResponseEntity<CategoryDto> getCategoryById(
+    public Mono<ResponseEntity<CategoryDto>> getCategoryById(
             @Parameter(description = "ID категории", required = true, example = "1")
             @PathVariable Long id) {
-        return ResponseEntity.ok(menuService.getCategoryById(id));
+        return menuService.getCategoryById(id)
+                .map(ResponseEntity::ok);
     }
 
     @Operation(summary = "Обновить категорию", description = "Обновляет существующую категорию")
@@ -146,11 +153,12 @@ public class MenuController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PutMapping("/categories/{id}")
-    public ResponseEntity<CategoryDto> updateCategory(
+    public Mono<ResponseEntity<CategoryDto>> updateCategory(
             @Parameter(description = "ID категории", required = true, example = "1")
             @PathVariable Long id,
             @Valid @RequestBody CategoryDto dto) {
-        return ResponseEntity.ok(menuService.updateCategory(id, dto));
+        return menuService.updateCategory(id, dto)
+                .map(ResponseEntity::ok);
     }
 
     @Operation(summary = "Удалить категорию", description = "Полностью удаляет категорию из системы")
@@ -160,11 +168,11 @@ public class MenuController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/categories/{id}")
-    public ResponseEntity<Void> deleteCategory(
+    public Mono<ResponseEntity<Void>> deleteCategory(
             @Parameter(description = "ID категории", required = true, example = "1")
             @PathVariable Long id) {
-        menuService.deleteCategory(id);
-        return ResponseEntity.noContent().build();
+        return menuService.deleteCategory(id)
+                .then(Mono.just(ResponseEntity.noContent().<Void>build()));
     }
 
     // Dish endpoints
@@ -199,8 +207,9 @@ public class MenuController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/dishes")
-    public ResponseEntity<DishDto> createDish(@Valid @RequestBody DishDto dto) {
-        return new ResponseEntity<>(menuService.createDish(dto), HttpStatus.CREATED);
+    public Mono<ResponseEntity<DishDto>> createDish(@Valid @RequestBody DishDto dto) {
+        return menuService.createDish(dto)
+                .map(dish -> new ResponseEntity<>(dish, HttpStatus.CREATED));
     }
 
     @Operation(summary = "Получить блюдо по ID", description = "Возвращает блюдо по указанному идентификатору")
@@ -211,10 +220,11 @@ public class MenuController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/dishes/{id}")
-    public ResponseEntity<DishDto> getDishById(
+    public Mono<ResponseEntity<DishDto>> getDishById(
             @Parameter(description = "ID блюда", required = true, example = "1")
             @PathVariable Long id) {
-        return ResponseEntity.ok(menuService.getDishById(id));
+        return menuService.getDishById(id)
+                .map(ResponseEntity::ok);
     }
 
     @Operation(summary = "Получить все блюда с пагинацией и total count",
@@ -224,21 +234,21 @@ public class MenuController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class)))
     })
     @GetMapping("/dishes/paged")
-    public ResponseEntity<Page<DishDto>> getAllDishesPaged(
+    public Mono<ResponseEntity<Page<DishDto>>> getAllDishesPaged(
             @Parameter(description = "Номер страницы (начиная с 0)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Размер страницы (максимум 50)", example = "20")
             @RequestParam(defaultValue = "20") int size) {
 
-        Page<DishDto> dishes = menuService.getAllDishesPaginated(page, size);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Total-Count", String.valueOf(dishes.getTotalElements()));
-        headers.add("X-Total-Pages", String.valueOf(dishes.getTotalPages()));
-        headers.add("X-Page-Number", String.valueOf(dishes.getNumber()));
-        headers.add("X-Page-Size", String.valueOf(dishes.getSize()));
-
-        return ResponseEntity.ok().headers(headers).body(dishes);
+        return menuService.getAllDishesPaginated(page, size)
+                .map(dishes -> {
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.add("X-Total-Count", String.valueOf(dishes.getTotalElements()));
+                    headers.add("X-Total-Pages", String.valueOf(dishes.getTotalPages()));
+                    headers.add("X-Page-Number", String.valueOf(dishes.getNumber()));
+                    headers.add("X-Page-Size", String.valueOf(dishes.getSize()));
+                    return ResponseEntity.ok().headers(headers).body(dishes);
+                });
     }
 
     @Operation(summary = "Получить блюда для бесконечной прокрутки (без total count)",
@@ -248,21 +258,21 @@ public class MenuController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Slice.class)))
     })
     @GetMapping("/dishes/infinite-scroll")
-    public ResponseEntity<Slice<DishDto>> getAllDishesInfiniteScroll(
+    public Mono<ResponseEntity<Slice<DishDto>>> getAllDishesInfiniteScroll(
             @Parameter(description = "Номер страницы (начиная с 0)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Размер страницы (максимум 50)", example = "20")
             @RequestParam(defaultValue = "20") int size) {
 
-        Slice<DishDto> dishes = menuService.getAllDishesSlice(page, size);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Has-Next", String.valueOf(dishes.hasNext()));
-        headers.add("X-Has-Previous", String.valueOf(dishes.hasPrevious()));
-        headers.add("X-Page-Number", String.valueOf(dishes.getNumber()));
-        headers.add("X-Page-Size", String.valueOf(dishes.getSize()));
-
-        return ResponseEntity.ok().headers(headers).body(dishes);
+        return menuService.getAllDishesSlice(page, size)
+                .map(dishes -> {
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.add("X-Has-Next", String.valueOf(dishes.hasNext()));
+                    headers.add("X-Has-Previous", String.valueOf(dishes.hasPrevious()));
+                    headers.add("X-Page-Number", String.valueOf(dishes.getNumber()));
+                    headers.add("X-Page-Size", String.valueOf(dishes.getSize()));
+                    return ResponseEntity.ok().headers(headers).body(dishes);
+                });
     }
 
     @Operation(summary = "Получить активные блюда", description = "Возвращает список всех активных блюд в меню")
@@ -271,8 +281,10 @@ public class MenuController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = DishDto.class)))
     })
     @GetMapping("/dishes/active")
-    public ResponseEntity<List<DishDto>> getActiveDishes() {
-        return ResponseEntity.ok(menuService.getActiveDishes());
+    public Mono<ResponseEntity<List<DishDto>>> getActiveDishes() {
+        return menuService.getActiveDishes()
+                .collectList()
+                .map(ResponseEntity::ok);
     }
 
     @Operation(summary = "Обновить блюдо", description = "Обновляет существующее блюдо")
@@ -285,11 +297,12 @@ public class MenuController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PutMapping("/dishes/{id}")
-    public ResponseEntity<DishDto> updateDish(
+    public Mono<ResponseEntity<DishDto>> updateDish(
             @Parameter(description = "ID блюда", required = true, example = "1")
             @PathVariable Long id,
             @Valid @RequestBody DishDto dto) {
-        return ResponseEntity.ok(menuService.updateDish(id, dto));
+        return menuService.updateDish(id, dto)
+                .map(ResponseEntity::ok);
     }
 
     @Operation(summary = "Удалить блюдо", description = "Полностью удаляет блюдо из системы")
@@ -299,11 +312,11 @@ public class MenuController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/dishes/{id}")
-    public ResponseEntity<Void> deleteDish(
+    public Mono<ResponseEntity<Void>> deleteDish(
             @Parameter(description = "ID блюда", required = true, example = "1")
             @PathVariable Long id) {
-        menuService.deleteDish(id);
-        return ResponseEntity.noContent().build();
+        return menuService.deleteDish(id)
+                .then(Mono.just(ResponseEntity.noContent().<Void>build()));
     }
 
     // Ingredient endpoints
@@ -333,8 +346,9 @@ public class MenuController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/ingredients")
-    public ResponseEntity<IngredientDto> createIngredient(@Valid @RequestBody IngredientDto dto) {
-        return new ResponseEntity<>(menuService.createIngredient(dto), HttpStatus.CREATED);
+    public Mono<ResponseEntity<IngredientDto>> createIngredient(@Valid @RequestBody IngredientDto dto) {
+        return menuService.createIngredient(dto)
+                .map(ingredient -> new ResponseEntity<>(ingredient, HttpStatus.CREATED));
     }
 
     @Operation(summary = "Получить ингредиент по ID", description = "Возвращает ингредиент по указанному идентификатору")
@@ -345,10 +359,11 @@ public class MenuController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/ingredients/{id}")
-    public ResponseEntity<IngredientDto> getIngredientById(
+    public Mono<ResponseEntity<IngredientDto>> getIngredientById(
             @Parameter(description = "ID ингредиента", required = true, example = "1")
             @PathVariable Long id) {
-        return ResponseEntity.ok(menuService.getIngredientById(id));
+        return menuService.getIngredientById(id)
+                .map(ResponseEntity::ok);
     }
 
     @Operation(summary = "Получить все ингредиенты", description = "Возвращает список всех ингредиентов")
@@ -357,7 +372,9 @@ public class MenuController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = IngredientDto.class)))
     })
     @GetMapping("/ingredients")
-    public ResponseEntity<List<IngredientDto>> getAllIngredients() {
-        return ResponseEntity.ok(menuService.getAllIngredients());
+    public Mono<ResponseEntity<List<IngredientDto>>> getAllIngredients() {
+        return menuService.getAllIngredients()
+                .collectList()
+                .map(ResponseEntity::ok);
     }
 }

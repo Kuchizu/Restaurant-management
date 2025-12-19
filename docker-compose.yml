@@ -99,7 +99,9 @@ services:
   eureka-server:
     build:
       context: .
-      dockerfile: eureka-server/Dockerfile
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: eureka-server
     container_name: eureka-server
     environment:
       SERVER_PORT: 8761
@@ -118,7 +120,9 @@ services:
   config-server:
     build:
       context: .
-      dockerfile: config-server/Dockerfile
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: config-server
     container_name: config-server
     environment:
       SERVER_PORT: 8888
@@ -143,7 +147,9 @@ services:
   order-service:
     build:
       context: .
-      dockerfile: order-service/Dockerfile
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: order-service
     container_name: order-service
     environment:
       SERVER_PORT: 8081
@@ -174,7 +180,9 @@ services:
   kitchen-service:
     build:
       context: .
-      dockerfile: kitchen-service/Dockerfile
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: kitchen-service
     container_name: kitchen-service
     environment:
       SERVER_PORT: 8082
@@ -207,7 +215,9 @@ services:
   menu-service:
     build:
       context: .
-      dockerfile: menu-service/Dockerfile
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: menu-service
     container_name: menu-service
     environment:
       SERVER_PORT: 8083
@@ -240,7 +250,9 @@ services:
   inventory-service:
     build:
       context: .
-      dockerfile: inventory-service/Dockerfile
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: inventory-service
     container_name: inventory-service
     environment:
       SERVER_PORT: 8084
@@ -273,7 +285,9 @@ services:
   billing-service:
     build:
       context: .
-      dockerfile: billing-service/Dockerfile
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: billing-service
     container_name: billing-service
     environment:
       SERVER_PORT: 8085
@@ -306,7 +320,9 @@ services:
   api-gateway:
     build:
       context: .
-      dockerfile: api-gateway/Dockerfile
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: api-gateway
     container_name: api-gateway
     environment:
       SERVER_PORT: 49999
