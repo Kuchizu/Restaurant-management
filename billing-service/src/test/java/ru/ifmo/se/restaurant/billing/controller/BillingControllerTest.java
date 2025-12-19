@@ -14,6 +14,11 @@ import ru.ifmo.se.restaurant.billing.exception.BusinessConflictException;
 import ru.ifmo.se.restaurant.billing.exception.ResourceNotFoundException;
 import ru.ifmo.se.restaurant.billing.service.BillingService;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
+
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
@@ -72,6 +77,46 @@ class BillingControllerTest {
                 .andExpect(jsonPath("$", hasSize(0)));
 
         verify(billingService).getAllBills();
+    }
+
+    @Test
+    void getAllBillsPaged_ReturnsPagedBills() throws Exception {
+        // Given
+        List<BillDto> bills = Arrays.asList(createMockBillDto(1L));
+        Page<BillDto> page = new PageImpl<>(bills);
+        when(billingService.getAllBillsPaginated(eq(0), eq(20)))
+                .thenReturn(page);
+
+        // When & Then
+        mockMvc.perform(get("/api/bills/paged?page=0&size=20")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(header().exists("X-Total-Count"))
+                .andExpect(header().exists("X-Total-Pages"))
+                .andExpect(header().exists("X-Page-Number"))
+                .andExpect(header().exists("X-Page-Size"));
+
+        verify(billingService).getAllBillsPaginated(eq(0), eq(20));
+    }
+
+    @Test
+    void getAllBillsInfiniteScroll_ReturnsSlicedBills() throws Exception {
+        // Given
+        List<BillDto> bills = Arrays.asList(createMockBillDto(1L));
+        Slice<BillDto> slice = new SliceImpl<>(bills);
+        when(billingService.getAllBillsSlice(eq(0), eq(20)))
+                .thenReturn(slice);
+
+        // When & Then
+        mockMvc.perform(get("/api/bills/infinite-scroll?page=0&size=20")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(header().exists("X-Has-Next"))
+                .andExpect(header().exists("X-Has-Previous"))
+                .andExpect(header().exists("X-Page-Number"))
+                .andExpect(header().exists("X-Page-Size"));
+
+        verify(billingService).getAllBillsSlice(eq(0), eq(20));
     }
 
     @Test

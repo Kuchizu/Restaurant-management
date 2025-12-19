@@ -28,7 +28,7 @@ public class OrderDto {
     @Schema(description = "ID официанта", required = true, example = "2")
     private Long waiterId;
 
-    @Schema(description = "Статус заказа", accessMode = Schema.AccessMode.READ_ONLY, example = "PENDING")
+    @Schema(description = "Статус заказа", accessMode = Schema.AccessMode.READ_ONLY, example = "CREATED")
     private OrderStatus status;
 
     @Schema(description = "Общая сумма заказа", accessMode = Schema.AccessMode.READ_ONLY, example = "1250.00")

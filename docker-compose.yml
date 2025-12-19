@@ -296,14 +296,12 @@ services:
         condition: service_healthy
       config-server:
         condition: service_healthy
-      order-service:
-        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8085/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 90s
+      start_period: 60s
 
   api-gateway:
     build:
@@ -323,22 +321,12 @@ services:
         condition: service_healthy
       config-server:
         condition: service_healthy
-      order-service:
-        condition: service_healthy
-      kitchen-service:
-        condition: service_healthy
-      menu-service:
-        condition: service_healthy
-      inventory-service:
-        condition: service_healthy
-      billing-service:
-        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:49999/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 90s
+      start_period: 60s
 
 networks:
   restaurant-network:

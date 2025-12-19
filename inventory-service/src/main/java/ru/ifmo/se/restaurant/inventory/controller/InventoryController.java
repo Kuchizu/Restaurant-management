@@ -117,15 +117,17 @@ public class InventoryController {
         description = "Создает новую позицию инвентаря для указанного ингредиента",
         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
-            description = "Только обязательные поля",
+            description = "Данные для создания позиции инвентаря",
             content = @Content(
                 schema = @Schema(implementation = InventoryDto.class),
                 examples = @ExampleObject(
-                    name = "Минимальный запрос",
+                    name = "Полный пример",
                     value = """
                         {
                           "ingredientId": 8,
-                          "quantity": 10
+                          "quantity": 45.5,
+                          "minQuantity": 10.0,
+                          "maxQuantity": 100.0
                         }
                         """
                 )
@@ -269,15 +271,16 @@ public class InventoryController {
         description = "Создает новый ингредиент в системе",
         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
-            description = "Только обязательные поля",
+            description = "Данные для создания ингредиента",
             content = @Content(
                 schema = @Schema(implementation = IngredientDto.class),
                 examples = @ExampleObject(
-                    name = "Минимальный запрос",
+                    name = "Полный пример",
                     value = """
                         {
                           "name": "Говядина мраморная",
-                          "unit": "кг"
+                          "unit": "кг",
+                          "description": "Мраморная говядина высшего сорта для стейков"
                         }
                         """
                 )

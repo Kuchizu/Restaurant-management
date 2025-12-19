@@ -1,8 +1,10 @@
 package ru.ifmo.se.restaurant.order.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
@@ -134,16 +136,54 @@ public class GlobalExceptionHandler {
         return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error));
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public Mono<ResponseEntity<ErrorResponse>> handleDataIntegrityViolation(
+            DataIntegrityViolationException ex,
+            ServerWebExchange exchange) {
+        log.error("Data integrity violation: {}", ex.getMessage());
+        String message = "Database constraint violation";
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CONFLICT.value())
+                .error("Conflict")
+                .message(message)
+                .path(exchange.getRequest().getPath().value())
+                .build();
+        return Mono.just(ResponseEntity.status(HttpStatus.CONFLICT).body(error));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public Mono<ResponseEntity<ErrorResponse>> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException ex,
+            ServerWebExchange exchange) {
+        log.warn("Malformed JSON request: {}", ex.getMessage());
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Bad Request")
+                .message("Malformed JSON request")
+                .path(exchange.getRequest().getPath().value())
+                .build();
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error));
+    }
+
     @ExceptionHandler(NoResourceFoundException.class)
     public Mono<ResponseEntity<ErrorResponse>> handleNoResourceFound(
             NoResourceFoundException ex, ServerWebExchange exchange) {
-        // Don't log - these are benign 404s for missing static resources (favicon.ico, actuator endpoints, etc.)
+        String path = exchange.getRequest().getPath().value();
+
+        // Don't handle actuator endpoints - let Spring Boot Actuator handle them
+        if (path.startsWith("/actuator")) {
+            return Mono.error(ex);
+        }
+
+        // Don't log - these are benign 404s for missing static resources (favicon.ico, etc.)
         ErrorResponse error = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.NOT_FOUND.value())
                 .error("Not Found")
                 .message("Resource not found")
-                .path(exchange.getRequest().getPath().value())
+                .path(path)
                 .build();
         return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(error));
     }

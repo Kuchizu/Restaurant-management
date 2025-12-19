@@ -64,30 +64,6 @@ public class MenuController {
         return new ResponseEntity<>(menuService.createCategory(dto), HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Получить категорию по ID", description = "Возвращает категорию по указанному идентификатору")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Категория найдена",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = CategoryDto.class))),
-            @ApiResponse(responseCode = "404", description = "Категория не найдена",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    @GetMapping("/categories/{id}")
-    public ResponseEntity<CategoryDto> getCategoryById(
-            @Parameter(description = "ID категории", required = true, example = "1")
-            @PathVariable Long id) {
-        return ResponseEntity.ok(menuService.getCategoryById(id));
-    }
-
-    @Operation(summary = "Получить все категории", description = "Возвращает список всех категорий без пагинации")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Список категорий успешно получен",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = CategoryDto.class)))
-    })
-    @GetMapping("/categories")
-    public ResponseEntity<List<CategoryDto>> getAllCategories() {
-        return ResponseEntity.ok(menuService.getAllCategories());
-    }
-
     @Operation(summary = "Получить все категории с пагинацией и total count",
             description = "Возвращает страницу категорий с информацией об общем количестве в заголовке X-Total-Count. Максимум 50 записей за запрос.")
     @ApiResponses(value = {
@@ -134,6 +110,30 @@ public class MenuController {
         headers.add("X-Page-Size", String.valueOf(categories.getSize()));
 
         return ResponseEntity.ok().headers(headers).body(categories);
+    }
+
+    @Operation(summary = "Получить все категории", description = "Возвращает список всех категорий без пагинации")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Список категорий успешно получен",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = CategoryDto.class)))
+    })
+    @GetMapping("/categories")
+    public ResponseEntity<List<CategoryDto>> getAllCategories() {
+        return ResponseEntity.ok(menuService.getAllCategories());
+    }
+
+    @Operation(summary = "Получить категорию по ID", description = "Возвращает категорию по указанному идентификатору")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Категория найдена",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = CategoryDto.class))),
+            @ApiResponse(responseCode = "404", description = "Категория не найдена",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/categories/{id}")
+    public ResponseEntity<CategoryDto> getCategoryById(
+            @Parameter(description = "ID категории", required = true, example = "1")
+            @PathVariable Long id) {
+        return ResponseEntity.ok(menuService.getCategoryById(id));
     }
 
     @Operation(summary = "Обновить категорию", description = "Обновляет существующую категорию")
@@ -215,22 +215,6 @@ public class MenuController {
             @Parameter(description = "ID блюда", required = true, example = "1")
             @PathVariable Long id) {
         return ResponseEntity.ok(menuService.getDishById(id));
-    }
-
-    @Operation(summary = "Получить все блюда (старый endpoint)",
-            description = "Возвращает страницу блюд. Рекомендуется использовать /dishes/paged или /dishes/infinite-scroll")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Страница блюд успешно получена",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class)))
-    })
-    @GetMapping("/dishes")
-    public ResponseEntity<Page<DishDto>> getAllDishes(
-            @Parameter(description = "Номер страницы (начиная с 0)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Размер страницы (максимум 50)", example = "50")
-            @RequestParam(defaultValue = "50") int size) {
-        Pageable pageable = PageRequest.of(page, Math.min(size, 50));
-        return ResponseEntity.ok(menuService.getAllDishes(pageable));
     }
 
     @Operation(summary = "Получить все блюда с пагинацией и total count",

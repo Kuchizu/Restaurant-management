@@ -125,6 +125,9 @@ public class OrderController {
         return orderService.getAllOrdersPaginated(page, validatedSize)
             .map(pagedOrders -> {
                 exchange.getResponse().getHeaders().add("X-Total-Count", String.valueOf(pagedOrders.getTotalElements()));
+                exchange.getResponse().getHeaders().add("X-Total-Pages", String.valueOf(pagedOrders.getTotalPages()));
+                exchange.getResponse().getHeaders().add("X-Page-Number", String.valueOf(pagedOrders.getNumber()));
+                exchange.getResponse().getHeaders().add("X-Page-Size", String.valueOf(pagedOrders.getSize()));
                 return ResponseEntity.ok(pagedOrders);
             });
     }
@@ -238,6 +241,9 @@ public class OrderController {
         return orderService.getAllTablesPaginated(page, validatedSize)
             .map(pagedTables -> {
                 exchange.getResponse().getHeaders().add("X-Total-Count", String.valueOf(pagedTables.getTotalElements()));
+                exchange.getResponse().getHeaders().add("X-Total-Pages", String.valueOf(pagedTables.getTotalPages()));
+                exchange.getResponse().getHeaders().add("X-Page-Number", String.valueOf(pagedTables.getNumber()));
+                exchange.getResponse().getHeaders().add("X-Page-Size", String.valueOf(pagedTables.getSize()));
                 return ResponseEntity.ok(pagedTables);
             });
     }
@@ -255,6 +261,9 @@ public class OrderController {
         return orderService.getAllEmployeesPaginated(page, validatedSize)
             .map(pagedEmployees -> {
                 exchange.getResponse().getHeaders().add("X-Total-Count", String.valueOf(pagedEmployees.getTotalElements()));
+                exchange.getResponse().getHeaders().add("X-Total-Pages", String.valueOf(pagedEmployees.getTotalPages()));
+                exchange.getResponse().getHeaders().add("X-Page-Number", String.valueOf(pagedEmployees.getNumber()));
+                exchange.getResponse().getHeaders().add("X-Page-Size", String.valueOf(pagedEmployees.getSize()));
                 return ResponseEntity.ok(pagedEmployees);
             });
     }

@@ -1,5 +1,7 @@
 package ru.ifmo.se.restaurant.billing.dto;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,10 +15,18 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderDto {
     private Long id;
+
+    @NotNull(message = "Table ID is required")
     private Long tableId;
+
+    @NotNull(message = "Waiter ID is required")
     private Long waiterId;
+
     private String status;
+
+    @DecimalMin(value = "0.0", message = "Total amount must be non-negative")
     private BigDecimal totalAmount;
+
     private String specialRequests;
     private LocalDateTime createdAt;
     private LocalDateTime closedAt;

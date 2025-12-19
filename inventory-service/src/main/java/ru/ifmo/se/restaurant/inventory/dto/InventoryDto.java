@@ -1,6 +1,8 @@
 package ru.ifmo.se.restaurant.inventory.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,18 +18,23 @@ public class InventoryDto {
     @Schema(description = "ID записи (заполняется автоматически)", accessMode = Schema.AccessMode.READ_ONLY, example = "1")
     private Long id;
 
+    @NotNull(message = "Ingredient ID is required")
     @Schema(description = "ID ингредиента", required = true, example = "8")
     private Long ingredientId;
 
     @Schema(description = "Название ингредиента (заполняется автоматически)", accessMode = Schema.AccessMode.READ_ONLY, example = "Говядина мраморная")
     private String ingredientName;
 
+    @NotNull(message = "Quantity is required")
+    @DecimalMin(value = "0.0", message = "Quantity must be non-negative")
     @Schema(description = "Текущее количество на складе", required = true, example = "45.5")
     private BigDecimal quantity;
 
+    @DecimalMin(value = "0.0", message = "Minimum quantity must be non-negative")
     @Schema(description = "Минимальное количество (порог для заказа)", example = "10.0")
     private BigDecimal minQuantity;
 
+    @DecimalMin(value = "0.0", message = "Maximum quantity must be non-negative")
     @Schema(description = "Максимальное количество на складе", example = "100.0")
     private BigDecimal maxQuantity;
 

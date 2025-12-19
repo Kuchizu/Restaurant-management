@@ -160,13 +160,20 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErrorResponse> handleNoResourceFound(
             NoResourceFoundException ex, HttpServletRequest request) {
-        // Don't log - these are benign 404s for missing static resources (favicon.ico, actuator endpoints, etc.)
+        String path = request.getRequestURI();
+
+        // Don't handle actuator endpoints - let Spring Boot Actuator handle them
+        if (path.startsWith("/actuator")) {
+            return null;
+        }
+
+        // Don't log - these are benign 404s for missing static resources (favicon.ico, etc.)
         ErrorResponse error = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.NOT_FOUND.value())
                 .error("Not Found")
                 .message("Resource not found")
-                .path(request.getRequestURI())
+                .path(path)
                 .build();
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }

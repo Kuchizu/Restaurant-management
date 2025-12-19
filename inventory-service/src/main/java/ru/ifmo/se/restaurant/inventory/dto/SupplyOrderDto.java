@@ -2,6 +2,8 @@ package ru.ifmo.se.restaurant.inventory.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,6 +21,7 @@ public class SupplyOrderDto {
     @Schema(description = "ID заказа (заполняется автоматически)", accessMode = Schema.AccessMode.READ_ONLY, example = "15")
     private Long id;
 
+    @NotNull(message = "Supplier ID is required")
     @Schema(description = "ID поставщика", required = true, example = "3")
     private Long supplierId;
 
@@ -37,7 +40,8 @@ public class SupplyOrderDto {
     @Schema(description = "Общая стоимость заказа (заполняется автоматически)", accessMode = Schema.AccessMode.READ_ONLY, example = "48500.00")
     private BigDecimal totalCost;
 
-    @Schema(description = "Примечания к заказу", example = "Доставка через задний вход")
+    @Size(max = 1000, message = "Notes cannot exceed 1000 characters")
+    @Schema(description = "Примечания к заказу", example = "Доставка через задний вход, с 14:00 до 16:00")
     private String notes;
 
     @Valid

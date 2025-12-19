@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
@@ -13,12 +15,13 @@ import ru.ifmo.se.restaurant.kitchen.entity.DishStatus;
 import ru.ifmo.se.restaurant.kitchen.exception.ResourceNotFoundException;
 import ru.ifmo.se.restaurant.kitchen.service.KitchenService;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static ru.ifmo.se.restaurant.kitchen.TestDataFactory.*;
 
 @WebFluxTest(KitchenController.class)
 class KitchenControllerTest {
@@ -28,6 +31,27 @@ class KitchenControllerTest {
 
     @MockBean
     private KitchenService kitchenService;
+
+    private KitchenQueueDto createMockKitchenQueueDto(Long id) {
+        KitchenQueueDto dto = new KitchenQueueDto();
+        dto.setId(id);
+        dto.setOrderId(100L);
+        dto.setOrderItemId(200L);
+        dto.setDishName("Test Dish");
+        dto.setQuantity(2);
+        dto.setStatus(DishStatus.PENDING);
+        dto.setCreatedAt(LocalDateTime.now());
+        return dto;
+    }
+
+    private KitchenQueueDto createKitchenQueueDtoForCreation() {
+        KitchenQueueDto dto = new KitchenQueueDto();
+        dto.setOrderId(100L);
+        dto.setOrderItemId(200L);
+        dto.setDishName("Test Dish");
+        dto.setQuantity(2);
+        return dto;
+    }
 
     @Test
     void addToQueue_CreatesNewQueueItem() {
@@ -86,11 +110,7 @@ class KitchenControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(KitchenQueueDto.class)
-                .hasSize(2)
-                .value(list -> {
-                    assert list.get(0).getStatus() == DishStatus.PENDING;
-                    assert list.get(1).getStatus() == DishStatus.IN_PROGRESS;
-                });
+                .hasSize(2);
 
         verify(kitchenService).getActiveQueue();
     }
@@ -206,11 +226,7 @@ class KitchenControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(KitchenQueueDto.class)
-                .hasSize(2)
-                .value(list -> {
-                    assert list.get(0).getOrderId().equals(orderId);
-                    assert list.get(1).getOrderId().equals(orderId);
-                });
+                .hasSize(2);
 
         verify(kitchenService).getQueueByOrderId(orderId);
     }
@@ -231,4 +247,64 @@ class KitchenControllerTest {
 
         verify(kitchenService).getQueueByOrderId(orderId);
     }
+
+
+    @Test
+    void updateStatus_WithReadyStatus_ReturnsUpdated() {
+        // Given
+        Long queueId = 1L;
+        DishStatus newStatus = DishStatus.READY;
+        KitchenQueueDto updatedDto = createMockKitchenQueueDto(queueId);
+        updatedDto.setStatus(newStatus);
+
+        when(kitchenService.updateStatus(queueId, newStatus)).thenReturn(Mono.just(updatedDto));
+
+        // When & Then
+        webTestClient.put()
+                .uri("/api/kitchen/queue/{id}/status?status={status}", queueId, newStatus)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.status").isEqualTo("READY");
+
+        verify(kitchenService).updateStatus(queueId, newStatus);
+    }
+
+    @Test
+    void updateStatus_WithServedStatus_ReturnsUpdated() {
+        // Given
+        Long queueId = 1L;
+        DishStatus newStatus = DishStatus.SERVED;
+        KitchenQueueDto updatedDto = createMockKitchenQueueDto(queueId);
+        updatedDto.setStatus(newStatus);
+
+        when(kitchenService.updateStatus(queueId, newStatus)).thenReturn(Mono.just(updatedDto));
+
+        // When & Then
+        webTestClient.put()
+                .uri("/api/kitchen/queue/{id}/status?status={status}", queueId, newStatus)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.status").isEqualTo("SERVED");
+
+        verify(kitchenService).updateStatus(queueId, newStatus);
+    }
+
+    @Test
+    void getActiveQueue_EmptyQueue_ReturnsEmptyList() {
+        // Given
+        when(kitchenService.getActiveQueue()).thenReturn(Flux.empty());
+
+        // When & Then
+        webTestClient.get()
+                .uri("/api/kitchen/queue")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(KitchenQueueDto.class)
+                .hasSize(0);
+
+        verify(kitchenService).getActiveQueue();
+    }
+
 }

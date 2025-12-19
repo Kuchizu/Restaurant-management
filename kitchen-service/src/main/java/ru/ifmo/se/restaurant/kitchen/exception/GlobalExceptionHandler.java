@@ -131,13 +131,20 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public Mono<ResponseEntity<ErrorResponse>> handleNoResourceFound(
             NoResourceFoundException ex, ServerWebExchange exchange) {
-        // Don't log - these are benign 404s for missing static resources (favicon.ico, actuator endpoints, etc.)
+        String path = exchange.getRequest().getPath().value();
+
+        // Don't handle actuator endpoints - let Spring Boot Actuator handle them
+        if (path.startsWith("/actuator")) {
+            return Mono.error(ex);
+        }
+
+        // Don't log - these are benign 404s for missing static resources (favicon.ico, etc.)
         ErrorResponse error = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.NOT_FOUND.value())
                 .error("Not Found")
                 .message("Resource not found")
-                .path(exchange.getRequest().getPath().value())
+                .path(path)
                 .build();
         return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(error));
     }

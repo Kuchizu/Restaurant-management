@@ -1,8 +1,8 @@
 package ru.ifmo.se.restaurant.order.client;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -10,14 +10,17 @@ import ru.ifmo.se.restaurant.order.dto.DishResponse;
 import ru.ifmo.se.restaurant.order.exception.ServiceUnavailableException;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class MenuServiceClient {
-    private final WebClient.Builder webClientBuilder;
+    private final WebClient webClient;
+
+    public MenuServiceClient(@LoadBalanced WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder.build();
+    }
 
     @CircuitBreaker(name = "menuService", fallbackMethod = "fallbackGetDish")
     public Mono<DishResponse> getDish(Long dishId) {
-        return webClientBuilder.build()
+        return webClient
             .get()
             .uri("http://menu-service/api/dishes/{id}", dishId)
             .retrieve()

@@ -14,6 +14,12 @@ spring:
     url: ${DATABASE_URL:r2dbc:postgresql://localhost:5432/order_db}
     username: ${DATABASE_USERNAME:restaurant_user}
     password: ${DATABASE_PASSWORD:restaurant_pass}
+    pool:
+      initial-size: 5
+      max-size: 10
+      max-idle-time: 10m
+      max-acquire-time: 5s
+      max-life-time: 30m
   sql:
     init:
       mode: ${SQL_INIT_MODE:always}
@@ -22,8 +28,12 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+    registry-fetch-interval-seconds: 5
+    disable-delta: false
   instance:
     preferIpAddress: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
 
 resilience4j:
   circuitbreaker:
@@ -53,3 +63,17 @@ springdoc:
     operationsSorter: method
     tagsSorter: alpha
   show-actuator: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      enabled: true
+  health:
+    defaults:
+      enabled: true
