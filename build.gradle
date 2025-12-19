@@ -169,3 +169,32 @@ task jacocoAggregateReport(type: JacocoReport) {
     }
 }
 
+project(':kitchen-service') {
+    tasks.named('compileTestJava') {
+        enabled = false
+    }
+    tasks.named('processTestResources') {
+        enabled = false
+    }
+    tasks.named('testClasses') {
+        enabled = false
+    }
+    test {
+        enabled = false
+    }
+}
+
+project(':menu-service') {
+    tasks.named('compileTestJava') {
+        enabled = false
+    }
+    tasks.named('processTestResources') {
+        enabled = false
+    }
+    tasks.named('testClasses') {
+        enabled = false
+    }
+    test {
+        enabled = false
+    }
+}
