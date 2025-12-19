@@ -31,7 +31,7 @@ COPY --from=deps /root/.gradle /root/.gradle
 # Copy build files
 COPY gradle.properties settings.gradle build.gradle ./
 
-# Copy ALL service directories (needed for multi-module build)
+# Copy ALL service directories
 COPY eureka-server ./eureka-server
 COPY config-server ./config-server
 COPY api-gateway ./api-gateway
@@ -48,7 +48,7 @@ ENV GRADLE_OPTS="-Dorg.gradle.daemon=false \
                  -Dhttps.protocols=TLSv1.2,TLSv1.3 \
                  -Xmx2g"
 
-# Build ONLY the target service (fast!)
+# Build ONLY the target service
 RUN --mount=type=cache,target=/root/.gradle/caches,sharing=locked \
     --mount=type=cache,target=/root/.gradle/wrapper,sharing=locked \
     gradle :${SERVICE_NAME}:build -x test --no-daemon --parallel --quiet
@@ -66,7 +66,7 @@ RUN apk add --no-cache curl wget ca-certificates tzdata && \
 # Set timezone
 ENV TZ=Europe/Moscow
 
-# Copy ONLY the JAR (smallest layer)
+# Copy ONLY the JAR
 COPY --from=build --chown=spring:spring /app/${SERVICE_NAME}/build/libs/*.jar app.jar
 
 # Switch to non-root user
@@ -85,4 +85,3 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
                -Dspring.backgroundpreinitializer.ignore=true"
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
-

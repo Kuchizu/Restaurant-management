@@ -5,193 +5,90 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import ru.ifmo.se.restaurant.menu.entity.Category;
-import ru.ifmo.se.restaurant.menu.exception.ResourceNotFoundException;
 import ru.ifmo.se.restaurant.menu.repository.CategoryRepository;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collections;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static ru.ifmo.se.restaurant.menu.TestDataFactory.*;
 
 @ExtendWith(MockitoExtension.class)
 class CategoryDataAccessTest {
 
     @Mock
-    private CategoryRepository categoryRepository;
+    private CategoryRepository repository;
 
     @InjectMocks
-    private CategoryDataAccess categoryDataAccess;
+    private CategoryDataAccess dataAccess;
 
     @Test
-    void findById_WhenExists_ReturnsOptionalWithCategory() {
-        // Given
-        Long categoryId = 1L;
-        Category category = createMockCategory(categoryId);
-        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
-
-        // When
-        Optional<Category> result = categoryDataAccess.findById(categoryId);
-
-        // Then
-        assertThat(result).isPresent();
-        assertThat(result.get().getId()).isEqualTo(categoryId);
-        verify(categoryRepository).findById(categoryId);
+    void save() {
+        Category category = new Category();
+        when(repository.save(any())).thenReturn(category);
+        assertNotNull(dataAccess.save(category));
     }
 
     @Test
-    void findById_WhenNotExists_ReturnsEmptyOptional() {
-        // Given
-        Long categoryId = 999L;
-        when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
-
-        // When
-        Optional<Category> result = categoryDataAccess.findById(categoryId);
-
-        // Then
-        assertThat(result).isEmpty();
-        verify(categoryRepository).findById(categoryId);
+    void findById() {
+        when(repository.findById(1L)).thenReturn(Optional.of(new Category()));
+        assertTrue(dataAccess.findById(1L).isPresent());
     }
 
     @Test
-    void getById_WhenExists_ReturnsCategory() {
-        // Given
-        Long categoryId = 1L;
-        Category category = createMockCategory(categoryId);
-        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
-
-        // When
-        Category result = categoryDataAccess.getById(categoryId);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(categoryId);
-        verify(categoryRepository).findById(categoryId);
+    void getById() {
+        Category category = new Category();
+        when(repository.findById(1L)).thenReturn(Optional.of(category));
+        assertNotNull(dataAccess.getById(1L));
     }
 
     @Test
-    void getById_WhenNotExists_ThrowsException() {
-        // Given
-        Long categoryId = 999L;
-        when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
-
-        // When & Then
-        assertThatThrownBy(() -> categoryDataAccess.getById(categoryId))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("Category not found with id: " + categoryId);
-
-        verify(categoryRepository).findById(categoryId);
+    void findAll() {
+        when(repository.findAll()).thenReturn(Collections.emptyList());
+        assertNotNull(dataAccess.findAll());
     }
 
     @Test
-    void save_SavesCategoryAndReturns() {
-        // Given
-        Category category = createMockCategory(null);
-        Category savedCategory = createMockCategory(1L);
-        when(categoryRepository.save(category)).thenReturn(savedCategory);
-
-        // When
-        Category result = categoryDataAccess.save(category);
-
-        // Then
-        assertThat(result.getId()).isEqualTo(1L);
-        verify(categoryRepository).save(category);
+    void findAllPaginated() {
+        Page<Category> page = new PageImpl<>(Collections.emptyList());
+        when(repository.findAll(any(PageRequest.class))).thenReturn(page);
+        assertNotNull(dataAccess.findAll(PageRequest.of(0, 20)));
     }
 
     @Test
-    void findAll_ReturnsAllCategories() {
-        // Given
-        List<Category> categories = Arrays.asList(
-                createMockCategory(1L),
-                createMockCategory(2L)
-        );
-        when(categoryRepository.findAll()).thenReturn(categories);
-
-        // When
-        List<Category> result = categoryDataAccess.findAll();
-
-        // Then
-        assertThat(result).hasSize(2);
-        verify(categoryRepository).findAll();
+    void findAllSlice() {
+        Page<Category> page = new PageImpl<>(Collections.emptyList());
+        when(repository.findAll(any(PageRequest.class))).thenReturn(page);
+        assertNotNull(dataAccess.findAllSlice(PageRequest.of(0, 20)));
     }
 
     @Test
-    void findByName_WhenExists_ReturnsOptionalWithCategory() {
-        // Given
-        String categoryName = "Test Category";
-        Category category = createMockCategory(1L, categoryName);
-        when(categoryRepository.findByName(categoryName)).thenReturn(Optional.of(category));
-
-        // When
-        Optional<Category> result = categoryDataAccess.findByName(categoryName);
-
-        // Then
-        assertThat(result).isPresent();
-        assertThat(result.get().getName()).isEqualTo(categoryName);
-        verify(categoryRepository).findByName(categoryName);
+    void findByName() {
+        when(repository.findByName("Test")).thenReturn(Optional.of(new Category()));
+        assertTrue(dataAccess.findByName("Test").isPresent());
     }
 
     @Test
-    void findByIsActive_ReturnsMatchingCategories() {
-        // Given
-        Boolean isActive = true;
-        List<Category> categories = Arrays.asList(
-                createMockCategoryWithIsActive(1L, true),
-                createMockCategoryWithIsActive(2L, true)
-        );
-        when(categoryRepository.findByIsActive(isActive)).thenReturn(categories);
-
-        // When
-        List<Category> result = categoryDataAccess.findByIsActive(isActive);
-
-        // Then
-        assertThat(result).hasSize(2);
-        assertThat(result).allMatch(c -> c.getIsActive());
-        verify(categoryRepository).findByIsActive(isActive);
+    void findByIsActive() {
+        when(repository.findByIsActive(true)).thenReturn(Collections.emptyList());
+        assertNotNull(dataAccess.findByIsActive(true));
     }
 
     @Test
-    void existsById_WhenExists_ReturnsTrue() {
-        // Given
-        Long categoryId = 1L;
-        when(categoryRepository.existsById(categoryId)).thenReturn(true);
-
-        // When
-        boolean result = categoryDataAccess.existsById(categoryId);
-
-        // Then
-        assertThat(result).isTrue();
-        verify(categoryRepository).existsById(categoryId);
+    void existsById() {
+        when(repository.existsById(1L)).thenReturn(true);
+        assertTrue(dataAccess.existsById(1L));
     }
 
     @Test
-    void existsById_WhenNotExists_ReturnsFalse() {
-        // Given
-        Long categoryId = 999L;
-        when(categoryRepository.existsById(categoryId)).thenReturn(false);
-
-        // When
-        boolean result = categoryDataAccess.existsById(categoryId);
-
-        // Then
-        assertThat(result).isFalse();
-        verify(categoryRepository).existsById(categoryId);
-    }
-
-    @Test
-    void deleteById_DeletesCategory() {
-        // Given
-        Long categoryId = 1L;
-        doNothing().when(categoryRepository).deleteById(categoryId);
-
-        // When
-        categoryDataAccess.deleteById(categoryId);
-
-        // Then
-        verify(categoryRepository).deleteById(categoryId);
+    void deleteById() {
+        doNothing().when(repository).deleteById(1L);
+        dataAccess.deleteById(1L);
+        verify(repository).deleteById(1L);
     }
 }

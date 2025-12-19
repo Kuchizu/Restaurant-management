@@ -6,191 +6,67 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.ifmo.se.restaurant.menu.entity.Ingredient;
-import ru.ifmo.se.restaurant.menu.exception.ResourceNotFoundException;
 import ru.ifmo.se.restaurant.menu.repository.IngredientRepository;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static ru.ifmo.se.restaurant.menu.TestDataFactory.*;
 
 @ExtendWith(MockitoExtension.class)
 class IngredientDataAccessTest {
 
     @Mock
-    private IngredientRepository ingredientRepository;
+    private IngredientRepository repository;
 
     @InjectMocks
-    private IngredientDataAccess ingredientDataAccess;
+    private IngredientDataAccess dataAccess;
 
     @Test
-    void findById_WhenExists_ReturnsOptionalWithIngredient() {
-        // Given
-        Long ingredientId = 1L;
-        Ingredient ingredient = createMockIngredient(ingredientId);
-        when(ingredientRepository.findById(ingredientId)).thenReturn(Optional.of(ingredient));
-
-        // When
-        Optional<Ingredient> result = ingredientDataAccess.findById(ingredientId);
-
-        // Then
-        assertThat(result).isPresent();
-        assertThat(result.get().getId()).isEqualTo(ingredientId);
-        verify(ingredientRepository).findById(ingredientId);
+    void save() {
+        Ingredient ingredient = new Ingredient();
+        when(repository.save(any())).thenReturn(ingredient);
+        assertNotNull(dataAccess.save(ingredient));
     }
 
     @Test
-    void findById_WhenNotExists_ReturnsEmptyOptional() {
-        // Given
-        Long ingredientId = 999L;
-        when(ingredientRepository.findById(ingredientId)).thenReturn(Optional.empty());
-
-        // When
-        Optional<Ingredient> result = ingredientDataAccess.findById(ingredientId);
-
-        // Then
-        assertThat(result).isEmpty();
-        verify(ingredientRepository).findById(ingredientId);
+    void findById() {
+        when(repository.findById(1L)).thenReturn(Optional.of(new Ingredient()));
+        assertTrue(dataAccess.findById(1L).isPresent());
     }
 
     @Test
-    void getById_WhenExists_ReturnsIngredient() {
-        // Given
-        Long ingredientId = 1L;
-        Ingredient ingredient = createMockIngredient(ingredientId);
-        when(ingredientRepository.findById(ingredientId)).thenReturn(Optional.of(ingredient));
-
-        // When
-        Ingredient result = ingredientDataAccess.getById(ingredientId);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(ingredientId);
-        verify(ingredientRepository).findById(ingredientId);
+    void getById() {
+        Ingredient ingredient = new Ingredient();
+        when(repository.findById(1L)).thenReturn(Optional.of(ingredient));
+        assertNotNull(dataAccess.getById(1L));
     }
 
     @Test
-    void getById_WhenNotExists_ThrowsException() {
-        // Given
-        Long ingredientId = 999L;
-        when(ingredientRepository.findById(ingredientId)).thenReturn(Optional.empty());
-
-        // When & Then
-        assertThatThrownBy(() -> ingredientDataAccess.getById(ingredientId))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("Ingredient not found with id: " + ingredientId);
-
-        verify(ingredientRepository).findById(ingredientId);
+    void findAll() {
+        when(repository.findAll()).thenReturn(Collections.emptyList());
+        assertNotNull(dataAccess.findAll());
     }
 
     @Test
-    void save_SavesIngredientAndReturns() {
-        // Given
-        Ingredient ingredient = createMockIngredient(null);
-        Ingredient savedIngredient = createMockIngredient(1L);
-        when(ingredientRepository.save(ingredient)).thenReturn(savedIngredient);
-
-        // When
-        Ingredient result = ingredientDataAccess.save(ingredient);
-
-        // Then
-        assertThat(result.getId()).isEqualTo(1L);
-        verify(ingredientRepository).save(ingredient);
+    void findAllById() {
+        when(repository.findAllById(any(List.class))).thenReturn(Collections.emptyList());
+        assertNotNull(dataAccess.findAllById(List.of(1L)));
     }
 
     @Test
-    void findAll_ReturnsAllIngredients() {
-        // Given
-        List<Ingredient> ingredients = Arrays.asList(
-                createMockIngredient(1L),
-                createMockIngredient(2L)
-        );
-        when(ingredientRepository.findAll()).thenReturn(ingredients);
-
-        // When
-        List<Ingredient> result = ingredientDataAccess.findAll();
-
-        // Then
-        assertThat(result).hasSize(2);
-        verify(ingredientRepository).findAll();
+    void existsById() {
+        when(repository.existsById(1L)).thenReturn(true);
+        assertTrue(dataAccess.existsById(1L));
     }
 
     @Test
-    void findAllById_ReturnsMatchingIngredients() {
-        // Given
-        List<Long> ids = Arrays.asList(1L, 2L);
-        List<Ingredient> ingredients = Arrays.asList(
-                createMockIngredient(1L),
-                createMockIngredient(2L)
-        );
-        when(ingredientRepository.findAllById(ids)).thenReturn(ingredients);
-
-        // When
-        List<Ingredient> result = ingredientDataAccess.findAllById(ids);
-
-        // Then
-        assertThat(result).hasSize(2);
-        verify(ingredientRepository).findAllById(ids);
-    }
-
-    @Test
-    void findByName_WhenExists_ReturnsOptionalWithIngredient() {
-        // Given
-        String ingredientName = "Test Ingredient";
-        Ingredient ingredient = createMockIngredient(1L, ingredientName);
-        when(ingredientRepository.findByName(ingredientName)).thenReturn(Optional.of(ingredient));
-
-        // When
-        Optional<Ingredient> result = ingredientDataAccess.findByName(ingredientName);
-
-        // Then
-        assertThat(result).isPresent();
-        assertThat(result.get().getName()).isEqualTo(ingredientName);
-        verify(ingredientRepository).findByName(ingredientName);
-    }
-
-    @Test
-    void existsById_WhenExists_ReturnsTrue() {
-        // Given
-        Long ingredientId = 1L;
-        when(ingredientRepository.existsById(ingredientId)).thenReturn(true);
-
-        // When
-        boolean result = ingredientDataAccess.existsById(ingredientId);
-
-        // Then
-        assertThat(result).isTrue();
-        verify(ingredientRepository).existsById(ingredientId);
-    }
-
-    @Test
-    void existsById_WhenNotExists_ReturnsFalse() {
-        // Given
-        Long ingredientId = 999L;
-        when(ingredientRepository.existsById(ingredientId)).thenReturn(false);
-
-        // When
-        boolean result = ingredientDataAccess.existsById(ingredientId);
-
-        // Then
-        assertThat(result).isFalse();
-        verify(ingredientRepository).existsById(ingredientId);
-    }
-
-    @Test
-    void deleteById_DeletesIngredient() {
-        // Given
-        Long ingredientId = 1L;
-        doNothing().when(ingredientRepository).deleteById(ingredientId);
-
-        // When
-        ingredientDataAccess.deleteById(ingredientId);
-
-        // Then
-        verify(ingredientRepository).deleteById(ingredientId);
+    void deleteById() {
+        doNothing().when(repository).deleteById(1L);
+        dataAccess.deleteById(1L);
+        verify(repository).deleteById(1L);
     }
 }

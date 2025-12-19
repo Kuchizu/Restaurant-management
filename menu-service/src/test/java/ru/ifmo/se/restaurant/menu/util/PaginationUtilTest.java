@@ -1,4 +1,4 @@
-package ru.ifmo.se.restaurant.kitchen.util;
+package ru.ifmo.se.restaurant.menu.util;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Pageable;
