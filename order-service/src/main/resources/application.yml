@@ -20,9 +20,8 @@ spring:
       max-idle-time: 10m
       max-acquire-time: 5s
       max-life-time: 30m
-  sql:
-    init:
-      mode: ${SQL_INIT_MODE:always}
+      validation-query: SELECT 1
+      validation-depth: LOCAL
 
 eureka:
   client:

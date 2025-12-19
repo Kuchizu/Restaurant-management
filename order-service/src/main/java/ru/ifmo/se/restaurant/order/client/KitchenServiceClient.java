@@ -3,6 +3,7 @@ package ru.ifmo.se.restaurant.order.client;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -25,6 +26,19 @@ public class KitchenServiceClient {
             .uri("http://kitchen-service/api/kitchen/queue")
             .bodyValue(request)
             .retrieve()
+            .onStatus(HttpStatusCode::is4xxClientError, response -> {
+                log.warn("Client error from kitchen service: {}", response.statusCode());
+                return response.createException()
+                    .flatMap(Mono::error);
+            })
+            .onStatus(HttpStatusCode::is5xxServerError, response -> {
+                log.error("Server error from kitchen service: {}", response.statusCode());
+                return Mono.error(new ServiceUnavailableException(
+                    "Kitchen service returned server error",
+                    "kitchen-service",
+                    "addToQueue"
+                ));
+            })
             .bodyToMono(Void.class)
             .doOnError(error -> log.error("Error calling kitchen service: {}", error.getMessage()));
     }

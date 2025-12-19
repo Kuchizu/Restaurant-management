@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.ifmo.se.restaurant.billing.entity.OrderStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -22,7 +23,7 @@ public class OrderDto {
     @NotNull(message = "Waiter ID is required")
     private Long waiterId;
 
-    private String status;
+    private OrderStatus status;
 
     @DecimalMin(value = "0.0", message = "Total amount must be non-negative")
     private BigDecimal totalAmount;

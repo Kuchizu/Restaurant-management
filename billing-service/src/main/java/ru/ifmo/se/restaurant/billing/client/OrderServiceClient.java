@@ -10,6 +10,6 @@ import ru.ifmo.se.restaurant.billing.dto.OrderDto;
 public interface OrderServiceClient {
 
     @GetMapping("/api/orders/{id}")
-    @CircuitBreaker(name = "orderService", fallbackMethod = "getOrderFallback")
+    @CircuitBreaker(name = "orderService")
     OrderDto getOrder(@PathVariable("id") Long id);
 }

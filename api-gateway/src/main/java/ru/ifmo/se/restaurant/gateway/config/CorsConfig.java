@@ -26,6 +26,7 @@ public class CorsConfig {
                 "X-Has-Next",
                 "X-Has-Previous"
         ));
+        corsConfig.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfig);

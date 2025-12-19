@@ -7,9 +7,6 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import ru.ifmo.se.restaurant.kitchen.dataaccess.KitchenQueueDataAccess;
 import ru.ifmo.se.restaurant.kitchen.dto.KitchenQueueDto;
 import ru.ifmo.se.restaurant.kitchen.entity.DishStatus;
@@ -19,6 +16,7 @@ import ru.ifmo.se.restaurant.kitchen.util.PaginationUtil;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,90 +25,78 @@ public class KitchenService {
 
     // Add order items to kitchen queue
     @Transactional
-    public Mono<KitchenQueueDto> addToQueue(KitchenQueueDto dto) {
-        return Mono.fromCallable(() -> {
-            KitchenQueue queue = new KitchenQueue();
-            queue.setOrderId(dto.getOrderId());
-            queue.setOrderItemId(dto.getOrderItemId());
-            queue.setDishName(dto.getDishName());
-            queue.setQuantity(dto.getQuantity() != null ? dto.getQuantity() : 1);
-            queue.setStatus(DishStatus.PENDING);
-            queue.setSpecialRequest(dto.getSpecialRequest());
-            queue.setCreatedAt(LocalDateTime.now());
-            return toDto(kitchenQueueDataAccess.save(queue));
-        }).subscribeOn(Schedulers.boundedElastic());
+    public KitchenQueueDto addToQueue(KitchenQueueDto dto) {
+        KitchenQueue queue = new KitchenQueue();
+        queue.setOrderId(dto.getOrderId());
+        queue.setOrderItemId(dto.getOrderItemId());
+        queue.setDishName(dto.getDishName());
+        queue.setQuantity(dto.getQuantity() != null ? dto.getQuantity() : 1);
+        queue.setStatus(DishStatus.PENDING);
+        queue.setSpecialRequest(dto.getSpecialRequest());
+        queue.setCreatedAt(LocalDateTime.now());
+        return toDto(kitchenQueueDataAccess.save(queue));
     }
 
     // Get active kitchen queue (PENDING, IN_PROGRESS)
-    public Flux<KitchenQueueDto> getActiveQueue() {
-        return Mono.fromCallable(() -> {
-            List<DishStatus> activeStatuses = Arrays.asList(DishStatus.PENDING, DishStatus.IN_PROGRESS);
-            return kitchenQueueDataAccess.findByStatusInOrderByCreatedAtAsc(activeStatuses);
-        })
-        .subscribeOn(Schedulers.boundedElastic())
-        .flatMapMany(Flux::fromIterable)
-        .map(this::toDto);
+    public List<KitchenQueueDto> getActiveQueue() {
+        List<DishStatus> activeStatuses = Arrays.asList(DishStatus.PENDING, DishStatus.IN_PROGRESS);
+        return kitchenQueueDataAccess.findByStatusInOrderByCreatedAtAsc(activeStatuses)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     // Get all queue items
-    public Flux<KitchenQueueDto> getAllQueue() {
-        return Mono.fromCallable(kitchenQueueDataAccess::findAll)
-            .subscribeOn(Schedulers.boundedElastic())
-            .flatMapMany(Flux::fromIterable)
-            .map(this::toDto);
+    public List<KitchenQueueDto> getAllQueue() {
+        return kitchenQueueDataAccess.findAll()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     // Get queue item by ID
-    public Mono<KitchenQueueDto> getQueueItemById(Long id) {
-        return Mono.fromCallable(() -> kitchenQueueDataAccess.getById(id))
-        .subscribeOn(Schedulers.boundedElastic())
-        .map(this::toDto);
+    public KitchenQueueDto getQueueItemById(Long id) {
+        return toDto(kitchenQueueDataAccess.getById(id));
     }
 
     // Update dish status
     @Transactional
-    public Mono<KitchenQueueDto> updateStatus(Long id, DishStatus status) {
-        return Mono.fromCallable(() -> {
-            KitchenQueue queue = kitchenQueueDataAccess.getById(id);
+    public KitchenQueueDto updateStatus(Long id, DishStatus status) {
+        KitchenQueue queue = kitchenQueueDataAccess.getById(id);
 
-            queue.setStatus(status);
+        queue.setStatus(status);
 
-            if (status == DishStatus.IN_PROGRESS && queue.getStartedAt() == null) {
-                queue.setStartedAt(LocalDateTime.now());
-            }
+        if (status == DishStatus.IN_PROGRESS && queue.getStartedAt() == null) {
+            queue.setStartedAt(LocalDateTime.now());
+        }
 
-            if (status == DishStatus.READY && queue.getCompletedAt() == null) {
-                queue.setCompletedAt(LocalDateTime.now());
-            }
+        if (status == DishStatus.READY && queue.getCompletedAt() == null) {
+            queue.setCompletedAt(LocalDateTime.now());
+        }
 
-            return toDto(kitchenQueueDataAccess.save(queue));
-        }).subscribeOn(Schedulers.boundedElastic());
+        return toDto(kitchenQueueDataAccess.save(queue));
     }
 
     // Get queue items by order ID
-    public Flux<KitchenQueueDto> getQueueByOrderId(Long orderId) {
-        return Mono.fromCallable(() -> kitchenQueueDataAccess.findByOrderId(orderId))
-            .subscribeOn(Schedulers.boundedElastic())
-            .flatMapMany(Flux::fromIterable)
-            .map(this::toDto);
+    public List<KitchenQueueDto> getQueueByOrderId(Long orderId) {
+        return kitchenQueueDataAccess.findByOrderId(orderId)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     // Get all queue items with pagination (Page)
-    public Mono<Page<KitchenQueueDto>> getAllQueueItemsPaginated(int page, int size) {
-        return Mono.fromCallable(() -> {
-            Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.ASC, "createdAt"));
-            Page<KitchenQueue> queuePage = kitchenQueueDataAccess.findAll(pageable);
-            return queuePage.map(this::toDto);
-        }).subscribeOn(Schedulers.boundedElastic());
+    public Page<KitchenQueueDto> getAllQueueItemsPaginated(int page, int size) {
+        Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.ASC, "createdAt"));
+        Page<KitchenQueue> queuePage = kitchenQueueDataAccess.findAll(pageable);
+        return queuePage.map(this::toDto);
     }
 
     // Get all queue items with pagination (Slice for infinite scroll)
-    public Mono<Slice<KitchenQueueDto>> getAllQueueItemsSlice(int page, int size) {
-        return Mono.fromCallable(() -> {
-            Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.ASC, "createdAt"));
-            Slice<KitchenQueue> queueSlice = kitchenQueueDataAccess.findAllSlice(pageable);
-            return queueSlice.map(this::toDto);
-        }).subscribeOn(Schedulers.boundedElastic());
+    public Slice<KitchenQueueDto> getAllQueueItemsSlice(int page, int size) {
+        Pageable pageable = PaginationUtil.createPageable(page, size, Sort.by(Sort.Direction.ASC, "createdAt"));
+        Slice<KitchenQueue> queueSlice = kitchenQueueDataAccess.findAllSlice(pageable);
+        return queueSlice.map(this::toDto);
     }
 
     // Mapper

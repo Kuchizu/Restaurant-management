@@ -3,10 +3,12 @@ package ru.ifmo.se.restaurant.order.client;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import ru.ifmo.se.restaurant.order.dto.DishResponse;
+import ru.ifmo.se.restaurant.order.exception.ResourceNotFoundException;
 import ru.ifmo.se.restaurant.order.exception.ServiceUnavailableException;
 
 @Component
@@ -24,8 +26,25 @@ public class MenuServiceClient {
             .get()
             .uri("http://menu-service/api/dishes/{id}", dishId)
             .retrieve()
+            .onStatus(HttpStatusCode::is4xxClientError, response -> {
+                if (response.statusCode().value() == 404) {
+                    log.warn("Dish {} not found in menu service", dishId);
+                    return Mono.error(new ResourceNotFoundException("Dish not found with id: " + dishId));
+                }
+                log.warn("Client error from menu service: {}", response.statusCode());
+                return response.createException()
+                    .flatMap(Mono::error);
+            })
+            .onStatus(HttpStatusCode::is5xxServerError, response -> {
+                log.error("Server error from menu service: {}", response.statusCode());
+                return Mono.error(new ServiceUnavailableException(
+                    "Menu service returned server error",
+                    "menu-service",
+                    "getDish"
+                ));
+            })
             .bodyToMono(DishResponse.class)
-            .doOnError(error -> log.error("Error calling menu service: {}", error.getMessage()));
+            .doOnError(error -> log.error("Error calling menu service for dish {}: {}", dishId, error.getMessage()));
     }
 
     private Mono<DishResponse> fallbackGetDish(Long dishId, Throwable throwable) {

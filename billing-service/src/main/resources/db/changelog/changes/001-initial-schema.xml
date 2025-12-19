@@ -32,9 +32,9 @@
             <column name="paid_at" type="TIMESTAMP"/>
             <column name="notes" type="VARCHAR(500)"/>
         </createTable>
-        <createIndex tableName="bills" indexName="idx_bills_order_id">
-            <column name="order_id"/>
-        </createIndex>
+        <addUniqueConstraint tableName="bills"
+                             columnNames="order_id"
+                             constraintName="uk_bills_order_id"/>
         <createIndex tableName="bills" indexName="idx_bills_status">
             <column name="status"/>
         </createIndex>

@@ -16,12 +16,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import ru.ifmo.se.restaurant.kitchen.dto.ErrorResponse;
 import ru.ifmo.se.restaurant.kitchen.dto.KitchenQueueDto;
 import ru.ifmo.se.restaurant.kitchen.entity.DishStatus;
 import ru.ifmo.se.restaurant.kitchen.service.KitchenService;
+
+import java.util.List;
 
 @Tag(name = "Kitchen Service", description = "API для управления кухонной очередью")
 @RestController
@@ -60,7 +60,7 @@ public class KitchenController {
     })
     @PostMapping("/queue")
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<KitchenQueueDto> addToQueue(
+    public KitchenQueueDto addToQueue(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Данные блюда для добавления в очередь",
                     required = true
@@ -76,7 +76,7 @@ public class KitchenController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = KitchenQueueDto.class)))
     })
     @GetMapping("/queue")
-    public Flux<KitchenQueueDto> getActiveQueue() {
+    public List<KitchenQueueDto> getActiveQueue() {
         return kitchenService.getActiveQueue();
     }
 
@@ -87,7 +87,7 @@ public class KitchenController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = KitchenQueueDto.class)))
     })
     @GetMapping("/queue/all")
-    public Flux<KitchenQueueDto> getAllQueue() {
+    public List<KitchenQueueDto> getAllQueue() {
         return kitchenService.getAllQueue();
     }
 
@@ -98,22 +98,21 @@ public class KitchenController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class)))
     })
     @GetMapping("/queue/paged")
-    public Mono<ResponseEntity<Page<KitchenQueueDto>>> getAllQueuePaged(
+    public ResponseEntity<Page<KitchenQueueDto>> getAllQueuePaged(
             @Parameter(description = "Номер страницы (начиная с 0)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Размер страницы (максимум 50)", example = "20")
             @RequestParam(defaultValue = "20") int size) {
 
-        return kitchenService.getAllQueueItemsPaginated(page, size)
-                .map(queuePage -> {
-                    HttpHeaders headers = new HttpHeaders();
-                    headers.add("X-Total-Count", String.valueOf(queuePage.getTotalElements()));
-                    headers.add("X-Total-Pages", String.valueOf(queuePage.getTotalPages()));
-                    headers.add("X-Page-Number", String.valueOf(queuePage.getNumber()));
-                    headers.add("X-Page-Size", String.valueOf(queuePage.getSize()));
+        Page<KitchenQueueDto> queuePage = kitchenService.getAllQueueItemsPaginated(page, size);
 
-                    return ResponseEntity.ok().headers(headers).body(queuePage);
-                });
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Total-Count", String.valueOf(queuePage.getTotalElements()));
+        headers.add("X-Total-Pages", String.valueOf(queuePage.getTotalPages()));
+        headers.add("X-Page-Number", String.valueOf(queuePage.getNumber()));
+        headers.add("X-Page-Size", String.valueOf(queuePage.getSize()));
+
+        return ResponseEntity.ok().headers(headers).body(queuePage);
     }
 
     @Operation(summary = "Получить очередь для бесконечной прокрутки (без total count)",
@@ -123,22 +122,21 @@ public class KitchenController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Slice.class)))
     })
     @GetMapping("/queue/infinite-scroll")
-    public Mono<ResponseEntity<Slice<KitchenQueueDto>>> getAllQueueInfiniteScroll(
+    public ResponseEntity<Slice<KitchenQueueDto>> getAllQueueInfiniteScroll(
             @Parameter(description = "Номер страницы (начиная с 0)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Размер страницы (максимум 50)", example = "20")
             @RequestParam(defaultValue = "20") int size) {
 
-        return kitchenService.getAllQueueItemsSlice(page, size)
-                .map(queueSlice -> {
-                    HttpHeaders headers = new HttpHeaders();
-                    headers.add("X-Has-Next", String.valueOf(queueSlice.hasNext()));
-                    headers.add("X-Has-Previous", String.valueOf(queueSlice.hasPrevious()));
-                    headers.add("X-Page-Number", String.valueOf(queueSlice.getNumber()));
-                    headers.add("X-Page-Size", String.valueOf(queueSlice.getSize()));
+        Slice<KitchenQueueDto> queueSlice = kitchenService.getAllQueueItemsSlice(page, size);
 
-                    return ResponseEntity.ok().headers(headers).body(queueSlice);
-                });
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Has-Next", String.valueOf(queueSlice.hasNext()));
+        headers.add("X-Has-Previous", String.valueOf(queueSlice.hasPrevious()));
+        headers.add("X-Page-Number", String.valueOf(queueSlice.getNumber()));
+        headers.add("X-Page-Size", String.valueOf(queueSlice.getSize()));
+
+        return ResponseEntity.ok().headers(headers).body(queueSlice);
     }
 
     @Operation(summary = "Получить элемент очереди по ID",
@@ -150,7 +148,7 @@ public class KitchenController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/queue/{id}")
-    public Mono<KitchenQueueDto> getQueueItemById(
+    public KitchenQueueDto getQueueItemById(
             @Parameter(description = "ID элемента очереди", required = true, example = "1")
             @PathVariable Long id) {
         return kitchenService.getQueueItemById(id);
@@ -165,7 +163,7 @@ public class KitchenController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PutMapping("/queue/{id}/status")
-    public Mono<KitchenQueueDto> updateStatus(
+    public KitchenQueueDto updateStatus(
             @Parameter(description = "ID элемента очереди", required = true, example = "1")
             @PathVariable Long id,
             @Parameter(description = "Новый статус блюда", required = true, example = "IN_PROGRESS")
@@ -180,7 +178,7 @@ public class KitchenController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = KitchenQueueDto.class)))
     })
     @GetMapping("/queue/order/{orderId}")
-    public Flux<KitchenQueueDto> getQueueByOrderId(
+    public List<KitchenQueueDto> getQueueByOrderId(
             @Parameter(description = "ID заказа", required = true, example = "1")
             @PathVariable Long orderId) {
         return kitchenService.getQueueByOrderId(orderId);

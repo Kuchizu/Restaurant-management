@@ -94,7 +94,19 @@ public class InventoryService {
     public InventoryDto adjustInventory(Long id, BigDecimal quantity) {
         Inventory inventory = inventoryDataAccess.getById(id);
 
-        inventory.setQuantity(inventory.getQuantity().add(quantity));
+        BigDecimal newQuantity = inventory.getQuantity().add(quantity);
+
+        // Prevent negative inventory
+        if (newQuantity.compareTo(BigDecimal.ZERO) < 0) {
+            throw new ValidationException(
+                "Adjustment would result in negative inventory. Current: " +
+                inventory.getQuantity() + ", Adjustment: " + quantity,
+                "quantity",
+                quantity
+            );
+        }
+
+        inventory.setQuantity(newQuantity);
         inventory.setLastUpdated(LocalDateTime.now());
 
         return toDto(inventoryDataAccess.save(inventory));

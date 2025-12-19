@@ -43,6 +43,8 @@ eureka:
     lease-expiration-duration-in-seconds: 30
 
 feign:
+  circuitbreaker:
+    enabled: true
   client:
     config:
       default:

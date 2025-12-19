@@ -1,6 +1,7 @@
 package ru.ifmo.se.restaurant.order.entity;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,4 +24,7 @@ public class Order {
     private String specialRequests;
     private LocalDateTime createdAt;
     private LocalDateTime closedAt;
+
+    @Version
+    private Long version;
 }
