@@ -228,6 +228,39 @@ public class OrderController {
         return orderService.closeOrder(id);
     }
 
+    @Operation(
+        summary = "Создать новый стол",
+        description = "Создает новый стол в ресторане",
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            required = true,
+            description = "Данные нового стола",
+            content = @Content(
+                schema = @Schema(implementation = TableDto.class),
+                examples = @ExampleObject(
+                    name = "Пример создания стола",
+                    value = """
+                        {
+                          "tableNumber": "A-12",
+                          "capacity": 4,
+                          "location": "Основной зал, у окна"
+                        }
+                        """
+                )
+            )
+        )
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Стол успешно создан",
+            content = @Content(schema = @Schema(implementation = TableDto.class))),
+        @ApiResponse(responseCode = "400", description = "Некорректные данные запроса",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/tables")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<TableDto> createTable(@Valid @RequestBody TableDto dto) {
+        return orderService.createTable(dto);
+    }
+
     @Operation(summary = "Получить все столы (с пагинацией)", description = "Возвращает список столов с пагинацией")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Страница столов успешно получена")
@@ -246,6 +279,41 @@ public class OrderController {
                 exchange.getResponse().getHeaders().add("X-Page-Size", String.valueOf(pagedTables.getSize()));
                 return ResponseEntity.ok(pagedTables);
             });
+    }
+
+    @Operation(
+        summary = "Создать нового сотрудника",
+        description = "Добавляет нового сотрудника в систему",
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            required = true,
+            description = "Данные нового сотрудника",
+            content = @Content(
+                schema = @Schema(implementation = EmployeeDto.class),
+                examples = @ExampleObject(
+                    name = "Пример создания сотрудника",
+                    value = """
+                        {
+                          "firstName": "Иван",
+                          "lastName": "Петров",
+                          "email": "ivan.petrov@restaurant.ru",
+                          "phone": "+7 (916) 555-12-34",
+                          "role": "WAITER"
+                        }
+                        """
+                )
+            )
+        )
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Сотрудник успешно создан",
+            content = @Content(schema = @Schema(implementation = EmployeeDto.class))),
+        @ApiResponse(responseCode = "400", description = "Некорректные данные запроса",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/employees")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<EmployeeDto> createEmployee(@Valid @RequestBody EmployeeDto dto) {
+        return orderService.createEmployee(dto);
     }
 
     @Operation(summary = "Получить всех сотрудников (с пагинацией)", description = "Возвращает список сотрудников с пагинацией")

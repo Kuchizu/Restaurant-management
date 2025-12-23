@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.reactive.resource.NoResourceFoundException;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.ServerWebInputException;
 import reactor.core.publisher.Mono;
 import ru.ifmo.se.restaurant.order.dto.ErrorResponse;
 
@@ -141,13 +142,46 @@ public class GlobalExceptionHandler {
             DataIntegrityViolationException ex,
             ServerWebExchange exchange) {
         log.error("Data integrity violation: {}", ex.getMessage());
+
         String message = "Database constraint violation";
+        Map<String, Object> details = new HashMap<>();
+
+        String exceptionMessage = ex.getMessage() != null ? ex.getMessage().toLowerCase() : "";
+        Throwable rootCause = ex.getRootCause();
+        String rootCauseMessage = rootCause != null ? rootCause.getMessage() : "";
+
+        if (exceptionMessage.contains("unique") || rootCauseMessage.contains("unique")) {
+            if (exceptionMessage.contains("email") || rootCauseMessage.toLowerCase().contains("email")) {
+                message = "An employee with this email already exists";
+                details.put("field", "email");
+                details.put("constraint", "unique");
+            } else if (exceptionMessage.contains("table_number") || rootCauseMessage.toLowerCase().contains("table_number")) {
+                message = "A table with this number already exists";
+                details.put("field", "tableNumber");
+                details.put("constraint", "unique");
+            } else {
+                message = "A record with this value already exists";
+                details.put("constraint", "unique");
+            }
+        } else if (exceptionMessage.contains("foreign key") || rootCauseMessage.toLowerCase().contains("foreign key")) {
+            message = "Referenced record does not exist";
+            details.put("constraint", "foreign_key");
+        } else if (exceptionMessage.contains("not null") || rootCauseMessage.toLowerCase().contains("not null")) {
+            message = "Required field is missing";
+            details.put("constraint", "not_null");
+        }
+
+        if (rootCauseMessage != null && !rootCauseMessage.isEmpty()) {
+            details.put("technicalDetails", rootCauseMessage);
+        }
+
         ErrorResponse error = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.CONFLICT.value())
                 .error("Conflict")
                 .message(message)
                 .path(exchange.getRequest().getPath().value())
+                .details(details.isEmpty() ? null : details)
                 .build();
         return Mono.just(ResponseEntity.status(HttpStatus.CONFLICT).body(error));
     }
@@ -163,6 +197,42 @@ public class GlobalExceptionHandler {
                 .error("Bad Request")
                 .message("Malformed JSON request")
                 .path(exchange.getRequest().getPath().value())
+                .build();
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error));
+    }
+
+    @ExceptionHandler(ServerWebInputException.class)
+    public Mono<ResponseEntity<ErrorResponse>> handleServerWebInputException(
+            ServerWebInputException ex,
+            ServerWebExchange exchange) {
+        log.warn("Invalid request input: {}", ex.getMessage());
+
+        String message = "Invalid request format";
+        Map<String, Object> details = new HashMap<>();
+
+        Throwable cause = ex.getCause();
+        if (cause != null) {
+            String causeMessage = cause.getMessage();
+            if (causeMessage != null) {
+                if (causeMessage.contains("JSON decoding error") || causeMessage.contains("Unrecognized token")) {
+                    message = "Malformed JSON: Please check your request syntax";
+                    details.put("hint", "Common issues: missing quotes, extra characters, typos in field names");
+                } else if (causeMessage.contains("Cannot deserialize")) {
+                    message = "Invalid data format in request body";
+                } else if (causeMessage.contains("Unexpected character")) {
+                    message = "Syntax error in JSON request";
+                }
+                details.put("error", causeMessage);
+            }
+        }
+
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Bad Request")
+                .message(message)
+                .path(exchange.getRequest().getPath().value())
+                .details(details.isEmpty() ? null : details)
                 .build();
         return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error));
     }

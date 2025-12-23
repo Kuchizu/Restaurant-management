@@ -231,6 +231,31 @@ public class OrderService {
                 .map(employees -> new PageImpl<>(employees, pageable, total)));
     }
 
+    @Transactional
+    public Mono<EmployeeDto> createEmployee(EmployeeDto dto) {
+        Employee employee = new Employee();
+        employee.setFirstName(dto.getFirstName());
+        employee.setLastName(dto.getLastName());
+        employee.setEmail(dto.getEmail());
+        employee.setPhone(dto.getPhone());
+        employee.setRole(dto.getRole());
+
+        return employeeDataAccess.save(employee)
+            .map(this::toEmployeeDto);
+    }
+
+    @Transactional
+    public Mono<TableDto> createTable(TableDto dto) {
+        RestaurantTable table = new RestaurantTable();
+        table.setTableNumber(dto.getTableNumber());
+        table.setCapacity(dto.getCapacity());
+        table.setLocation(dto.getLocation());
+        table.setStatus(dto.getStatus() != null ? dto.getStatus() : TableStatus.FREE);
+
+        return tableDataAccess.save(table)
+            .map(this::toTableDto);
+    }
+
     private TableDto toTableDto(RestaurantTable table) {
         return new TableDto(
             table.getId(),
