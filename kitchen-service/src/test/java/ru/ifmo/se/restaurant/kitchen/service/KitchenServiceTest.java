@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.ifmo.se.restaurant.kitchen.client.MenuServiceClient;
 import ru.ifmo.se.restaurant.kitchen.dataaccess.KitchenQueueDataAccess;
 import ru.ifmo.se.restaurant.kitchen.dto.KitchenQueueDto;
 import ru.ifmo.se.restaurant.kitchen.entity.DishStatus;
@@ -22,6 +23,9 @@ class KitchenServiceTest {
 
     @Mock
     private KitchenQueueDataAccess dataAccess;
+
+    @Mock
+    private MenuServiceClient menuServiceClient;
 
     @InjectMocks
     private KitchenService service;

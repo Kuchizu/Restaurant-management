@@ -1,13 +1,16 @@
 package ru.ifmo.se.restaurant.kitchen.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.ifmo.se.restaurant.kitchen.client.MenuServiceClient;
 import ru.ifmo.se.restaurant.kitchen.dataaccess.KitchenQueueDataAccess;
+import ru.ifmo.se.restaurant.kitchen.dto.DishInfoDto;
 import ru.ifmo.se.restaurant.kitchen.dto.KitchenQueueDto;
 import ru.ifmo.se.restaurant.kitchen.entity.DishStatus;
 import ru.ifmo.se.restaurant.kitchen.entity.KitchenQueue;
@@ -18,14 +21,26 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class KitchenService {
     private final KitchenQueueDataAccess kitchenQueueDataAccess;
+    private final MenuServiceClient menuServiceClient;
 
     // Add order items to kitchen queue
     @Transactional
     public KitchenQueueDto addToQueue(KitchenQueueDto dto) {
+        // TODO: Интеграция с menu-service (закомментировано до реализации бизнес-логики)
+        // DishInfoDto dishInfo = menuServiceClient.getDishByName(dto.getDishName());
+        // if (dishInfo != null) {
+        //     log.info("Dish info from menu-service: {} (category: {}, price: {})",
+        //              dishInfo.getName(), dishInfo.getCategoryName(), dishInfo.getPrice());
+        // } else {
+        //     log.warn("Could not fetch dish info from menu-service for: {} (service may be unavailable)",
+        //              dto.getDishName());
+        // }
+
         KitchenQueue queue = new KitchenQueue();
         queue.setOrderId(dto.getOrderId());
         queue.setOrderItemId(dto.getOrderItemId());

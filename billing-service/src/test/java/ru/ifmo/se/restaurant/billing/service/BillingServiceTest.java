@@ -154,6 +154,12 @@ class BillingServiceTest {
         // Given
         Long orderId = 1L;
         Bill existingBill = createMockBill(1L);
+        OrderDto orderDto = new OrderDto();
+        orderDto.setId(orderId);
+        orderDto.setTotalAmount(new BigDecimal("100.00"));
+
+        // Сначала вызывается order-service, потом проверяется существующий счёт
+        when(orderServiceClient.getOrder(orderId)).thenReturn(orderDto);
         when(billDataAccess.findByOrderId(orderId)).thenReturn(Optional.of(existingBill));
 
         // When & Then
@@ -161,8 +167,8 @@ class BillingServiceTest {
                 .isInstanceOf(BusinessConflictException.class)
                 .hasMessageContaining("Bill already exists for this order");
 
+        verify(orderServiceClient).getOrder(orderId);
         verify(billDataAccess).findByOrderId(orderId);
-        verify(orderServiceClient, never()).getOrder(any());
         verify(billDataAccess, never()).save(any());
     }
 
@@ -170,7 +176,7 @@ class BillingServiceTest {
     void generateBill_WhenOrderServiceUnavailable_ThrowsServiceUnavailable() {
         // Given
         Long orderId = 1L;
-        when(billDataAccess.findByOrderId(orderId)).thenReturn(Optional.empty());
+        // Order-service вызывается первым и возвращает null (недоступен)
         when(orderServiceClient.getOrder(orderId)).thenReturn(null);
 
         // When & Then
@@ -178,8 +184,9 @@ class BillingServiceTest {
                 .isInstanceOf(ServiceUnavailableException.class)
                 .hasMessageContaining("Order service is currently unavailable");
 
-        verify(billDataAccess).findByOrderId(orderId);
         verify(orderServiceClient).getOrder(orderId);
+        // findByOrderId НЕ вызывается, т.к. ошибка происходит раньше
+        verify(billDataAccess, never()).findByOrderId(any());
         verify(billDataAccess, never()).save(any());
     }
 
