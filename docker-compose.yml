@@ -127,8 +127,6 @@ services:
     environment:
       SERVER_PORT: 8888
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      SPRING_PROFILES_ACTIVE: native
-      CONFIG_SEARCH_LOCATIONS: classpath:/config
     ports:
       - "8888:8888"
     networks:
@@ -152,15 +150,14 @@ services:
         SERVICE_NAME: order-service
     container_name: order-service
     environment:
-      SERVER_PORT: 8081
+      SPRING_PROFILES_ACTIVE: prod
+      MANAGEMENT_SERVER_PORT: 8080
       DATABASE_URL: r2dbc:postgresql://order-db:5432/order_db
       DATABASE_USERNAME: restaurant_user
       DATABASE_PASSWORD: restaurant_pass
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
       CONFIG_SERVER_URL: http://config-server:8888
       SQL_INIT_MODE: always
-    ports:
-      - "8081:8081"
     networks:
       - restaurant-network
     depends_on:
@@ -171,7 +168,7 @@ services:
       config-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -185,7 +182,8 @@ services:
         SERVICE_NAME: kitchen-service
     container_name: kitchen-service
     environment:
-      SERVER_PORT: 8082
+      SPRING_PROFILES_ACTIVE: prod
+      MANAGEMENT_SERVER_PORT: 8080
       DATABASE_URL: jdbc:postgresql://kitchen-db:5432/kitchen_db
       DATABASE_USERNAME: restaurant_user
       DATABASE_PASSWORD: restaurant_pass
@@ -194,8 +192,6 @@ services:
       JPA_DDL_AUTO: none
       JPA_SHOW_SQL: false
       LIQUIBASE_ENABLED: true
-    ports:
-      - "8082:8082"
     networks:
       - restaurant-network
     depends_on:
@@ -206,7 +202,7 @@ services:
       config-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8082/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -220,7 +216,8 @@ services:
         SERVICE_NAME: menu-service
     container_name: menu-service
     environment:
-      SERVER_PORT: 8083
+      SPRING_PROFILES_ACTIVE: prod
+      MANAGEMENT_SERVER_PORT: 8080
       DATABASE_URL: jdbc:postgresql://menu-db:5432/menu_db
       DATABASE_USERNAME: restaurant_user
       DATABASE_PASSWORD: restaurant_pass
@@ -229,8 +226,6 @@ services:
       JPA_DDL_AUTO: none
       JPA_SHOW_SQL: false
       LIQUIBASE_ENABLED: true
-    ports:
-      - "8083:8083"
     networks:
       - restaurant-network
     depends_on:
@@ -241,7 +236,7 @@ services:
       config-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8083/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -255,7 +250,8 @@ services:
         SERVICE_NAME: inventory-service
     container_name: inventory-service
     environment:
-      SERVER_PORT: 8084
+      SPRING_PROFILES_ACTIVE: prod
+      MANAGEMENT_SERVER_PORT: 8080
       DATABASE_URL: jdbc:postgresql://inventory-db:5432/inventory_db
       DATABASE_USERNAME: restaurant_user
       DATABASE_PASSWORD: restaurant_pass
@@ -264,8 +260,6 @@ services:
       JPA_DDL_AUTO: none
       JPA_SHOW_SQL: false
       LIQUIBASE_ENABLED: true
-    ports:
-      - "8084:8084"
     networks:
       - restaurant-network
     depends_on:
@@ -276,7 +270,7 @@ services:
       config-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8084/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -290,7 +284,8 @@ services:
         SERVICE_NAME: billing-service
     container_name: billing-service
     environment:
-      SERVER_PORT: 8085
+      SPRING_PROFILES_ACTIVE: prod
+      MANAGEMENT_SERVER_PORT: 8080
       DATABASE_URL: jdbc:postgresql://billing-db:5432/billing_db
       DATABASE_USERNAME: restaurant_user
       DATABASE_PASSWORD: restaurant_pass
@@ -299,8 +294,6 @@ services:
       JPA_DDL_AUTO: none
       JPA_SHOW_SQL: false
       LIQUIBASE_ENABLED: true
-    ports:
-      - "8085:8085"
     networks:
       - restaurant-network
     depends_on:
@@ -311,7 +304,7 @@ services:
       config-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8085/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -325,6 +318,7 @@ services:
         SERVICE_NAME: api-gateway
     container_name: api-gateway
     environment:
+      SPRING_PROFILES_ACTIVE: prod
       SERVER_PORT: 49999
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
       CONFIG_SERVER_URL: http://config-server:8888

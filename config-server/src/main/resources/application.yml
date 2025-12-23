@@ -4,20 +4,17 @@ server:
 spring:
   application:
     name: config-server
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:git}
   cloud:
     config:
       server:
         git:
-          uri: ${CONFIG_REPO_URI:file://C:/Users/Kuchizu/Desktop/configs-repo}
+          uri: ${CONFIG_REPO_URI:https://github.com/Kuchizu/Restaurant-management-configs}
           default-label: master
           clone-on-start: true
-          timeout: 5
+          timeout: 10
           search-paths:
             - '{application}'
-        native:
-          search-locations: ${CONFIG_SEARCH_LOCATIONS:classpath:/config}
+          skip-ssl-validation: true
 
 eureka:
   client:
