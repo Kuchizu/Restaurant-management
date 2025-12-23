@@ -78,6 +78,17 @@ public class BillingService {
 
     @Transactional
     public BillDto generateBill(Long orderId) {
+        // 1. Сначала проверяем существование заказа в order-service
+        OrderDto order = orderServiceClient.getOrder(orderId);
+        if (order == null) {
+            throw new ServiceUnavailableException(
+                "Order service is currently unavailable or order not found",
+                "order-service",
+                "getOrder"
+            );
+        }
+
+        // 2. Потом проверяем нет ли уже счёта для этого заказа
         billDataAccess.findByOrderId(orderId).ifPresent(existingBill -> {
             throw new BusinessConflictException(
                 "Bill already exists for this order",
@@ -86,15 +97,6 @@ public class BillingService {
                 "Existing bill ID: " + existingBill.getId()
             );
         });
-
-        OrderDto order = orderServiceClient.getOrder(orderId);
-        if (order == null) {
-            throw new ServiceUnavailableException(
-                "Order service is currently unavailable",
-                "order-service",
-                "getOrder"
-            );
-        }
 
         Bill bill = new Bill();
         bill.setOrderId(orderId);
