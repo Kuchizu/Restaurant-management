@@ -1,5 +1,6 @@
 package ru.ifmo.se.restaurant.inventory.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -23,6 +24,7 @@ import ru.ifmo.se.restaurant.inventory.service.SupplierService;
 
 import java.util.List;
 
+@Hidden
 @Tag(name = "Suppliers", description = "API для управления поставщиками и заказами на поставку")
 @RestController
 @RequestMapping("/api/suppliers")

@@ -11,11 +11,15 @@ import ru.ifmo.se.restaurant.kitchen.dto.KitchenQueueDto;
 import ru.ifmo.se.restaurant.kitchen.entity.DishStatus;
 import ru.ifmo.se.restaurant.kitchen.entity.KitchenQueue;
 
+import ru.ifmo.se.restaurant.kitchen.dto.DishInfoDto;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +39,7 @@ class KitchenServiceTest {
         KitchenQueue queue = new KitchenQueue();
         queue.setId(1L);
         when(dataAccess.save(any())).thenReturn(queue);
+        when(menuServiceClient.getDishByName(any())).thenReturn(createDishInfoDto());
 
         KitchenQueueDto result = service.addToQueue(new KitchenQueueDto());
         assertNotNull(result);
@@ -90,6 +95,7 @@ class KitchenServiceTest {
         KitchenQueue queue = new KitchenQueue();
         queue.setId(1L);
         when(dataAccess.save(any())).thenReturn(queue);
+        when(menuServiceClient.getDishByName(any())).thenReturn(createDishInfoDto());
         KitchenQueueDto dto = new KitchenQueueDto();
         dto.setQuantity(5);
         assertNotNull(service.addToQueue(dto));
@@ -113,5 +119,9 @@ class KitchenServiceTest {
         org.springframework.data.domain.Slice<KitchenQueue> slice = new org.springframework.data.domain.SliceImpl<>(Collections.emptyList());
         when(dataAccess.findAllSlice(any(org.springframework.data.domain.Pageable.class))).thenReturn(slice);
         assertNotNull(service.getAllQueueItemsSlice(0, 20));
+    }
+
+    private DishInfoDto createDishInfoDto() {
+        return new DishInfoDto(1L, "Test Dish", "Description", BigDecimal.TEN, 1L, "Category", true, Collections.emptyList());
     }
 }

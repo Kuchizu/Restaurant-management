@@ -329,7 +329,6 @@ class OrderServiceTest {
         OrderItem item = createDefaultOrderItem();
 
         when(orderDataAccess.getById(1L)).thenReturn(Mono.just(order));
-        when(orderDataAccess.save(any(Order.class))).thenReturn(Mono.just(order));
         when(orderItemDataAccess.findByOrderId(1L)).thenReturn(Flux.just(item));
         when(kitchenServiceClient.addToKitchenQueue(any()))
                 .thenReturn(Mono.error(new ServiceUnavailableException("Kitchen service unavailable", "kitchen-service", "addToQueue")));
@@ -339,7 +338,8 @@ class OrderServiceTest {
                 .expectError(ServiceUnavailableException.class)
                 .verify();
 
-        verify(orderDataAccess).save(any(Order.class));
+        // Order should NOT be saved when kitchen service fails
+        verify(orderDataAccess, never()).save(any(Order.class));
     }
 
     // ========== CLOSE ORDER TESTS ==========
