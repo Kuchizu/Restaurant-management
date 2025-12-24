@@ -171,16 +171,4 @@ public class KitchenController {
         return kitchenService.updateStatus(id, status);
     }
 
-    @Operation(summary = "Получить очередь по ID заказа",
-            description = "Возвращает все элементы очереди для указанного заказа")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Очередь для заказа успешно получена",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = KitchenQueueDto.class)))
-    })
-    @GetMapping("/queue/order/{orderId}")
-    public List<KitchenQueueDto> getQueueByOrderId(
-            @Parameter(description = "ID заказа", required = true, example = "1")
-            @PathVariable Long orderId) {
-        return kitchenService.getQueueByOrderId(orderId);
-    }
 }

@@ -1,6 +1,1 @@
 # See: https://github.com/Kuchizu/Restaurant-management-configs
-
-# Enable Feign Circuit Breaker to use fallback classes
-feign:
-  circuitbreaker:
-    enabled: true

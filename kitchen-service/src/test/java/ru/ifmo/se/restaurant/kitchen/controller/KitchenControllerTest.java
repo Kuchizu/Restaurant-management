@@ -72,12 +72,6 @@ class KitchenControllerTest {
     }
 
     @Test
-    void getQueueByOrderId() throws Exception {
-        when(kitchenService.getQueueByOrderId(1L)).thenReturn(Collections.emptyList());
-        mockMvc.perform(get("/api/kitchen/queue/order/1")).andExpect(status().isOk());
-    }
-
-    @Test
     void getAllQueueItemsPaginated() throws Exception {
         org.springframework.data.domain.Page<KitchenQueueDto> page = org.springframework.data.domain.Page.empty();
         when(kitchenService.getAllQueueItemsPaginated(0, 20)).thenReturn(page);
