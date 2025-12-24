@@ -1,6 +1,7 @@
 package ru.ifmo.se.restaurant.order.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -117,6 +118,21 @@ public class GlobalExceptionHandler {
                 .path(exchange.getRequest().getPath().value())
                 .build();
         return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error));
+    }
+
+    @ExceptionHandler(CallNotPermittedException.class)
+    public Mono<ResponseEntity<ErrorResponse>> handleCircuitBreakerOpen(
+            CallNotPermittedException ex,
+            ServerWebExchange exchange) {
+        log.warn("Circuit breaker is OPEN: {}", ex.getMessage());
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.SERVICE_UNAVAILABLE.value())
+                .error("Service Unavailable")
+                .message("Circuit breaker is open for downstream service")
+                .path(exchange.getRequest().getPath().value())
+                .build();
+        return Mono.just(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error));
     }
 
     @ExceptionHandler(WebExchangeBindException.class)
