@@ -192,21 +192,34 @@ public class GlobalExceptionHandler {
             feign.FeignException ex,
             HttpServletRequest request) {
         log.error("Feign client error: {} - {}", ex.status(), ex.getMessage());
-        
+
         String message = "External service communication error";
-        if (ex.status() == 404) {
-            message = "Resource not found in external service";
-        } else if (ex.status() >= 500) {
-            message = "External service is unavailable";
+        String serviceName = "downstream service";
+
+        if (ex.getMessage() != null && ex.getMessage().contains("order-service")) {
+            serviceName = "Order service";
+            message = "Order service is currently unavailable";
         }
-        
+
+        if (ex.status() == 404) {
+            message = "Resource not found in " + serviceName;
+        } else if (ex.status() >= 500) {
+            message = serviceName + " returned server error";
+        } else if (ex.status() == -1) {
+            message = serviceName + " is unreachable (connection refused)";
+        }
+
+        Map<String, Object> details = new HashMap<>();
+        details.put("serviceName", serviceName);
+        details.put("statusCode", ex.status());
+
         ErrorResponse error = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.SERVICE_UNAVAILABLE.value())
                 .error("Service Unavailable")
                 .message(message)
                 .path(request.getRequestURI())
-                .details(Map.of("externalServiceStatus", ex.status()))
+                .details(details)
                 .build();
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
     }

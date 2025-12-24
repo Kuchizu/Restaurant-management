@@ -163,6 +163,43 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    @ExceptionHandler(feign.FeignException.class)
+    public ResponseEntity<ErrorResponse> handleFeignException(
+            feign.FeignException ex,
+            HttpServletRequest request) {
+        log.error("Feign client error: {} - {}", ex.status(), ex.getMessage());
+
+        String message = "External service communication error";
+        String serviceName = "downstream service";
+
+        if (ex.getMessage() != null && ex.getMessage().contains("menu-service")) {
+            serviceName = "Menu service";
+            message = "Menu service is currently unavailable";
+        }
+
+        if (ex.status() == 404) {
+            message = "Resource not found in " + serviceName;
+        } else if (ex.status() >= 500) {
+            message = serviceName + " returned server error";
+        } else if (ex.status() == -1) {
+            message = serviceName + " is unreachable (connection refused)";
+        }
+
+        Map<String, Object> details = new HashMap<>();
+        details.put("serviceName", serviceName);
+        details.put("statusCode", ex.status());
+
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.SERVICE_UNAVAILABLE.value())
+                .error("Service Unavailable")
+                .message(message)
+                .path(request.getRequestURI())
+                .details(details)
+                .build();
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(
             Exception ex, HttpServletRequest request) {

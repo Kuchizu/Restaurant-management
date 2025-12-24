@@ -8,6 +8,8 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.reactive.resource.NoResourceFoundException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.ServerWebInputException;
@@ -256,6 +258,58 @@ public class GlobalExceptionHandler {
                 .path(path)
                 .build();
         return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(error));
+    }
+
+    @ExceptionHandler(WebClientRequestException.class)
+    public Mono<ResponseEntity<ErrorResponse>> handleWebClientRequestException(
+            WebClientRequestException ex,
+            ServerWebExchange exchange) {
+        log.error("WebClient connection error: {}", ex.getMessage());
+
+        String serviceName = "downstream service";
+        String uri = ex.getUri() != null ? ex.getUri().toString() : "unknown";
+
+        if (uri.contains("menu-service")) {
+            serviceName = "Menu service";
+        } else if (uri.contains("kitchen-service")) {
+            serviceName = "Kitchen service";
+        }
+
+        Map<String, Object> details = new HashMap<>();
+        details.put("serviceName", serviceName);
+        details.put("uri", uri);
+        details.put("reason", "Connection refused or service unavailable");
+
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.SERVICE_UNAVAILABLE.value())
+                .error("Service Unavailable")
+                .message(serviceName + " is currently unavailable")
+                .path(exchange.getRequest().getPath().value())
+                .details(details)
+                .build();
+        return Mono.just(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error));
+    }
+
+    @ExceptionHandler(WebClientResponseException.class)
+    public Mono<ResponseEntity<ErrorResponse>> handleWebClientResponseException(
+            WebClientResponseException ex,
+            ServerWebExchange exchange) {
+        log.error("WebClient response error: {} - {}", ex.getStatusCode(), ex.getMessage());
+
+        Map<String, Object> details = new HashMap<>();
+        details.put("statusCode", ex.getStatusCode().value());
+        details.put("responseBody", ex.getResponseBodyAsString());
+
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(ex.getStatusCode().value())
+                .error(ex.getStatusCode().toString())
+                .message("Downstream service returned an error")
+                .path(exchange.getRequest().getPath().value())
+                .details(details)
+                .build();
+        return Mono.just(ResponseEntity.status(ex.getStatusCode()).body(error));
     }
 
     @ExceptionHandler(Exception.class)

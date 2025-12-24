@@ -132,17 +132,32 @@ public class OrderService {
                         "Current status: " + order.getStatus()
                     ));
                 }
-                order.setStatus(OrderStatus.IN_KITCHEN);
-                return orderDataAccess.save(order)
-                    .flatMap(savedOrder -> orderItemDataAccess.findByOrderId(orderId)
-                        .flatMap(item -> {
-                            KitchenQueueRequest request = new KitchenQueueRequest(
-                                orderId, item.getId(), item.getDishName(),
-                                item.getQuantity(), item.getSpecialRequest()
-                            );
-                            return kitchenServiceClient.addToKitchenQueue(request);
-                        })
-                        .then(Mono.just(savedOrder)))
+
+                return orderItemDataAccess.findByOrderId(orderId)
+                    .collectList()
+                    .flatMap(items -> {
+                        if (items.isEmpty()) {
+                            return Mono.error(new BusinessConflictException(
+                                "Cannot send to kitchen: order has no items",
+                                "Order",
+                                orderId,
+                                "Items count: 0"
+                            ));
+                        }
+
+                        return Flux.fromIterable(items)
+                            .flatMap(item -> {
+                                KitchenQueueRequest request = new KitchenQueueRequest(
+                                    orderId, item.getId(), item.getDishName(),
+                                    item.getQuantity(), item.getSpecialRequest()
+                                );
+                                return kitchenServiceClient.addToKitchenQueue(request);
+                            })
+                            .then(Mono.defer(() -> {
+                                order.setStatus(OrderStatus.IN_KITCHEN);
+                                return orderDataAccess.save(order);
+                            }));
+                    })
                     .flatMap(this::toDto);
             });
     }

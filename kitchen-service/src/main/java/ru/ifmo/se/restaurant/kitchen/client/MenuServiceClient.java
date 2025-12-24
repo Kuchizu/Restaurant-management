@@ -1,6 +1,5 @@
 package ru.ifmo.se.restaurant.kitchen.client;
 
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,10 +10,8 @@ import ru.ifmo.se.restaurant.kitchen.dto.DishInfoDto;
 public interface MenuServiceClient {
 
     @GetMapping("/api/dishes/by-name")
-    @CircuitBreaker(name = "menuService")
     DishInfoDto getDishByName(@RequestParam("name") String name);
 
     @GetMapping("/api/dishes/{id}")
-    @CircuitBreaker(name = "menuService")
     DishInfoDto getDishById(@PathVariable("id") Long id);
 }

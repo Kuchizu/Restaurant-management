@@ -31,15 +31,10 @@ public class KitchenService {
     // Add order items to kitchen queue
     @Transactional
     public KitchenQueueDto addToQueue(KitchenQueueDto dto) {
-        // TODO: Интеграция с menu-service (закомментировано до реализации бизнес-логики)
-        // DishInfoDto dishInfo = menuServiceClient.getDishByName(dto.getDishName());
-        // if (dishInfo != null) {
-        //     log.info("Dish info from menu-service: {} (category: {}, price: {})",
-        //              dishInfo.getName(), dishInfo.getCategoryName(), dishInfo.getPrice());
-        // } else {
-        //     log.warn("Could not fetch dish info from menu-service for: {} (service may be unavailable)",
-        //              dto.getDishName());
-        // }
+        // Validate dish exists in menu service
+        DishInfoDto dishInfo = menuServiceClient.getDishByName(dto.getDishName());
+        log.info("Dish info from menu-service: {} (category: {}, price: {})",
+                 dishInfo.getName(), dishInfo.getCategoryName(), dishInfo.getPrice());
 
         KitchenQueue queue = new KitchenQueue();
         queue.setOrderId(dto.getOrderId());
