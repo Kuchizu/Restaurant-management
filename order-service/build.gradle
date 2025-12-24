@@ -3,6 +3,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     implementation 'org.springframework.cloud:spring-cloud-starter-config'
     implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'
@@ -12,6 +13,7 @@ dependencies {
     runtimeOnly 'org.postgresql:r2dbc-postgresql'
 
     testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.testcontainers:r2dbc:1.19.3'
     testImplementation 'org.testcontainers:postgresql:1.19.3'
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
