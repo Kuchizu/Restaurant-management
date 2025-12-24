@@ -1,5 +1,6 @@
 package ru.ifmo.se.restaurant.order.exception;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -9,13 +10,23 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.support.WebExchangeBindException;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.reactive.resource.NoResourceFoundException;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.ServerWebInputException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import ru.ifmo.se.restaurant.order.dto.ErrorResponse;
 
+import java.net.URI;
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class GlobalExceptionHandlerTest {
@@ -208,6 +219,274 @@ class GlobalExceptionHandlerTest {
                 .assertNext(entity -> {
                     assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
                     assertThat(entity.getBody()).isNotNull();
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void handleCircuitBreakerOpen_ReturnsServiceUnavailable() {
+        CallNotPermittedException exception = mock(CallNotPermittedException.class);
+        when(exception.getMessage()).thenReturn("CircuitBreaker is OPEN");
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleCircuitBreakerOpen(exception, exchange);
+
+        StepVerifier.create(response)
+                .assertNext(entity -> {
+                    assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+                    assertThat(entity.getBody()).isNotNull();
+                    assertThat(entity.getBody().getStatus()).isEqualTo(503);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void handleWebExchangeBindException_ReturnsBadRequest() {
+        BindingResult bindingResult = mock(BindingResult.class);
+        FieldError fieldError = new FieldError("object", "field", "must not be null");
+        when(bindingResult.getFieldErrors()).thenReturn(List.of(fieldError));
+
+        WebExchangeBindException exception = mock(WebExchangeBindException.class);
+        when(exception.getBindingResult()).thenReturn(bindingResult);
+        when(exception.getMessage()).thenReturn("Validation failed");
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleWebExchangeBindException(exception, exchange);
+
+        StepVerifier.create(response)
+                .assertNext(entity -> {
+                    assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(entity.getBody()).isNotNull();
+                    assertThat(entity.getBody().getDetails()).isNotNull();
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void handleDataIntegrityViolation_UniqueEmail_ReturnsConflict() {
+        DataIntegrityViolationException exception = new DataIntegrityViolationException("unique constraint violated: email");
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleDataIntegrityViolation(exception, exchange);
+
+        StepVerifier.create(response)
+                .assertNext(entity -> {
+                    assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+                    assertThat(entity.getBody().getMessage()).contains("email");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void handleDataIntegrityViolation_UniqueTableNumber_ReturnsConflict() {
+        DataIntegrityViolationException exception = new DataIntegrityViolationException("unique constraint violated: table_number");
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleDataIntegrityViolation(exception, exchange);
+
+        StepVerifier.create(response)
+                .assertNext(entity -> {
+                    assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+                    assertThat(entity.getBody().getMessage()).contains("table");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void handleDataIntegrityViolation_ForeignKey_ReturnsConflict() {
+        DataIntegrityViolationException exception = new DataIntegrityViolationException("foreign key constraint violated");
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleDataIntegrityViolation(exception, exchange);
+
+        StepVerifier.create(response)
+                .assertNext(entity -> {
+                    assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+                    assertThat(entity.getBody().getMessage()).contains("Referenced");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void handleDataIntegrityViolation_NotNull_ReturnsConflict() {
+        DataIntegrityViolationException exception = new DataIntegrityViolationException("not null constraint violated");
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleDataIntegrityViolation(exception, exchange);
+
+        StepVerifier.create(response)
+                .assertNext(entity -> {
+                    assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+                    assertThat(entity.getBody().getMessage()).contains("Required");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void handleServerWebInputException_JsonDecoding_ReturnsBadRequest() {
+        Exception cause = new Exception("JSON decoding error");
+        ServerWebInputException exception = new ServerWebInputException("Invalid input", null, cause);
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleServerWebInputException(exception, exchange);
+
+        StepVerifier.create(response)
+                .assertNext(entity -> {
+                    assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(entity.getBody().getMessage()).contains("Malformed JSON");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void handleServerWebInputException_CannotDeserialize_ReturnsBadRequest() {
+        Exception cause = new Exception("Cannot deserialize value");
+        ServerWebInputException exception = new ServerWebInputException("Invalid input", null, cause);
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleServerWebInputException(exception, exchange);
+
+        StepVerifier.create(response)
+                .assertNext(entity -> {
+                    assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(entity.getBody().getMessage()).contains("Invalid data format");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void handleServerWebInputException_UnexpectedCharacter_ReturnsBadRequest() {
+        Exception cause = new Exception("Unexpected character in input");
+        ServerWebInputException exception = new ServerWebInputException("Invalid input", null, cause);
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleServerWebInputException(exception, exchange);
+
+        StepVerifier.create(response)
+                .assertNext(entity -> {
+                    assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(entity.getBody().getMessage()).contains("Syntax error");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void handleServerWebInputException_NoCause_ReturnsBadRequest() {
+        ServerWebInputException exception = new ServerWebInputException("Invalid input");
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleServerWebInputException(exception, exchange);
+
+        StepVerifier.create(response)
+                .assertNext(entity -> {
+                    assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void handleNoResourceFound_ActuatorPath_ReturnsError() {
+        when(requestPath.value()).thenReturn("/actuator/health");
+        NoResourceFoundException exception = new NoResourceFoundException(null);
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleNoResourceFound(exception, exchange);
+
+        StepVerifier.create(response)
+                .expectError(NoResourceFoundException.class)
+                .verify();
+    }
+
+    @Test
+    void handleWebClientRequestException_MenuService_ReturnsServiceUnavailable() {
+        WebClientRequestException exception = mock(WebClientRequestException.class);
+        when(exception.getUri()).thenReturn(URI.create("http://menu-service/api/dishes"));
+        when(exception.getMessage()).thenReturn("Connection refused");
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleWebClientRequestException(exception, exchange);
+
+        StepVerifier.create(response)
+                .assertNext(entity -> {
+                    assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+                    assertThat(entity.getBody().getMessage()).contains("Menu");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void handleWebClientRequestException_KitchenService_ReturnsServiceUnavailable() {
+        WebClientRequestException exception = mock(WebClientRequestException.class);
+        when(exception.getUri()).thenReturn(URI.create("http://kitchen-service/api/queue"));
+        when(exception.getMessage()).thenReturn("Connection refused");
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleWebClientRequestException(exception, exchange);
+
+        StepVerifier.create(response)
+                .assertNext(entity -> {
+                    assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+                    assertThat(entity.getBody().getMessage()).contains("Kitchen");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void handleWebClientRequestException_UnknownService_ReturnsServiceUnavailable() {
+        WebClientRequestException exception = mock(WebClientRequestException.class);
+        when(exception.getUri()).thenReturn(URI.create("http://unknown-service/api"));
+        when(exception.getMessage()).thenReturn("Connection refused");
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleWebClientRequestException(exception, exchange);
+
+        StepVerifier.create(response)
+                .assertNext(entity -> {
+                    assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void handleWebClientResponseException_ReturnsDownstreamError() {
+        WebClientResponseException exception = WebClientResponseException.create(
+                500, "Internal Server Error", null, "error body".getBytes(), null);
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleWebClientResponseException(exception, exchange);
+
+        StepVerifier.create(response)
+                .assertNext(entity -> {
+                    assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+                    assertThat(entity.getBody().getMessage()).contains("Downstream");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void handleGenericException_WithCause_ReturnsInternalServerError() {
+        Exception cause = new Exception("Root cause");
+        Exception exception = new Exception("Wrapper exception", cause);
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleGenericException(exception, exchange);
+
+        StepVerifier.create(response)
+                .assertNext(entity -> {
+                    assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+                    assertThat(entity.getBody().getDetails()).containsKey("cause");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void handleDataIntegrityViolation_WithRootCause_ReturnsConflict() {
+        Exception rootCause = new Exception("unique constraint: email violated");
+        DataIntegrityViolationException exception = new DataIntegrityViolationException("Data integrity", rootCause);
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleDataIntegrityViolation(exception, exchange);
+
+        StepVerifier.create(response)
+                .assertNext(entity -> {
+                    assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void handleValidation_WithNullRejectedValue_ReturnsUnprocessableEntity() {
+        ValidationException exception = new ValidationException("Field is required", "name", null);
+
+        Mono<ResponseEntity<ErrorResponse>> response = exceptionHandler.handleValidation(exception, exchange);
+
+        StepVerifier.create(response)
+                .assertNext(entity -> {
+                    assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+                    assertThat(entity.getBody().getDetails()).isNotNull();
                 })
                 .verifyComplete();
     }
