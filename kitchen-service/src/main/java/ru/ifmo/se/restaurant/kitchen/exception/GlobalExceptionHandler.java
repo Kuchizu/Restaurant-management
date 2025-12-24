@@ -169,20 +169,46 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
         log.error("Feign client error: {} - {}", ex.status(), ex.getMessage());
 
-        String message = "External service communication error";
         String serviceName = "downstream service";
-
         if (ex.getMessage() != null && ex.getMessage().contains("menu-service")) {
             serviceName = "Menu service";
-            message = "Menu service is currently unavailable";
         }
 
+        // Handle 404 - resource not found
         if (ex.status() == 404) {
-            message = "Resource not found in " + serviceName;
+            log.warn("Resource not found in {}: {}", serviceName, ex.getMessage());
+            ErrorResponse error = ErrorResponse.builder()
+                    .timestamp(LocalDateTime.now())
+                    .status(HttpStatus.NOT_FOUND.value())
+                    .error("Not Found")
+                    .message("Dish not found in menu")
+                    .path(request.getRequestURI())
+                    .build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        }
+
+        // Handle other 4xx errors - client errors
+        if (ex.status() >= 400 && ex.status() < 500) {
+            log.warn("Client error from {}: {} - {}", serviceName, ex.status(), ex.getMessage());
+            ErrorResponse error = ErrorResponse.builder()
+                    .timestamp(LocalDateTime.now())
+                    .status(HttpStatus.BAD_REQUEST.value())
+                    .error("Bad Request")
+                    .message("Invalid request to " + serviceName)
+                    .path(request.getRequestURI())
+                    .details(Map.of("serviceName", serviceName, "statusCode", ex.status()))
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        // Handle 5xx errors and connection failures - service unavailable
+        String message;
+        if (ex.status() == -1) {
+            message = serviceName + " is unreachable (connection refused)";
         } else if (ex.status() >= 500) {
             message = serviceName + " returned server error";
-        } else if (ex.status() == -1) {
-            message = serviceName + " is unreachable (connection refused)";
+        } else {
+            message = serviceName + " is currently unavailable";
         }
 
         Map<String, Object> details = new HashMap<>();

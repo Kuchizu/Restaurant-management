@@ -129,6 +129,14 @@ public class MenuService {
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
+    public Mono<DishDto> getDishByName(String name) {
+        return Mono.fromCallable(() -> {
+            Dish dish = dishDataAccess.findByName(name)
+                    .orElseThrow(() -> new ResourceNotFoundException("Dish not found with name: " + name));
+            return toDishDto(dish);
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
     public Mono<Page<DishDto>> getAllDishes(Pageable pageable) {
         return Mono.fromCallable(() ->
             dishDataAccess.findAll(pageable).map(this::toDishDto)

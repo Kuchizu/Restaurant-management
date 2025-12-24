@@ -212,6 +212,21 @@ public class MenuController {
                 .map(dish -> new ResponseEntity<>(dish, HttpStatus.CREATED));
     }
 
+    @Operation(summary = "Получить блюдо по названию", description = "Возвращает блюдо по указанному названию")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Блюдо найдено",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = DishDto.class))),
+            @ApiResponse(responseCode = "404", description = "Блюдо не найдено",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/dishes/by-name")
+    public Mono<ResponseEntity<DishDto>> getDishByName(
+            @Parameter(description = "Название блюда", required = true, example = "Стейк")
+            @RequestParam("name") String name) {
+        return menuService.getDishByName(name)
+                .map(ResponseEntity::ok);
+    }
+
     @Operation(summary = "Получить блюдо по ID", description = "Возвращает блюдо по указанному идентификатору")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Блюдо найдено",
