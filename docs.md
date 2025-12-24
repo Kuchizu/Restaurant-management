@@ -5,3 +5,13 @@ Kitchen Service:    http://localhost:8082/swagger-ui.html
 Menu Service:       http://localhost:8083/swagger-ui.html
 Inventory Service:  http://localhost:8084/swagger-ui.html
 Billing Service:    http://localhost:8085/swagger-ui.html
+
+Apps:               http://localhost:8761/eureka/apps
+
+config-server
+./gradlew bootRun
+
+eureka-server
+./gradlew bootRun
+
+order-service && ./gradlew bootRun
