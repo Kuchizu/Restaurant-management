@@ -4,10 +4,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import ru.ifmo.se.restaurant.menu.config.SecurityConfig;
 import ru.ifmo.se.restaurant.menu.dto.CategoryDto;
 import ru.ifmo.se.restaurant.menu.dto.DishDto;
 import ru.ifmo.se.restaurant.menu.dto.IngredientDto;
@@ -17,6 +19,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @WebFluxTest(MenuController.class)
+@Import(SecurityConfig.class)
 class MenuControllerTest {
 
     @Autowired
@@ -31,6 +34,9 @@ class MenuControllerTest {
         dto.setId(1L);
         when(menuService.createCategory(any())).thenReturn(Mono.just(dto));
         webTestClient.post().uri("/api/categories")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"name\":\"Test\"}")
                 .exchange()
@@ -42,13 +48,23 @@ class MenuControllerTest {
         CategoryDto dto = new CategoryDto();
         dto.setId(1L);
         when(menuService.getCategoryById(1L)).thenReturn(Mono.just(dto));
-        webTestClient.get().uri("/api/categories/1").exchange().expectStatus().isOk();
+        webTestClient.get().uri("/api/categories/1")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
+                .exchange()
+                .expectStatus().isOk();
     }
 
     @Test
     void getAllCategories() {
         when(menuService.getAllCategories()).thenReturn(Flux.empty());
-        webTestClient.get().uri("/api/categories").exchange().expectStatus().isOk();
+        webTestClient.get().uri("/api/categories")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
+                .exchange()
+                .expectStatus().isOk();
     }
 
     @Test
@@ -57,6 +73,9 @@ class MenuControllerTest {
         dto.setId(1L);
         when(menuService.createDish(any())).thenReturn(Mono.just(dto));
         webTestClient.post().uri("/api/dishes")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"name\":\"Test\",\"price\":10.0,\"categoryId\":1}")
                 .exchange()
@@ -68,13 +87,23 @@ class MenuControllerTest {
         DishDto dto = new DishDto();
         dto.setId(1L);
         when(menuService.getDishById(1L)).thenReturn(Mono.just(dto));
-        webTestClient.get().uri("/api/dishes/1").exchange().expectStatus().isOk();
+        webTestClient.get().uri("/api/dishes/1")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
+                .exchange()
+                .expectStatus().isOk();
     }
 
     @Test
     void getActiveDishes() {
         when(menuService.getActiveDishes()).thenReturn(Flux.empty());
-        webTestClient.get().uri("/api/dishes/active").exchange().expectStatus().isOk();
+        webTestClient.get().uri("/api/dishes/active")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
+                .exchange()
+                .expectStatus().isOk();
     }
 
     @Test
@@ -83,6 +112,9 @@ class MenuControllerTest {
         dto.setId(1L);
         when(menuService.createIngredient(any())).thenReturn(Mono.just(dto));
         webTestClient.post().uri("/api/ingredients")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"name\":\"Test\"}")
                 .exchange()
@@ -94,12 +126,22 @@ class MenuControllerTest {
         IngredientDto dto = new IngredientDto();
         dto.setId(1L);
         when(menuService.getIngredientById(1L)).thenReturn(Mono.just(dto));
-        webTestClient.get().uri("/api/ingredients/1").exchange().expectStatus().isOk();
+        webTestClient.get().uri("/api/ingredients/1")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
+                .exchange()
+                .expectStatus().isOk();
     }
 
     @Test
     void getAllIngredients() {
         when(menuService.getAllIngredients()).thenReturn(Flux.empty());
-        webTestClient.get().uri("/api/ingredients").exchange().expectStatus().isOk();
+        webTestClient.get().uri("/api/ingredients")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
+                .exchange()
+                .expectStatus().isOk();
     }
 }

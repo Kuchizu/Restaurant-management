@@ -24,6 +24,23 @@ public class AuthService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
 
+    public Mono<UserDto> initAdmin() {
+        return userRepository.count()
+                .flatMap(count -> {
+                    if (count > 0) {
+                        return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT, "Admin already exists"));
+                    }
+                    User admin = new User();
+                    admin.setUsername("admin@restaurant.com");
+                    admin.setPassword(passwordEncoder.encode("admin123"));
+                    admin.setRole(ru.ifmo.se.restaurant.gateway.entity.UserRole.ADMIN);
+                    admin.setEnabled(true);
+                    admin.setCreatedAt(LocalDateTime.now());
+                    return userRepository.save(admin);
+                })
+                .map(this::toUserDto);
+    }
+
     public Mono<LoginResponse> login(LoginRequest request) {
         return userRepository.findByUsername(request.getUsername())
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials")))
@@ -38,7 +55,7 @@ public class AuthService {
                 });
     }
 
-    public Mono<LoginResponse> register(RegisterRequest request) {
+    public Mono<UserDto> registerUser(RegisterRequest request) {
         return userRepository.existsByUsername(request.getUsername())
                 .flatMap(exists -> {
                     if (exists) {
@@ -53,7 +70,13 @@ public class AuthService {
                     user.setCreatedAt(LocalDateTime.now());
                     return userRepository.save(user);
                 })
-                .flatMap(this::createLoginResponse);
+                .map(this::toUserDto);
+    }
+
+    public Mono<java.util.List<UserDto>> getAllUsers() {
+        return userRepository.findAll()
+                .map(this::toUserDto)
+                .collectList();
     }
 
     public Mono<LoginResponse> refreshToken(RefreshTokenRequest request) {

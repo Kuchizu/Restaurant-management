@@ -58,10 +58,22 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return path.startsWith("/actuator") ||
+        String method = request.getMethod();
+
+        // Public paths
+        if (path.startsWith("/actuator") ||
                 path.startsWith("/swagger-ui") ||
                 path.startsWith("/v3/api-docs") ||
                 path.startsWith("/api-docs") ||
-                path.startsWith("/webjars");
+                path.startsWith("/webjars")) {
+            return true;
+        }
+
+        // Internal service-to-service calls (POST to /api/kitchen/queue)
+        if ("POST".equals(method) && path.startsWith("/api/kitchen/queue")) {
+            return true;
+        }
+
+        return false;
     }
 }

@@ -38,6 +38,9 @@ out/
 ### Claude Code ###
 .claude/
 
+### Smart Build Cache ###
+.build-cache/
+
 ### Mac ###
 .DS_Store
 

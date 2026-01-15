@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import ru.ifmo.se.restaurant.order.config.SecurityConfig;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Slice;
@@ -32,6 +34,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @WebFluxTest(OrderController.class)
+@Import(SecurityConfig.class)
 class OrderControllerTest {
 
     @Autowired
@@ -71,6 +74,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.post()
                 .uri("/api/orders")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(inputDto)
                 .exchange()
@@ -90,6 +96,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.get()
                 .uri("/api/orders/1")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(OrderDto.class);
@@ -104,6 +113,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.get()
                 .uri("/api/orders/999")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -122,6 +134,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.get()
                 .uri("/api/orders")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(OrderDto.class)
@@ -141,6 +156,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.post()
                 .uri("/api/orders/1/items")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(itemDto)
                 .exchange()
@@ -157,6 +175,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.delete()
                 .uri("/api/orders/1/items/1")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .exchange()
                 .expectStatus().isNoContent();
     }
@@ -174,6 +195,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.post()
                 .uri("/api/orders/1/send-to-kitchen")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(OrderDto.class);
@@ -190,6 +214,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.post()
                 .uri("/api/orders/1/send-to-kitchen")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .exchange()
                 .expectStatus().is4xxClientError();
     }
@@ -207,6 +234,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.post()
                 .uri("/api/orders/1/close")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(OrderDto.class);
@@ -221,6 +251,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.get()
                 .uri("/api/orders")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(OrderDto.class)
@@ -232,6 +265,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.post()
                 .uri("/api/orders")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{}")
                 .exchange()
@@ -249,6 +285,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.post()
                 .uri("/api/orders/999/items")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(itemDto)
                 .exchange()
@@ -264,6 +303,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.post()
                 .uri("/api/orders/999/close")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -283,6 +325,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.post()
                 .uri("/api/orders")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(inputDto)
                 .exchange()
@@ -299,6 +344,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.delete()
                 .uri("/api/orders/1/items/999")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .exchange()
                 .expectStatus().isNoContent();
     }
@@ -316,6 +364,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.post()
                 .uri("/api/orders/5/send-to-kitchen")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(OrderDto.class);
@@ -334,6 +385,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.get()
                 .uri("/api/orders/3")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(OrderDto.class);
@@ -353,6 +407,9 @@ class OrderControllerTest {
         // When & Then
         webTestClient.post()
                 .uri("/api/orders/2/items")
+                .header("X-User-Id", "1")
+                .header("X-User-Name", "testuser")
+                .header("X-User-Role", "ADMIN")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(itemDto)
                 .exchange()

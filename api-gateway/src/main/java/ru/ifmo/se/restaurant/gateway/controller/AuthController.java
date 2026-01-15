@@ -24,6 +24,11 @@ public class AuthController {
 
     private final AuthService authService;
 
+    @PostMapping("/init")
+    public Mono<UserDto> initAdmin() {
+        return authService.initAdmin();
+    }
+
     @Operation(summary = "Вход в систему", description = "Аутентификация пользователя и получение токенов")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Успешный вход",
@@ -98,4 +103,5 @@ public class AuthController {
         Long userId = Long.parseLong(userIdHeader);
         return authService.changePassword(userId, request);
     }
+
 }

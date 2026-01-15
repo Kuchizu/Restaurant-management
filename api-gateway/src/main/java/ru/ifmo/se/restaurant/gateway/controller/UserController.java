@@ -25,16 +25,17 @@ import ru.ifmo.se.restaurant.gateway.service.UserService;
 @RestController
 @RequestMapping("/api/auth/users")
 @RequiredArgsConstructor
-@Tag(name = "User Management", description = "Управление пользователями (только для ADMIN)")
+@Tag(name = "User Management", description = "Управление пользователями (только для ADMIN и MANAGER)")
 @SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
     private final UserService userService;
 
-    private Mono<Void> checkAdminRole(ServerWebExchange exchange) {
+    private Mono<Void> checkSupervisorRole(ServerWebExchange exchange) {
         String role = exchange.getRequest().getHeaders().getFirst("X-User-Role");
-        if (!"ADMIN".equals(role)) {
-            return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied. Admin role required."));
+        if (!"ADMIN".equals(role) && !"MANAGER".equals(role)) {
+            return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Access denied. Only supervisors (ADMIN, MANAGER) can manage users."));
         }
         return Mono.empty();
     }
@@ -47,7 +48,7 @@ public class UserController {
     })
     @GetMapping
     public Flux<UserDto> getAllUsers(ServerWebExchange exchange) {
-        return checkAdminRole(exchange).thenMany(userService.getAllUsers());
+        return checkSupervisorRole(exchange).thenMany(userService.getAllUsers());
     }
 
     @Operation(summary = "Получить пользователей с пагинацией")
@@ -60,7 +61,7 @@ public class UserController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             ServerWebExchange exchange) {
-        return checkAdminRole(exchange)
+        return checkSupervisorRole(exchange)
                 .then(userService.getAllUsersPaginated(page, size))
                 .map(pagedUsers -> {
                     exchange.getResponse().getHeaders().add("X-Total-Count", String.valueOf(pagedUsers.getTotalElements()));
@@ -78,7 +79,7 @@ public class UserController {
     })
     @GetMapping("/{id}")
     public Mono<UserDto> getUserById(@PathVariable Long id, ServerWebExchange exchange) {
-        return checkAdminRole(exchange).then(userService.getUserById(id));
+        return checkSupervisorRole(exchange).then(userService.getUserById(id));
     }
 
     @Operation(summary = "Создать пользователя", description = "Создание нового пользователя в системе")
@@ -91,7 +92,7 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<UserDto> createUser(@Valid @RequestBody RegisterRequest request, ServerWebExchange exchange) {
-        return checkAdminRole(exchange).then(userService.createUser(request));
+        return checkSupervisorRole(exchange).then(userService.createUser(request));
     }
 
     @Operation(summary = "Обновить пользователя")
@@ -103,7 +104,7 @@ public class UserController {
     })
     @PutMapping("/{id}")
     public Mono<UserDto> updateUser(@PathVariable Long id, @RequestBody UserDto dto, ServerWebExchange exchange) {
-        return checkAdminRole(exchange).then(userService.updateUser(id, dto));
+        return checkSupervisorRole(exchange).then(userService.updateUser(id, dto));
     }
 
     @Operation(summary = "Удалить пользователя")
@@ -115,18 +116,18 @@ public class UserController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> deleteUser(@PathVariable Long id, ServerWebExchange exchange) {
-        return checkAdminRole(exchange).then(userService.deleteUser(id));
+        return checkSupervisorRole(exchange).then(userService.deleteUser(id));
     }
 
     @Operation(summary = "Активировать пользователя")
     @PatchMapping("/{id}/enable")
     public Mono<UserDto> enableUser(@PathVariable Long id, ServerWebExchange exchange) {
-        return checkAdminRole(exchange).then(userService.toggleUserEnabled(id, true));
+        return checkSupervisorRole(exchange).then(userService.toggleUserEnabled(id, true));
     }
 
     @Operation(summary = "Деактивировать пользователя")
     @PatchMapping("/{id}/disable")
     public Mono<UserDto> disableUser(@PathVariable Long id, ServerWebExchange exchange) {
-        return checkAdminRole(exchange).then(userService.toggleUserEnabled(id, false));
+        return checkSupervisorRole(exchange).then(userService.toggleUserEnabled(id, false));
     }
 }

@@ -1,14 +1,14 @@
 package ru.ifmo.se.restaurant.gateway.security;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.cloud.gateway.filter.GatewayFilterChain;
-import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import ru.ifmo.se.restaurant.gateway.service.JwtService;
 
@@ -16,26 +16,30 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
+public class JwtAuthenticationFilter implements WebFilter, Ordered {
 
     private final JwtService jwtService;
 
     private static final List<String> PUBLIC_PATHS = List.of(
             "/api/auth/login",
             "/api/auth/refresh",
+            "/api/auth/init",
             "/actuator",
             "/swagger-ui",
+            "/swagger-ui.html",
             "/v3/api-docs",
+            "/auth-api/api-docs",
             "/webjars",
-            "/order-service/api-docs",
-            "/kitchen-service/api-docs",
-            "/menu-service/api-docs",
-            "/inventory-service/api-docs",
-            "/billing-service/api-docs"
+            "/favicon.ico"
+    );
+
+    private static final List<String> PUBLIC_SUFFIXES = List.of(
+            "/api-docs",
+            "/api-docs/swagger-config"
     );
 
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
 
         if (isPublicPath(path)) {
@@ -77,7 +81,8 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isPublicPath(String path) {
-        return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
+        return PUBLIC_PATHS.stream().anyMatch(path::startsWith)
+                || PUBLIC_SUFFIXES.stream().anyMatch(path::endsWith);
     }
 
     @Override
