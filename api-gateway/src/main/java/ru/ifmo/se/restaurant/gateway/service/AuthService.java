@@ -100,7 +100,9 @@ public class AuthService {
     }
 
     public Mono<Void> logout(String refreshToken) {
-        return refreshTokenRepository.deleteByToken(refreshToken);
+        return refreshTokenRepository.findByToken(refreshToken)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token")))
+                .flatMap(token -> refreshTokenRepository.delete(token));
     }
 
     public Mono<UserDto> getCurrentUser(Long userId) {

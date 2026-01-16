@@ -217,8 +217,13 @@ public class GlobalExceptionHandler {
             message = "Order service is currently unavailable";
         }
 
+        HttpStatus responseStatus = HttpStatus.SERVICE_UNAVAILABLE;
+        String errorType = "Service Unavailable";
+
         if (ex.status() == 404) {
             message = "Resource not found in " + serviceName;
+            responseStatus = HttpStatus.NOT_FOUND;
+            errorType = "Not Found";
         } else if (ex.status() >= 500) {
             message = serviceName + " returned server error";
         } else if (ex.status() == -1) {
@@ -231,13 +236,13 @@ public class GlobalExceptionHandler {
 
         ErrorResponse error = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.SERVICE_UNAVAILABLE.value())
-                .error("Service Unavailable")
+                .status(responseStatus.value())
+                .error(errorType)
                 .message(message)
                 .path(request.getRequestURI())
                 .details(details)
                 .build();
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
+        return ResponseEntity.status(responseStatus).body(error);
     }
 
     @ExceptionHandler(Exception.class)

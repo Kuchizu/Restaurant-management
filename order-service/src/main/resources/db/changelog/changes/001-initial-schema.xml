@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="001-create-tables-table" author="system">
+        <createTable tableName="tables">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="table_number" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="capacity" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location" type="VARCHAR(100)"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="FREE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="002-create-employees-table" author="system">
+        <createTable tableName="employees">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="first_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(100)">
+                <constraints unique="true"/>
+            </column>
+            <column name="phone" type="VARCHAR(20)"/>
+            <column name="role" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="003-create-orders-table" author="system">
+        <createTable tableName="orders">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="table_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="waiter_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="CREATED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_amount" type="DECIMAL(10,2)" defaultValueNumeric="0.00">
+                <constraints nullable="false"/>
+            </column>
+            <column name="special_requests" type="VARCHAR(500)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="closed_at" type="TIMESTAMP"/>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="004-create-order-items-table" author="system">
+        <createTable tableName="order_items">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="dish_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="dish_name" type="VARCHAR(200)"/>
+            <column name="quantity" type="INT" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="special_request" type="VARCHAR(500)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="005-create-indexes" author="system">
+        <createIndex tableName="order_items" indexName="idx_order_items_order_id">
+            <column name="order_id"/>
+        </createIndex>
+        <createIndex tableName="orders" indexName="idx_orders_table_id">
+            <column name="table_id"/>
+        </createIndex>
+        <createIndex tableName="orders" indexName="idx_orders_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="006-insert-sample-data" author="system">
+        <insert tableName="employees">
+            <column name="first_name" value="John"/>
+            <column name="last_name" value="Doe"/>
+            <column name="email" value="john.doe@restaurant.com"/>
+            <column name="phone" value="+1234567890"/>
+            <column name="role" value="WAITER"/>
+        </insert>
+        <insert tableName="employees">
+            <column name="first_name" value="Jane"/>
+            <column name="last_name" value="Smith"/>
+            <column name="email" value="jane.smith@restaurant.com"/>
+            <column name="phone" value="+1234567891"/>
+            <column name="role" value="WAITER"/>
+        </insert>
+        <insert tableName="employees">
+            <column name="first_name" value="Mike"/>
+            <column name="last_name" value="Johnson"/>
+            <column name="email" value="mike.j@restaurant.com"/>
+            <column name="phone" value="+1234567892"/>
+            <column name="role" value="CHEF"/>
+        </insert>
+
+        <insert tableName="tables">
+            <column name="table_number" value="T1"/>
+            <column name="capacity" valueNumeric="4"/>
+            <column name="location" value="Main Hall"/>
+            <column name="status" value="FREE"/>
+        </insert>
+        <insert tableName="tables">
+            <column name="table_number" value="T2"/>
+            <column name="capacity" valueNumeric="2"/>
+            <column name="location" value="Window Side"/>
+            <column name="status" value="FREE"/>
+        </insert>
+        <insert tableName="tables">
+            <column name="table_number" value="T3"/>
+            <column name="capacity" valueNumeric="6"/>
+            <column name="location" value="Private Room"/>
+            <column name="status" value="FREE"/>
+        </insert>
+        <insert tableName="tables">
+            <column name="table_number" value="T4"/>
+            <column name="capacity" valueNumeric="4"/>
+            <column name="location" value="Main Hall"/>
+            <column name="status" value="FREE"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
