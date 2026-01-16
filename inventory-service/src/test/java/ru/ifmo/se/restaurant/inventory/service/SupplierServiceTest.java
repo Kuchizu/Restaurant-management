@@ -347,6 +347,36 @@ class SupplierServiceTest {
     }
 
     @Test
+    void updateSupplyOrderStatus_ToDelivered_WhenInventoryNotFound_ThrowsResourceNotFoundException() {
+        // Given
+        Supplier supplier = createMockSupplier(1L);
+        SupplyOrder order = createSupplyOrderWithStatus(1L, supplier, SupplyOrderStatus.PENDING);
+        Ingredient ingredient = createMockIngredient(1L);
+
+        SupplyOrderIngredient orderItem = createMockSupplyOrderIngredient(
+                1L, order, ingredient,
+                new BigDecimal("50.00"),
+                new BigDecimal("10.00")
+        );
+
+        when(supplyOrderDataAccess.getById(1L)).thenReturn(order);
+        when(supplyOrderIngredientDataAccess.findBySupplyOrderId(1L))
+                .thenReturn(Arrays.asList(orderItem));
+        when(inventoryDataAccess.findByIngredientId(1L))
+                .thenReturn(Optional.empty()); // Inventory not found!
+
+        // When & Then
+        assertThatThrownBy(() -> supplierService.updateSupplyOrderStatus(1L, SupplyOrderStatus.DELIVERED))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Inventory not found for ingredient 1");
+
+        // Verify that inventory was never saved
+        verify(inventoryDataAccess, never()).save(any());
+        // Verify that supply order status was never updated due to transaction rollback
+        verify(supplyOrderDataAccess, never()).save(any());
+    }
+
+    @Test
     void deleteSupplyOrder_WhenExists_DeletesOrder() {
         // Given
         when(supplyOrderDataAccess.existsById(1L)).thenReturn(true);
