@@ -18,12 +18,9 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("Restaurant Management API")
                         .version("1.0")
-                        .description("## Как авторизоваться\n\n" +
-                                "1. POST `/api/auth/init` - создать админа (только первый раз)\n" +
-                                "2. POST `/api/auth/login` - получить токен\n" +
-                                "3. Нажать **Authorize** и ввести токен\n\n" +
-                                "**Логин:** admin@restaurant.com\n" +
-                                "**Пароль:** admin123"))
+                        .description(
+                                "**Login:** admin@restaurant.com\n" +
+                                "**Password:** admin123"))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components()
                         .addSecuritySchemes("bearerAuth", new SecurityScheme()

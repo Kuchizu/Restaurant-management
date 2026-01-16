@@ -14,7 +14,7 @@ public class AuthOpenApiController {
               "info": {
                 "title": "Auth API (Gateway)",
                 "version": "1.0",
-                "description": "## Как авторизоваться\\n\\n1. POST `/api/auth/init` - создать админа (только первый раз)\\n2. POST `/api/auth/login` - получить токен\\n3. Нажать **Authorize** и ввести токен\\n\\n**Логин:** admin@restaurant.com\\n**Пароль:** admin123\\n\\n## Роли\\n- **ADMIN** - полный доступ, может создавать пользователей\\n- **MANAGER** - управление рестораном, может создавать пользователей\\n- **CHEF** - повар, доступ к кухне\\n- **WAITER** - официант, доступ к заказам"
+                "description": "**Логин:** admin@restaurant.com\\n**Пароль:** admin123\\n\\n## Роли\\n- **ADMIN** - полный доступ, может создавать пользователей\\n- **MANAGER** - управление рестораном, может создавать пользователей\\n- **CHEF** - повар, доступ к кухне\\n- **WAITER** - официант, доступ к заказам"
               },
               "servers": [{"url": "/"}],
               "security": [{"bearerAuth": []}],
