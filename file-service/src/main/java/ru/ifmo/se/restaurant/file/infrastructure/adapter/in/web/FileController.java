@@ -1,6 +1,7 @@
 package ru.ifmo.se.restaurant.file.infrastructure.adapter.in.web;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
@@ -33,11 +34,13 @@ public class FileController {
     private final DeleteFileUseCase deleteFileUseCase;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Upload a file", description = "Upload a file with category and optional entity ID")
+    @Operation(summary = "Upload a file", description = "Upload a file with category. Only 'file' and 'category' are required.")
     public ResponseEntity<FileResponse> upload(
             @RequestParam("file") MultipartFile file,
             @RequestParam("category") FileCategory category,
+            @Parameter(description = "Optional: ID of related entity (e.g., dish ID)", required = false)
             @RequestParam(value = "entityId", required = false) Long entityId,
+            @Parameter(description = "Optional: User ID (auto-filled from JWT)", required = false, hidden = true)
             @RequestHeader(value = "X-User-Id", required = false) String userId
     ) throws IOException {
         FileUploadCommand command = FileUploadCommand.builder()
