@@ -8,9 +8,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.ifmo.se.restaurant.kitchen.dto.KitchenQueueDto;
-import ru.ifmo.se.restaurant.kitchen.entity.DishStatus;
-import ru.ifmo.se.restaurant.kitchen.service.KitchenService;
+import ru.ifmo.se.restaurant.kitchen.application.dto.KitchenQueueDto;
+import ru.ifmo.se.restaurant.kitchen.domain.valueobject.DishStatus;
+import ru.ifmo.se.restaurant.kitchen.application.port.in.AddToQueueUseCase;
+import ru.ifmo.se.restaurant.kitchen.application.port.in.GetQueueUseCase;
+import ru.ifmo.se.restaurant.kitchen.application.port.in.UpdateQueueStatusUseCase;
+import ru.ifmo.se.restaurant.kitchen.infrastructure.adapter.in.web.KitchenController;
 
 import java.util.Collections;
 
@@ -30,13 +33,19 @@ class KitchenControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private KitchenService kitchenService;
+    private AddToQueueUseCase addToQueueUseCase;
+
+    @MockBean
+    private GetQueueUseCase getQueueUseCase;
+
+    @MockBean
+    private UpdateQueueStatusUseCase updateQueueStatusUseCase;
 
     @Test
     void addToQueue() throws Exception {
         KitchenQueueDto dto = new KitchenQueueDto();
         dto.setId(1L);
-        when(kitchenService.addToQueue(any())).thenReturn(dto);
+        when(addToQueueUseCase.addToQueue(any())).thenReturn(dto);
 
         mockMvc.perform(post("/api/kitchen/queue")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -46,13 +55,13 @@ class KitchenControllerTest {
 
     @Test
     void getActiveQueue() throws Exception {
-        when(kitchenService.getActiveQueue()).thenReturn(Collections.emptyList());
+        when(getQueueUseCase.getActiveQueue()).thenReturn(Collections.emptyList());
         mockMvc.perform(get("/api/kitchen/queue")).andExpect(status().isOk());
     }
 
     @Test
     void getAllQueue() throws Exception {
-        when(kitchenService.getAllQueue()).thenReturn(Collections.emptyList());
+        when(getQueueUseCase.getAllQueue()).thenReturn(Collections.emptyList());
         mockMvc.perform(get("/api/kitchen/queue/all")).andExpect(status().isOk());
     }
 
@@ -60,7 +69,7 @@ class KitchenControllerTest {
     void getQueueItemById() throws Exception {
         KitchenQueueDto dto = new KitchenQueueDto();
         dto.setId(1L);
-        when(kitchenService.getQueueItemById(1L)).thenReturn(dto);
+        when(getQueueUseCase.getQueueItemById(1L)).thenReturn(dto);
         mockMvc.perform(get("/api/kitchen/queue/1")).andExpect(status().isOk());
     }
 
@@ -68,7 +77,7 @@ class KitchenControllerTest {
     void updateStatus() throws Exception {
         KitchenQueueDto dto = new KitchenQueueDto();
         dto.setId(1L);
-        when(kitchenService.updateStatus(1L, DishStatus.IN_PROGRESS)).thenReturn(dto);
+        when(updateQueueStatusUseCase.updateStatus(1L, DishStatus.IN_PROGRESS)).thenReturn(dto);
         mockMvc.perform(put("/api/kitchen/queue/1/status").param("status", "IN_PROGRESS"))
                 .andExpect(status().isOk());
     }
@@ -76,14 +85,14 @@ class KitchenControllerTest {
     @Test
     void getAllQueueItemsPaginated() throws Exception {
         org.springframework.data.domain.Page<KitchenQueueDto> page = org.springframework.data.domain.Page.empty();
-        when(kitchenService.getAllQueueItemsPaginated(0, 20)).thenReturn(page);
+        when(getQueueUseCase.getAllQueueItemsPaginated(0, 20)).thenReturn(page);
         mockMvc.perform(get("/api/kitchen/queue/paged?page=0&size=20")).andExpect(status().isOk());
     }
 
     @Test
     void getAllQueueItemsSlice() throws Exception {
         org.springframework.data.domain.Slice<KitchenQueueDto> slice = new org.springframework.data.domain.SliceImpl<>(Collections.emptyList());
-        when(kitchenService.getAllQueueItemsSlice(0, 20)).thenReturn(slice);
+        when(getQueueUseCase.getAllQueueItemsSlice(0, 20)).thenReturn(slice);
         mockMvc.perform(get("/api/kitchen/queue/infinite-scroll?page=0&size=20")).andExpect(status().isOk());
     }
 }

@@ -4,6 +4,7 @@ plugins {
 
 rootProject.name = 'restaurant-microservices'
 
+include 'common-events'
 include 'eureka-server'
 include 'config-server'
 include 'api-gateway'
@@ -12,3 +13,4 @@ include 'kitchen-service'
 include 'menu-service'
 include 'inventory-service'
 include 'billing-service'
+include 'file-service'

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.ifmo.se.restaurant.inventory.application.port.out.InventoryEventPublisher;
 import ru.ifmo.se.restaurant.inventory.dataaccess.IngredientDataAccess;
 import ru.ifmo.se.restaurant.inventory.dataaccess.InventoryDataAccess;
 import ru.ifmo.se.restaurant.inventory.dto.IngredientDto;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 public class InventoryService {
     private final InventoryDataAccess inventoryDataAccess;
     private final IngredientDataAccess ingredientDataAccess;
+    private final InventoryEventPublisher inventoryEventPublisher;
 
     public List<InventoryDto> getAllInventory() {
         return inventoryDataAccess.findAll().stream()
@@ -87,7 +89,12 @@ public class InventoryService {
         }
         inventory.setLastUpdated(LocalDateTime.now());
 
-        return toDto(inventoryDataAccess.save(inventory));
+        Inventory savedInventory = inventoryDataAccess.save(inventory);
+
+        // Check for low stock and publish event
+        checkAndPublishLowStockEvent(savedInventory);
+
+        return toDto(savedInventory);
     }
 
     @Transactional
@@ -109,7 +116,12 @@ public class InventoryService {
         inventory.setQuantity(newQuantity);
         inventory.setLastUpdated(LocalDateTime.now());
 
-        return toDto(inventoryDataAccess.save(inventory));
+        Inventory savedInventory = inventoryDataAccess.save(inventory);
+
+        // Check for low stock and publish event
+        checkAndPublishLowStockEvent(savedInventory);
+
+        return toDto(savedInventory);
     }
 
     @Transactional
@@ -204,5 +216,18 @@ public class InventoryService {
         dto.setUnit(ingredient.getUnit());
         dto.setDescription(ingredient.getDescription());
         return dto;
+    }
+
+    /**
+     * Checks if inventory is below minimum threshold and publishes LOW_STOCK event.
+     */
+    private void checkAndPublishLowStockEvent(Inventory inventory) {
+        if (inventory.getQuantity().compareTo(inventory.getMinQuantity()) < 0) {
+            log.warn("Low stock detected for ingredient '{}': current={}, minimum={}",
+                    inventory.getIngredient().getName(),
+                    inventory.getQuantity(),
+                    inventory.getMinQuantity());
+            inventoryEventPublisher.publishLowStock(inventory);
+        }
     }
 }

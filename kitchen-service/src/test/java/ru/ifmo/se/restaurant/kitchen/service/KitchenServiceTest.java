@@ -5,17 +5,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.ifmo.se.restaurant.kitchen.client.MenuServiceClient;
-import ru.ifmo.se.restaurant.kitchen.dataaccess.KitchenQueueDataAccess;
-import ru.ifmo.se.restaurant.kitchen.dto.KitchenQueueDto;
-import ru.ifmo.se.restaurant.kitchen.entity.DishStatus;
-import ru.ifmo.se.restaurant.kitchen.entity.KitchenQueue;
-
-import ru.ifmo.se.restaurant.kitchen.dto.DishInfoDto;
+import ru.ifmo.se.restaurant.kitchen.application.port.out.KitchenEventPublisher;
+import ru.ifmo.se.restaurant.kitchen.application.port.out.KitchenQueueRepository;
+import ru.ifmo.se.restaurant.kitchen.application.port.out.MenuServicePort;
+import ru.ifmo.se.restaurant.kitchen.application.dto.DishInfoDto;
+import ru.ifmo.se.restaurant.kitchen.application.dto.KitchenQueueDto;
+import ru.ifmo.se.restaurant.kitchen.application.usecase.KitchenService;
+import ru.ifmo.se.restaurant.kitchen.domain.entity.KitchenQueue;
+import ru.ifmo.se.restaurant.kitchen.domain.valueobject.DishStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,20 +28,30 @@ import static org.mockito.Mockito.*;
 class KitchenServiceTest {
 
     @Mock
-    private KitchenQueueDataAccess dataAccess;
+    private KitchenQueueRepository repository;
 
     @Mock
-    private MenuServiceClient menuServiceClient;
+    private MenuServicePort menuServicePort;
+
+    @Mock
+    private KitchenEventPublisher eventPublisher;
 
     @InjectMocks
     private KitchenService service;
 
     @Test
     void addToQueue() {
-        KitchenQueue queue = new KitchenQueue();
-        queue.setId(1L);
-        when(dataAccess.save(any())).thenReturn(queue);
-        when(menuServiceClient.getDishByName(any())).thenReturn(createDishInfoDto());
+        KitchenQueue queue = KitchenQueue.builder()
+                .id(1L)
+                .orderId(1L)
+                .orderItemId(1L)
+                .dishName("Test Dish")
+                .quantity(1)
+                .status(DishStatus.PENDING)
+                .createdAt(LocalDateTime.now())
+                .build();
+        when(repository.save(any())).thenReturn(queue);
+        when(menuServicePort.getDishByName(any())).thenReturn(createDishInfoDto());
 
         KitchenQueueDto result = service.addToQueue(new KitchenQueueDto());
         assertNotNull(result);
@@ -47,55 +59,77 @@ class KitchenServiceTest {
 
     @Test
     void getActiveQueue() {
-        when(dataAccess.findByStatusInOrderByCreatedAtAsc(any())).thenReturn(Collections.emptyList());
+        when(repository.findByStatusInOrderByCreatedAtAsc(any())).thenReturn(Collections.emptyList());
         assertNotNull(service.getActiveQueue());
     }
 
     @Test
     void getAllQueue() {
-        when(dataAccess.findAll()).thenReturn(Collections.emptyList());
+        when(repository.findAll()).thenReturn(Collections.emptyList());
         assertNotNull(service.getAllQueue());
     }
 
     @Test
     void getQueueItemById() {
-        KitchenQueue queue = new KitchenQueue();
-        queue.setId(1L);
-        queue.setStatus(DishStatus.PENDING);
-        queue.setCreatedAt(LocalDateTime.now());
-        when(dataAccess.getById(1L)).thenReturn(queue);
+        KitchenQueue queue = KitchenQueue.builder()
+                .id(1L)
+                .orderId(1L)
+                .orderItemId(1L)
+                .dishName("Test Dish")
+                .quantity(1)
+                .status(DishStatus.PENDING)
+                .createdAt(LocalDateTime.now())
+                .build();
+        when(repository.findById(1L)).thenReturn(Optional.of(queue));
         assertNotNull(service.getQueueItemById(1L));
     }
 
     @Test
     void updateStatus() {
-        KitchenQueue queue = new KitchenQueue();
-        queue.setId(1L);
-        queue.setStatus(DishStatus.PENDING);
-        queue.setCreatedAt(LocalDateTime.now());
-        when(dataAccess.getById(1L)).thenReturn(queue);
-        when(dataAccess.save(any())).thenReturn(queue);
+        KitchenQueue queue = KitchenQueue.builder()
+                .id(1L)
+                .orderId(1L)
+                .orderItemId(1L)
+                .dishName("Test Dish")
+                .quantity(1)
+                .status(DishStatus.PENDING)
+                .createdAt(LocalDateTime.now())
+                .build();
+        when(repository.findById(1L)).thenReturn(Optional.of(queue));
+        when(repository.save(any())).thenReturn(queue);
         assertNotNull(service.updateStatus(1L, DishStatus.IN_PROGRESS));
     }
 
     @Test
     void updateStatusToReady() {
-        KitchenQueue queue = new KitchenQueue();
-        queue.setId(1L);
-        queue.setStatus(DishStatus.IN_PROGRESS);
-        queue.setCreatedAt(LocalDateTime.now());
-        queue.setStartedAt(LocalDateTime.now());
-        when(dataAccess.getById(1L)).thenReturn(queue);
-        when(dataAccess.save(any())).thenReturn(queue);
+        KitchenQueue queue = KitchenQueue.builder()
+                .id(1L)
+                .orderId(1L)
+                .orderItemId(1L)
+                .dishName("Test Dish")
+                .quantity(1)
+                .status(DishStatus.IN_PROGRESS)
+                .createdAt(LocalDateTime.now())
+                .startedAt(LocalDateTime.now())
+                .build();
+        when(repository.findById(1L)).thenReturn(Optional.of(queue));
+        when(repository.save(any())).thenReturn(queue);
         assertNotNull(service.updateStatus(1L, DishStatus.READY));
     }
 
     @Test
     void addToQueueWithQuantity() {
-        KitchenQueue queue = new KitchenQueue();
-        queue.setId(1L);
-        when(dataAccess.save(any())).thenReturn(queue);
-        when(menuServiceClient.getDishByName(any())).thenReturn(createDishInfoDto());
+        KitchenQueue queue = KitchenQueue.builder()
+                .id(1L)
+                .orderId(1L)
+                .orderItemId(1L)
+                .dishName("Test Dish")
+                .quantity(5)
+                .status(DishStatus.PENDING)
+                .createdAt(LocalDateTime.now())
+                .build();
+        when(repository.save(any())).thenReturn(queue);
+        when(menuServicePort.getDishByName(any())).thenReturn(createDishInfoDto());
         KitchenQueueDto dto = new KitchenQueueDto();
         dto.setQuantity(5);
         assertNotNull(service.addToQueue(dto));
@@ -103,21 +137,21 @@ class KitchenServiceTest {
 
     @Test
     void getQueueByOrderId() {
-        when(dataAccess.findByOrderId(1L)).thenReturn(Collections.emptyList());
+        when(repository.findByOrderId(1L)).thenReturn(Collections.emptyList());
         assertNotNull(service.getQueueByOrderId(1L));
     }
 
     @Test
     void getAllQueueItemsPaginated() {
         org.springframework.data.domain.Page<KitchenQueue> page = org.springframework.data.domain.Page.empty();
-        when(dataAccess.findAll(any(org.springframework.data.domain.Pageable.class))).thenReturn(page);
+        when(repository.findAll(any(org.springframework.data.domain.Pageable.class))).thenReturn(page);
         assertNotNull(service.getAllQueueItemsPaginated(0, 20));
     }
 
     @Test
     void getAllQueueItemsSlice() {
         org.springframework.data.domain.Slice<KitchenQueue> slice = new org.springframework.data.domain.SliceImpl<>(Collections.emptyList());
-        when(dataAccess.findAllSlice(any(org.springframework.data.domain.Pageable.class))).thenReturn(slice);
+        when(repository.findAllSlice(any(org.springframework.data.domain.Pageable.class))).thenReturn(slice);
         assertNotNull(service.getAllQueueItemsSlice(0, 20));
     }
 
