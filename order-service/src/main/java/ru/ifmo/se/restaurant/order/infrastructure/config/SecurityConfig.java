@@ -2,7 +2,6 @@ package ru.ifmo.se.restaurant.order.infrastructure.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
@@ -17,12 +16,7 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
-                .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/actuator/**").permitAll()
-                        .pathMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/api-docs/**", "/webjars/**").permitAll()
-                        .pathMatchers(HttpMethod.OPTIONS).permitAll()
-                        .anyExchange().permitAll()
-                )
+                .authorizeExchange(exchanges -> exchanges.anyExchange().permitAll())
                 .build();
     }
 }

@@ -34,8 +34,7 @@ public class SecurityConfig {
     public ReactiveAuthenticationManager authenticationManager(
             ReactiveUserDetailsService userDetailsService,
             PasswordEncoder passwordEncoder) {
-        UserDetailsRepositoryReactiveAuthenticationManager authManager =
-                new UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService);
+        var authManager = new UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService);
         authManager.setPasswordEncoder(passwordEncoder);
         return authManager;
     }
