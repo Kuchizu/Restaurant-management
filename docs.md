@@ -42,6 +42,14 @@ docker exec kafka-1 kafka-topics --describe --topic restaurant.orders.created --
 
 
 
+Read:
+
+docker exec kafka-1 kafka-console-consumer --bootstrap-server kafka-1:9092 --topic restaurant.orders.created --from-beginning
+
+docker exec kafka-1 kafka-topics --bootstrap-server kafka-1:9092 --list
+
+
+
 MinIO: http://localhost:9001
 
 minioadmin
