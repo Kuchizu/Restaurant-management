@@ -12,7 +12,7 @@ import ru.ifmo.se.restaurant.inventory.domain.valueobject.SupplyOrderStatus;
 import ru.ifmo.se.restaurant.inventory.infrastructure.adapter.out.persistence.entity.SupplierJpaEntity;
 import ru.ifmo.se.restaurant.inventory.infrastructure.adapter.out.persistence.entity.SupplyOrderJpaEntity;
 import ru.ifmo.se.restaurant.inventory.infrastructure.adapter.out.persistence.repository.SupplierJpaRepository;
-import ru.ifmo.se.restaurant.inventory.infrastructure.adapter.out.persistence.repository\SupplyOrderJpaRepository;
+import ru.ifmo.se.restaurant.inventory.infrastructure.adapter.out.persistence.repository.SupplyOrderJpaRepository;
 
 import java.util.List;
 import java.util.Optional;

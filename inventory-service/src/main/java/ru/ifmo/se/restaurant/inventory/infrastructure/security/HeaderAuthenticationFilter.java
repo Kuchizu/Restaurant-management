@@ -1,4 +1,4 @@
-package ru.ifmo.se.restaurant.inventory.security;
+package ru.ifmo.se.restaurant.inventory.infrastructure.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

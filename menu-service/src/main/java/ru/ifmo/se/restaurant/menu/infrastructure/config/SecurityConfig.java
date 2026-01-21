@@ -1,4 +1,4 @@
-package ru.ifmo.se.restaurant.menu.config;
+package ru.ifmo.se.restaurant.menu.infrastructure.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

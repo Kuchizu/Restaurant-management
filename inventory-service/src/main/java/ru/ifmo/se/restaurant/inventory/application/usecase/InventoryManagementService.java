@@ -19,7 +19,7 @@ import ru.ifmo.se.restaurant.inventory.domain.entity.Ingredient;
 import ru.ifmo.se.restaurant.inventory.domain.entity.Inventory;
 import ru.ifmo.se.restaurant.inventory.domain.exception.ResourceNotFoundException;
 import ru.ifmo.se.restaurant.inventory.domain.exception.ValidationException;
-import ru.ifmo.se.restaurant.inventory.util.PaginationUtil;
+import ru.ifmo.se.restaurant.inventory.infrastructure.util.PaginationUtil;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

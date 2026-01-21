@@ -25,7 +25,7 @@ import ru.ifmo.se.restaurant.menu.domain.entity.Dish;
 import ru.ifmo.se.restaurant.menu.domain.entity.Ingredient;
 import ru.ifmo.se.restaurant.menu.domain.exception.ResourceNotFoundException;
 import ru.ifmo.se.restaurant.menu.domain.exception.ValidationException;
-import ru.ifmo.se.restaurant.menu.util.PaginationUtil;
+import ru.ifmo.se.restaurant.menu.infrastructure.util.PaginationUtil;
 
 import java.util.HashSet;
 import java.util.List;

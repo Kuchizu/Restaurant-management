@@ -1,4 +1,4 @@
-package ru.ifmo.se.restaurant.menu.util;
+package ru.ifmo.se.restaurant.menu.infrastructure.util;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

@@ -1,4 +1,4 @@
-package ru.ifmo.se.restaurant.kitchen.security;
+package ru.ifmo.se.restaurant.inventory.infrastructure.security;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

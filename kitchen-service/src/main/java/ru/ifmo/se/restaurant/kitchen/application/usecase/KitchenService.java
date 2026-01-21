@@ -19,7 +19,7 @@ import ru.ifmo.se.restaurant.kitchen.application.port.out.MenuServicePort;
 import ru.ifmo.se.restaurant.kitchen.domain.entity.KitchenQueue;
 import ru.ifmo.se.restaurant.kitchen.domain.exception.KitchenQueueNotFoundException;
 import ru.ifmo.se.restaurant.kitchen.domain.valueobject.DishStatus;
-import ru.ifmo.se.restaurant.kitchen.util.PaginationUtil;
+import ru.ifmo.se.restaurant.kitchen.infrastructure.util.PaginationUtil;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;

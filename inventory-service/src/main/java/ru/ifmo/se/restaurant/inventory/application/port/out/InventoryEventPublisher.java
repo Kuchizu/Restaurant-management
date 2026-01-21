@@ -1,6 +1,6 @@
 package ru.ifmo.se.restaurant.inventory.application.port.out;
 
-import ru.ifmo.se.restaurant.inventory.entity.Inventory;
+import ru.ifmo.se.restaurant.inventory.domain.entity.Inventory;
 
 /**
  * Output port for publishing inventory domain events.
