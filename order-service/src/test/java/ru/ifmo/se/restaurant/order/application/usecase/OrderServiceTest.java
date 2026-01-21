@@ -13,6 +13,7 @@ import ru.ifmo.se.restaurant.order.application.dto.*;
 import ru.ifmo.se.restaurant.order.application.port.out.*;
 import ru.ifmo.se.restaurant.order.domain.entity.*;
 import ru.ifmo.se.restaurant.order.domain.exception.BusinessConflictException;
+import ru.ifmo.se.restaurant.order.domain.exception.ServiceUnavailableException;
 import ru.ifmo.se.restaurant.order.domain.valueobject.EmployeeRole;
 import ru.ifmo.se.restaurant.order.domain.valueobject.OrderStatus;
 import ru.ifmo.se.restaurant.order.domain.valueobject.TableStatus;
@@ -20,9 +21,11 @@ import ru.ifmo.se.restaurant.order.infrastructure.adapter.in.web.client.MenuServ
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -240,6 +243,133 @@ class OrderServiceTest {
                 .expectNextMatches(result ->
                         result.getFirstName().equals("Jane") &&
                         result.getLastName().equals("Smith"))
+                .verifyComplete();
+    }
+
+    @Test
+    void addItemToOrder_ShouldAddItem() {
+        DishResponse dishResponse = new DishResponse(1L, "Pizza", new BigDecimal("15.00"), true);
+
+        OrderItemDto itemDto = new OrderItemDto();
+        itemDto.setDishId(1L);
+        itemDto.setQuantity(2);
+
+        when(orderRepositoryPort.getById(1L)).thenReturn(Mono.just(testOrder));
+        when(menuServiceClient.getDish(1L)).thenReturn(Mono.just(dishResponse));
+        when(orderItemRepositoryPort.save(any(OrderItem.class))).thenReturn(Mono.just(testItem));
+        when(orderRepositoryPort.save(any(Order.class))).thenReturn(Mono.just(testOrder));
+        when(orderItemRepositoryPort.findByOrderId(1L)).thenReturn(Flux.just(testItem));
+
+        StepVerifier.create(orderService.addItemToOrder(1L, itemDto))
+                .expectNextCount(1)
+                .verifyComplete();
+    }
+
+    @Test
+    void addItemToOrder_ShouldFailWhenDishPriceNull() {
+        DishResponse dishResponse = new DishResponse(1L, "Pizza", null, true);
+
+        OrderItemDto itemDto = new OrderItemDto();
+        itemDto.setDishId(1L);
+        itemDto.setQuantity(2);
+
+        when(orderRepositoryPort.getById(1L)).thenReturn(Mono.just(testOrder));
+        when(menuServiceClient.getDish(1L)).thenReturn(Mono.just(dishResponse));
+
+        StepVerifier.create(orderService.addItemToOrder(1L, itemDto))
+                .expectError(ServiceUnavailableException.class)
+                .verify();
+    }
+
+    @Test
+    void removeItemFromOrder_ShouldRemoveItem() {
+        when(orderRepositoryPort.getById(1L)).thenReturn(Mono.just(testOrder));
+        when(orderItemRepositoryPort.getById(1L)).thenReturn(Mono.just(testItem));
+        when(orderRepositoryPort.save(any(Order.class))).thenReturn(Mono.just(testOrder));
+        when(orderItemRepositoryPort.deleteById(1L)).thenReturn(Mono.empty());
+
+        StepVerifier.create(orderService.removeItemFromOrder(1L, 1L))
+                .verifyComplete();
+    }
+
+    @Test
+    void getAllOrdersPaginated_ShouldReturnPage() {
+        when(orderRepositoryPort.count()).thenReturn(Mono.just(1L));
+        when(orderRepositoryPort.findAll(any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(Flux.just(testOrder));
+        when(orderItemRepositoryPort.findByOrderId(anyLong())).thenReturn(Flux.empty());
+
+        StepVerifier.create(orderService.getAllOrdersPaginated(0, 10))
+                .expectNextMatches(page -> page.getContent().size() == 1)
+                .verifyComplete();
+    }
+
+    @Test
+    void getAllOrdersSlice_ShouldReturnSlice() {
+        when(orderRepositoryPort.findAll(any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(Flux.just(testOrder));
+        when(orderItemRepositoryPort.findByOrderId(anyLong())).thenReturn(Flux.empty());
+
+        StepVerifier.create(orderService.getAllOrdersSlice(0, 10))
+                .expectNextMatches(slice -> slice.getContent().size() == 1)
+                .verifyComplete();
+    }
+
+    @Test
+    void getAllOrdersSlice_WithMoreData_ShouldHaveNext() {
+        Order order2 = new Order();
+        order2.setId(2L);
+        order2.setTableId(1L);
+        order2.setWaiterId(1L);
+        order2.setStatus(OrderStatus.CREATED);
+        order2.setTotalAmount(BigDecimal.ZERO);
+
+        when(orderRepositoryPort.findAll(any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(Flux.just(testOrder, order2));
+        when(orderItemRepositoryPort.findByOrderId(anyLong())).thenReturn(Flux.empty());
+
+        StepVerifier.create(orderService.getAllOrdersSlice(0, 1))
+                .expectNextMatches(slice -> slice.hasNext() && slice.getContent().size() == 1)
+                .verifyComplete();
+    }
+
+    @Test
+    void getAllTablesPaginated_ShouldReturnPage() {
+        when(tableRepositoryPort.count()).thenReturn(Mono.just(1L));
+        when(tableRepositoryPort.findAll(any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(Flux.just(testTable));
+
+        StepVerifier.create(orderService.getAllTablesPaginated(0, 10))
+                .expectNextMatches(page -> page.getContent().size() == 1)
+                .verifyComplete();
+    }
+
+    @Test
+    void getAllEmployeesPaginated_ShouldReturnPage() {
+        when(employeeRepositoryPort.count()).thenReturn(Mono.just(1L));
+        when(employeeRepositoryPort.findAll(any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(Flux.just(testEmployee));
+
+        StepVerifier.create(orderService.getAllEmployeesPaginated(0, 10))
+                .expectNextMatches(page -> page.getContent().size() == 1)
+                .verifyComplete();
+    }
+
+    @Test
+    void createTable_WithNullStatus_ShouldDefaultToFree() {
+        TableDto dto = new TableDto(null, "B-1", 2, "Corner", null);
+
+        RestaurantTable savedTable = new RestaurantTable();
+        savedTable.setId(10L);
+        savedTable.setTableNumber("B-1");
+        savedTable.setCapacity(2);
+        savedTable.setLocation("Corner");
+        savedTable.setStatus(TableStatus.FREE);
+
+        when(tableRepositoryPort.save(any(RestaurantTable.class))).thenReturn(Mono.just(savedTable));
+
+        StepVerifier.create(orderService.createTable(dto))
+                .expectNextMatches(result -> result.getStatus() == TableStatus.FREE)
                 .verifyComplete();
     }
 }
