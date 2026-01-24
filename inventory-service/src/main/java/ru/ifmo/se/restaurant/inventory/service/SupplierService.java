@@ -169,12 +169,17 @@ public class SupplierService {
             supplyOrder.setDeliveryDate(LocalDateTime.now());
             List<SupplyOrderIngredient> items = supplyOrderIngredientDataAccess.findBySupplyOrderId(id);
             for (SupplyOrderIngredient item : items) {
-                inventoryDataAccess.findByIngredientId(item.getIngredient().getId())
-                        .ifPresent(inventory -> {
-                            inventory.setQuantity(inventory.getQuantity().add(item.getQuantity()));
-                            inventory.setLastUpdated(LocalDateTime.now());
-                            inventoryDataAccess.save(inventory);
-                        });
+                Long ingredientId = item.getIngredient().getId();
+                inventoryDataAccess.findByIngredientId(ingredientId)
+                        .ifPresentOrElse(
+                                inventory -> updateInventory(inventory, item.getQuantity()),
+                                () -> {
+                                    log.error("Inventory not found for ingredient {} during supply order {} delivery",
+                                            ingredientId, id);
+                                    throw new ResourceNotFoundException(
+                                            "Inventory not found for ingredient " + ingredientId);
+                                }
+                        );
             }
         }
 
@@ -187,6 +192,13 @@ public class SupplierService {
             throw new ResourceNotFoundException("Supply order not found");
         }
         supplyOrderDataAccess.deleteById(id);
+    }
+
+    private void updateInventory(Inventory inventory, BigDecimal quantity) {
+        inventory.setQuantity(inventory.getQuantity().add(quantity));
+        inventory.setLastUpdated(LocalDateTime.now());
+        inventoryDataAccess.save(inventory);
+        log.info("Updated inventory {} with quantity {}", inventory.getId(), quantity);
     }
 
     private SupplierDto toDto(Supplier supplier) {

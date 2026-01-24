@@ -344,7 +344,7 @@ services:
       AUTH_DATABASE_URL: r2dbc:postgresql://auth-db:5432/auth_db
       DATABASE_USERNAME: restaurant_user
       DATABASE_PASSWORD: restaurant_pass
-      JWT_SECRET: dGhpcyBpcyBhIHZlcnkgc2VjdXJlIGp3dCBzZWNyZXQga2V5IGZvciByZXN0YXVyYW50IG1hbmFnZW1lbnQ=
+      JWT_SECRET: ${JWT_SECRET}
     ports:
       - "49999:49999"
     networks:
