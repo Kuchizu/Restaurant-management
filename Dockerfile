@@ -6,9 +6,17 @@ FROM gradle:${GRADLE_VERSION} AS build
 ARG SERVICE_NAME
 WORKDIR /app
 
-COPY gradle.properties settings.gradle build.gradle ./
+COPY gradle.properties build.gradle ./
+
+# Copy common-events module (shared dependency)
+COPY common-events ./common-events
 
 COPY ${SERVICE_NAME} ./${SERVICE_NAME}
+
+# Create minimal settings.gradle for Docker build
+RUN echo "rootProject.name = 'restaurant-microservices'" > settings.gradle && \
+    echo "include 'common-events'" >> settings.gradle && \
+    echo "include '${SERVICE_NAME}'" >> settings.gradle
 
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false \
                  -Dorg.gradle.parallel=true \

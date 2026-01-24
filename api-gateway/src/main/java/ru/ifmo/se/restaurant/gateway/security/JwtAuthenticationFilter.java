@@ -3,6 +3,7 @@ package ru.ifmo.se.restaurant.gateway.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
@@ -40,6 +41,11 @@ public class JwtAuthenticationFilter implements WebFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        // Allow CORS preflight requests
+        if (exchange.getRequest().getMethod() == HttpMethod.OPTIONS) {
+            return chain.filter(exchange);
+        }
+
         String path = exchange.getRequest().getPath().value();
 
         if (isPublicPath(path)) {
@@ -49,16 +55,14 @@ public class JwtAuthenticationFilter implements WebFilter, Ordered {
         String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
+            return sendUnauthorized(exchange);
         }
 
         String token = authHeader.substring(7);
 
         try {
             if (!jwtService.isTokenValid(token)) {
-                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                return exchange.getResponse().setComplete();
+                return sendUnauthorized(exchange);
             }
 
             String username = jwtService.extractUsername(token);
@@ -75,9 +79,16 @@ public class JwtAuthenticationFilter implements WebFilter, Ordered {
 
             return chain.filter(exchange.mutate().request(mutatedRequest).build());
         } catch (Exception e) {
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
+            return sendUnauthorized(exchange);
         }
+    }
+
+    private Mono<Void> sendUnauthorized(ServerWebExchange exchange) {
+        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+        exchange.getResponse().getHeaders().add("Access-Control-Allow-Origin", "*");
+        exchange.getResponse().getHeaders().add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+        exchange.getResponse().getHeaders().add("Access-Control-Allow-Headers", "*");
+        return exchange.getResponse().setComplete();
     }
 
     private boolean isPublicPath(String path) {

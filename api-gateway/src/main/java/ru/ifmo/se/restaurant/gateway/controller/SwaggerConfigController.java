@@ -20,7 +20,8 @@ public class SwaggerConfigController {
             Map.of("url", "/kitchen-service/api-docs", "name", "Kitchen Service"),
             Map.of("url", "/menu-service/api-docs", "name", "Menu Service"),
             Map.of("url", "/inventory-service/api-docs", "name", "Inventory Service"),
-            Map.of("url", "/billing-service/api-docs", "name", "Billing Service")
+            Map.of("url", "/billing-service/api-docs", "name", "Billing Service"),
+            Map.of("url", "/file-service/api-docs", "name", "File Service")
         ));
         config.put("urls.primaryName", "Order Service");
         return Mono.just(config);

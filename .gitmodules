@@ -1,0 +1,3 @@
+[submodule "Config-Server-Repo"]
+	path = Config-Server-Repo
+	url = https://github.com/Kuchizu/Restaurant-management-configs

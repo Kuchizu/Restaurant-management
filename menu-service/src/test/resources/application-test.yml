@@ -1,28 +1,10 @@
 spring:
+  config:
+    import: optional:configserver:http://localhost:8888
   cloud:
     config:
       enabled: false
-    discovery:
-      enabled: false
-  datasource:
-    url: jdbc:tc:postgresql:15-alpine:///testdb
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-  liquibase:
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1
+  flyway:
     enabled: false
-
-eureka:
-  client:
-    enabled: false
-
-logging:
-  level:
-    ru.ifmo.se.restaurant: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

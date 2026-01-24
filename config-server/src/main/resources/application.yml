@@ -4,9 +4,15 @@ server:
 spring:
   application:
     name: config-server
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:native}
   cloud:
     config:
       server:
+        # Native profile for local development (uses local filesystem)
+        native:
+          search-locations: file:///${CONFIG_REPO_PATH:C:/Users/Kuchizu/Desktop/configs-repo},{application}
+        # Git profile for production
         git:
           uri: ${CONFIG_REPO_URI:https://github.com/Kuchizu/Restaurant-management-configs}
           default-label: master

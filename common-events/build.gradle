@@ -1,0 +1,16 @@
+plugins {
+    id 'java-library'
+}
+
+// This is a library module - jar is enabled by default
+jar {
+    enabled = true
+}
+
+dependencies {
+    api 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
+    api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2'
+
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
+}

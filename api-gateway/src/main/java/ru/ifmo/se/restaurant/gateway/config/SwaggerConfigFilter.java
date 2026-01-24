@@ -25,7 +25,8 @@ public class SwaggerConfigFilter implements WebFilter, Ordered {
                 {"name": "Kitchen Service", "url": "/kitchen-service/api-docs"},
                 {"name": "Menu Service", "url": "/menu-service/api-docs"},
                 {"name": "Inventory Service", "url": "/inventory-service/api-docs"},
-                {"name": "Billing Service", "url": "/billing-service/api-docs"}
+                {"name": "Billing Service", "url": "/billing-service/api-docs"},
+                {"name": "File Service", "url": "/file-service/api-docs"}
               ],
               "urls.primaryName": "Auth (Gateway)"
             }
@@ -38,6 +39,9 @@ public class SwaggerConfigFilter implements WebFilter, Ordered {
         if ("/v3/api-docs/swagger-config".equals(path)) {
             exchange.getResponse().setStatusCode(HttpStatus.OK);
             exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
+            exchange.getResponse().getHeaders().add("Access-Control-Allow-Origin", "*");
+            exchange.getResponse().getHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
+            exchange.getResponse().getHeaders().add("Access-Control-Allow-Headers", "*");
 
             byte[] bytes = SWAGGER_CONFIG.getBytes(StandardCharsets.UTF_8);
             DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);

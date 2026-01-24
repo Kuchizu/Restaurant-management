@@ -2,7 +2,8 @@
 **/build/
 **/.gradle/
 **/target/
-**/out/
+# Note: Don't use **/out/ as it excludes src/main/java/**/port/out/ folders
+/out/
 
 # IDE (excludes 100MB+)
 .idea/

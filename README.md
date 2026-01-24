@@ -30,7 +30,9 @@
 ```bash
 docker-compose up --build
 ```
+
 или на более новой версии Docker:
+
 ```sh
 docker compose up --build
 ```
@@ -38,6 +40,7 @@ docker compose up --build
 ## API
 
 Swagger документация:
+
 - Swagger UI: http://localhost:49999/docs
 
 ## Тесты
@@ -47,6 +50,15 @@ Swagger документация:
 ```
 
 Генерация отчета о покрытии:
+
 ```bash
 ./gradlew jacocoTestReport
 ```
+
+
+
+Лаба сдана!
+
+14:02 21.01.2026
+
+Мы свободны
